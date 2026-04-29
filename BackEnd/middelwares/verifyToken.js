@@ -1,0 +1,1 @@
+// Validacion de JWT enviado por clerk

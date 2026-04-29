@@ -1,0 +1,1 @@
+/// Esquema de incidente con historial y prioridades

@@ -1,0 +1,1 @@
+/// Endpoin que consumen IA

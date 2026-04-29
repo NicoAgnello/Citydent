@@ -1,0 +1,1 @@
+/// FUTURO GEMINI llamas a la ia

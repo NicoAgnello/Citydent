@@ -1,0 +1,1 @@
+/// Metadata local del usuario sync con clerk COOKIE GENERATOR
