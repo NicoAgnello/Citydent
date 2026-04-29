@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import axios from "axios";
 
 
-function login() {
+function Login() {
    const { isSignedIn, getToken } = useAuth();
    useEffect(() => {
     const enviarToken = async () => {
@@ -47,4 +47,4 @@ function login() {
   );
 }
 
-export default login;
+export default Login;
