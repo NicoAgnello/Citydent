@@ -1,17 +1,12 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+
+import React from 'react';
+import Login from'./pages/Login';
+
 
 function App() {
   return (
     <div>
-      <header>
-        <SignedOut>
-          <SignInButton />
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-      </header>
-      <h1>jj</h1>
+      <Login />
     </div>
   );
 }
