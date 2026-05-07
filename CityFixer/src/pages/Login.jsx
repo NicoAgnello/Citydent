@@ -15,7 +15,7 @@ function Login() {
           <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
             🏙️
           </div>
-          <CardTitle className="text-xl">CityFixer</CardTitle>
+            <CardTitle className="text-xl">CityFixer</CardTitle>
           <CardDescription>Ingresá a tu cuenta para continuar</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
