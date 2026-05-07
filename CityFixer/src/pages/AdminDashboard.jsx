@@ -1,4 +1,5 @@
 import { useClerk } from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button";
 
 function AdminDashboard() {
   const { signOut } = useClerk();
@@ -6,7 +7,9 @@ function AdminDashboard() {
   return (
     <div>
       <h1>Panel Admin</h1>
-      <button onClick={() => signOut()}>Cerrar sesión</button>
+      <Button variant="outline" onClick={() => signOut()}>
+        Cerrar sesión
+      </Button>
     </div>
   );
 }
