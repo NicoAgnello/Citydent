@@ -3,6 +3,20 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
+:root {
+  --color-blanquito: #D3D6FF;
+  --color-celestito: #3B418F;
+  --color-azul: #2F347A;
+  --color-azul-oscuro: #292D60;
+}
+
+@theme {
+  --color-blanquito: #D3D6FF;
+  --color-celestito: #3B418F;
+  --color-azul: #2F347A;
+  --color-azul-oscuro: #292D60;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
