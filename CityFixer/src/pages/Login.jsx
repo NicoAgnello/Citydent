@@ -24,10 +24,9 @@ function Login() {
         const response = await api.post(
           "/auth/login",
           {
-            clerkId: user.id,
-            nombre: user.fullName,
             email: user.primaryEmailAddress?.emailAddress,
-            avatar: user.imageUrl,
+            firstName: user.firstName,
+            lastName: user.lastName,
           },
           { headers: { Authorization: `Bearer ${token}` } },
         );
