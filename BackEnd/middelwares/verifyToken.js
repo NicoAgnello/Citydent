@@ -1,5 +1,5 @@
-const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
 const verifyTokenAndSetCookie = [
   // 1. Primero valida el token con Clerk
   ClerkExpressRequireAuth({
@@ -19,9 +19,7 @@ const verifyTokenAndSetCookie = [
       sameSite: 'strict',  // Protección CSRF
       maxAge: 1000 * 60 * 60 * 24, // 1 día en ms
     });
-
+    console.log(`paso por el middelware de verify`)
     next();
-  }
-];
-
-module.exports = verifyTokenAndSetCookie;
+  }];
+  module.exports = verifyTokenAndSetCookie;
