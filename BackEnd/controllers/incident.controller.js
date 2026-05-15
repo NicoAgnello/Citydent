@@ -3,13 +3,13 @@ const { uploadImageToCloudinary } = require('../services/cludinary.service');
 const { getAddressFromCoordinates } = require('../services/osm.service');
 const { createIncident, ESTADOS_PERMITIDOS } = require('../services/incident.service');
 
-/**
- * CREAR UN NUEVO INCIDENTE
- * Maneja la subida de fotos, geocodificación de dirección y guardado en DB.
- */
+const Incident = require('../models/incident');
+const { getAddressFromCoordinates } = require('../services/osm.service');
+const { createIncident, ESTADOS_PERMITIDOS } = require('../services/incident.service');
+
 const createIncidentController = async (req, res) => {
   try {
-    // 1. Obtener ID de usuario desde Clerk (inyectado por verifyToken)
+    // 1. Obtener ID de usuario desde Clerk
     const userId = req.auth?.userId || req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -25,21 +25,16 @@ const createIncidentController = async (req, res) => {
       address = await getAddressFromCoordinates(lat, lng);
     }
 
-    // 4. Subir fotos a Cloudinary (vienen por Multer en req.files)
-    const photosUrls = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const url = await uploadImageToCloudinary(file.buffer);
-        photosUrls.push(url);
-      }
-    }
+    // 4. Extraer las URLs de las fotos que el Frontend ya subió a Cloudinary
+    // Aseguramos que sea un arreglo (si no envían nada, queda vacío)
+    const photosUrls = Array.isArray(req.body.photos) ? req.body.photos : [];
 
     // 5. Preparar objeto de datos
     const incidentData = {
       title: req.body.title,
       description: req.body.description,
       status: req.body.status || 'pendiente',
-      photos: photosUrls,
+      photos: photosUrls, // Guardamos directamente las URLs
       location: {
         lat,
         lng,
@@ -64,7 +59,6 @@ const createIncidentController = async (req, res) => {
     });
   }
 };
-
 /**
  * OBTENER TODOS LOS INCIDENTES
  * Trae la lista completa, incluyendo datos básicos del usuario que reportó.

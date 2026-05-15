@@ -13,6 +13,18 @@ const validateIncidentData = (data) => {
   const errors = [];
 
   // 1. Validar Título
+  if (data.photos) {
+    if (!Array.isArray(data.photos)) {
+      errors.push('El formato de las fotos es inválido. Debe ser una lista (array).');
+    } else {
+      // Verificar que cada elemento de la lista sea un texto (URL)
+      const allStrings = data.photos.every(item => typeof item === 'string');
+      if (!allStrings) {
+        errors.push('Las URLs de las fotos deben ser texto.');
+      }
+    }
+  }
+
   if (!data.title || typeof data.title !== 'string') {
     errors.push('El título es obligatorio y debe ser un texto.');
   } else if (data.title.trim().length === 0) {
