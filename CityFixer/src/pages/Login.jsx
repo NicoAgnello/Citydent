@@ -1,6 +1,4 @@
 import { SignIn } from "@clerk/clerk-react";
-import { useUser, useAuth } from "@clerk/clerk-react";
-import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -8,36 +6,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import api from "../services/api";
 
 function Login() {
-  const { isSignedIn, getToken } = useAuth();
-  const { user, isLoaded } = useUser();
-
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-
-    const sincronizar = async () => {
-      try {
-        const token = await getToken();
-        const response = await api.post(
-          "/auth/login",
-          {
-            email: user.primaryEmailAddress?.emailAddress,
-            firstName: user.firstName,
-            lastName: user.lastName,
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        console.log("Usuario sincronizado:", response.data);
-      } catch (error) {
-        console.error("Error sincronizando usuario:", error);
-      }
-    };
-
-    sincronizar();
-  }, [isLoaded, isSignedIn]);
-
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-sm">
