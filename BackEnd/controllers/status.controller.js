@@ -1,0 +1,41 @@
+const { getAllStatuses, createStatus, deleteStatus } = require('../services/status.service');
+
+const getAll = async (req, res) => {
+  try {
+    const statuses = await getAllStatuses();
+    res.status(200).json({ success: true, statuses });
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
+const create = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const status = await createStatus({ name, description });
+    res.status(201).json({ success: true, status });
+  } catch (error) {
+    if (error.status === 400) {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
+const remove = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const status = await deleteStatus(id);
+    res.status(200).json({ success: true, status });
+  } catch (error) {
+    if (error.status === 400) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.status === 404) {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+};
+
+module.exports = { getAll, create, remove };
