@@ -1,4 +1,3 @@
-/// Esquema de incidente con historial y prioridades
 const mongoose = require('mongoose');
 
 const incidentSchema = new mongoose.Schema({
@@ -15,24 +14,22 @@ const incidentSchema = new mongoose.Schema({
     maxlength: [1000, 'La descripción no puede exceder los 1000 caracteres']
   },
   status: {
-    type: String,
-    enum: ['pendiente', 'en_proceso', 'resuelto'],
-    default: 'pendiente'
+    type: mongoose.Schema.Types.ObjectId, //MongoId de estado
+    ref: 'Status',
+    required: [true, 'El estado es obligatorio']
   },
-  // Base preparada para las fotos (A acomodar a futuro con Cloudinary)
-  photos: [{
-    type: String, // Aquí guardaremos las URLs de las imágenes
-    default: []
-  }],
-  // Base preparada para la ubicación (A acomodar a futuro con mapas/geolocalización)
+  photos: { 
+    type: [String], 
+    default: [] 
+  },
   location: {
     lat: {
       type: Number,
-      required: false
+      required: [true, 'La ubicación es obligatoria'],
     },
     lng: {
       type: Number,
-      required: false
+      required: [true, 'La ubicación es obligatoria'],
     },
     address: {
       type: String,
@@ -40,14 +37,18 @@ const incidentSchema = new mongoose.Schema({
       trim: true
     }
   },
-  // Relación con el usuario que reportó la situación
+  category: {
+    type: mongoose.Schema.Types.ObjectId, ///MongoId de categoria
+    ref: 'Category',
+    required: [true, 'La categoría es obligatoria']
+  },
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId, //MongoId de usuario
     ref: 'User',
     required: true
   }
 }, {
-  timestamps: true // Crea automáticamente createdAt y updatedAt
+  timestamps: true
 });
 
 module.exports = mongoose.model('Incident', incidentSchema);

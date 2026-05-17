@@ -1,1 +1,0 @@
-/// Definicion de constante ENUM, estaso y categorias

@@ -1,18 +1,15 @@
 const Incident = require('../models/incident');
+const Status = require('../models/status');
+const mongoose = require('mongoose');
 
-// Estas son las opciones exactas que tendrá tu menú desplegable (select) en el frontend.
-// Nota: En el futuro, esto podría moverse a tu archivo src/utils/constants.js
-const ESTADOS_PERMITIDOS = ['pendiente', 'en_proceso', 'resuelto'];
+// ==========================================
+// 1. VALIDACIONES
+// ==========================================
 
-/**
- * Función auxiliar para validar los datos del incidente
- * @param {Object} data - Datos provenientes del body de la petición
- * @returns {Object} - Retorna un objeto con el estado de la validación y los errores
- */
 const validateIncidentData = (data) => {
   const errors = [];
 
-  // 1. Validar Título
+  // Título
   if (!data.title || typeof data.title !== 'string') {
     errors.push('El título es obligatorio y debe ser un texto.');
   } else if (data.title.trim().length === 0) {
@@ -21,7 +18,7 @@ const validateIncidentData = (data) => {
     errors.push('El título no puede exceder los 100 caracteres.');
   }
 
-  // 2. Validar Descripción
+  // Descripción
   if (!data.description || typeof data.description !== 'string') {
     errors.push('La descripción es obligatoria y debe ser un texto.');
   } else if (data.description.trim().length === 0) {
@@ -30,59 +27,137 @@ const validateIncidentData = (data) => {
     errors.push('La descripción no puede exceder los 1000 caracteres.');
   }
 
-  // 3. Validar Estado (Desplegable)
-  // Si el usuario envía un estado desde el desplegable, verificamos que coincida exactamente con nuestras opciones.
-  if (data.status) {
-    if (typeof data.status !== 'string') {
-      errors.push('El estado debe ser un formato de texto válido.');
-    } else if (!ESTADOS_PERMITIDOS.includes(data.status)) {
-      // Si envían algo que no está en la lista del desplegable, lo bloqueamos
-      errors.push(`El estado '${data.status}' es inválido. Por favor selecciona una opción del menú: ${ESTADOS_PERMITIDOS.join(', ')}.`);
-    }
+  // Categoría
+  if (!data.category) {
+    errors.push('La categoría es obligatoria.');
+  } else if (!mongoose.Types.ObjectId.isValid(data.category)) {
+    errors.push('La categoría enviada no es válida.');
   }
 
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  // Fotos
+  if (!Array.isArray(data.photos) || data.photos.length < 1 || data.photos.length > 3) {
+    errors.push('Se requiere entre 1 y 3 fotos.');
+  }
+
+  // Ubicación
+  if (!data.location?.lat || !data.location?.lng) {
+    errors.push('La ubicación es obligatoria.');
+  }
+
+  return { isValid: errors.length === 0, errors };
 };
 
-/**
- * Servicio para crear un nuevo incidente
- * @param {Object} incidentData - Datos del incidente
- * @param {String} userId - ID del usuario de MongoDB (relacionado con Clerk)
- * @returns {Object} - Incidente creado
- */
-const createIncident = async (incidentData, userId) => {
-  // Ejecutar las validaciones
-  const validation = validateIncidentData(incidentData);
+// ==========================================
+// 2. CREACIÓN (Usuario)
+// ==========================================
 
+const createIncident = async (incidentData, userId) => {
+  // Primero validar
+  const validation = validateIncidentData(incidentData);
   if (!validation.isValid) {
-    // Si hay errores, lanzamos una excepción detallada
     const error = new Error('Error en los datos del formulario');
     error.status = 400;
     error.details = validation.errors;
     throw error;
   }
 
-  // Si los datos son válidos, procedemos a crear la situación
+  // Después ir a la DB
+  const defaultStatus = await Status.findOne({ name: 'pendiente' });
+  if (!defaultStatus) {
+    const error = new Error('Estado por defecto no encontrado');
+    error.status = 500;
+    throw error;
+  }
+
   const newIncident = new Incident({
     title: incidentData.title.trim(),
     description: incidentData.description.trim(),
-    // Asignamos el estado seleccionado en el desplegable, o 'pendiente' por defecto si el formulario no lo envía
-    status: incidentData.status || 'pendiente',
-    location: incidentData.location || {},
-    photos: incidentData.photos || [],
+    status: defaultStatus._id,
+    category: incidentData.category,
+    location: incidentData.location,
+    photos: incidentData.photos,
     user: userId
   });
 
-  // Guardar en la base de datos
-  const savedIncident = await newIncident.save();
-  return savedIncident;
+  return await newIncident.save();
 };
 
+// ==========================================
+// 3. LECTURA / CONSULTAS
+// ==========================================
+
+const getIncidentsByUser = async (userId) => {
+  return await Incident.find({ user: userId })
+    .populate('category')
+    .populate('status')
+    .sort({ createdAt: -1 });
+};
+
+const getAllIncidents = async () => {
+  return await Incident.find()
+    .populate('category')
+    .populate('status')
+    .populate('user', 'firstName lastName email')
+    .sort({ createdAt: -1 });
+};
+
+// ==========================================
+// 4. ACTUALIZACIÓN (Solo Admin)
+// ==========================================
+
+const updateIncidentStatus = async (incidentId, newStatusId) => {
+  if (!mongoose.Types.ObjectId.isValid(newStatusId)) {
+    const error = new Error('El estado enviado no es válido.');
+    error.status = 400;
+    throw error;
+  }
+
+  const updated = await Incident.findByIdAndUpdate(
+    incidentId,
+    { $set: { status: newStatusId } },
+    { returnDocument: 'after' }
+  );
+
+  if (!updated) {
+    const error = new Error('Incidente no encontrado');
+    error.status = 404;
+    throw error;
+  }
+
+  return updated;
+};
+
+const updateIncidentCategory = async (incidentId, newCategory) => {
+  if (!mongoose.Types.ObjectId.isValid(newCategory)) {
+    const error = new Error('La categoría enviada no es válida.');
+    error.status = 400;
+    throw error;
+  }
+
+  const updated = await Incident.findByIdAndUpdate(
+    incidentId,
+    { $set: { category: newCategory } },
+    { returnDocument: 'after' }
+  );
+
+  if (!updated) {
+    const error = new Error('Incidente no encontrado');
+    error.status = 404;
+    throw error;
+  }
+
+  return updated;
+};
+
+// ==========================================
+// EXPORTACIONES
+// ==========================================
+
 module.exports = {
-  ESTADOS_PERMITIDOS, // Exportamos la constante por si la necesitamos en el controlador
   validateIncidentData,
-  createIncident
+  createIncident,
+  getIncidentsByUser,
+  getAllIncidents,
+  updateIncidentStatus,
+  updateIncidentCategory
 };
