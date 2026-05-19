@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react'; // 1. Importamos useEffect
-import { Camera, MapPin, Send, Image as ImageIcon, X, Loader2 } from 'lucide-react';
-
-// Importaciones de shadcn/ui
+import React, { useState, useEffect } from 'react';
+import { Camera, MapPin, Send, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,83 +11,101 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import MapPicker from "./MapPicker";
 
 const IncidentForm = () => {
-    // 2. Estados para categorías y carga
-    const [categorias, setCategorias] = useState([]);
-    const [cargandoCategorias, setCargandoCategorias] = useState(true);
+  const [categorias, setCategorias] = useState([]);
+  const [cargandoCategorias, setCargandoCategorias] = useState(true);
+  const [ubicacionSeleccionada, setUbicacionSeleccionada] = useState(null);
 
-    const [formData, setFormData] = useState({
-        titulo: '',
-        categoriaId: '',
-        descripcion: '',
-        ubicacion: '', 
-        coordenadas: null 
-    });
-    const [imagenes, setImagenes] = useState([]);
+  const [formData, setFormData] = useState({
+    titulo: '',
+    categoriaId: '',
+    descripcion: '',
+    coordenadas: null,
+  });
+  const [imagenes, setImagenes] = useState([]);
 
-    // 3. Efecto para traer las categorías del Back
-    useEffect(() => {
-        const obtenerCategorias = async () => {
-            try {
-                // REEMPLAZA ESTA URL POR LA DE TU API
-                const response = await fetch('http://localhost:8080/api/categorias'); 
-                if (!response.ok) throw new Error('Error al obtener categorías');
-                
-                const data = await response.json();
-                setCategorias(data); // Asumimos que data es un array de objetos [{id: 1, nombre: '...'}]
-            } catch (error) {
-                console.error("Error cargando categorías:", error);
-            } finally {
-                setCargandoCategorias(false);
-            }
-        };
-
-        obtenerCategorias();
-    }, []);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+  useEffect(() => {
+    const obtenerCategorias = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/categorias');
+        if (!response.ok) throw new Error('Error al obtener categorías');
+        const data = await response.json();
+        setCategorias(data);
+      } catch (error) {
+        console.error("Error cargando categorías:", error);
+      } finally {
+        setCargandoCategorias(false);
+      }
     };
+    obtenerCategorias();
+  }, []);
 
-    const handleCategoryChange = (value) => {
-        setFormData(prev => ({ ...prev, categoriaId: value }));
-    };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    const handleImageChange = (e) => {
-        if (e.target.files) {
-            const filesArray = Array.from(e.target.files).map((file) => ({
-                file,
-                preview: URL.createObjectURL(file) 
-            }));
-            setImagenes((prev) => [...prev, ...filesArray]);
-        }
-    };
+  const handleCategoryChange = (value) => {
+    setFormData((prev) => ({ ...prev, categoriaId: value }));
+  };
 
-    const removeImage = (index) => {
-        setImagenes((prev) => prev.filter((_, i) => i !== index));
-    };
+  const handleUbicacionChange = (ubicacion) => {
+    setUbicacionSeleccionada(ubicacion);
+    setFormData((prev) => ({
+      ...prev,
+      coordenadas: { lat: ubicacion.lat, lng: ubicacion.lng },
+    }));
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("Datos a enviar al back:", { ...formData, imagenes });
-    };
+  const handleImageChange = (e) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files).map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      }));
+      setImagenes((prev) => [...prev, ...filesArray]);
+    }
+  };
 
-   // ... (tus imports y lógica se mantienen iguales)
+  const removeImage = (index) => {
+    setImagenes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Datos a enviar:", { ...formData, ubicacion: ubicacionSeleccionada, imagenes });
+  };
+
+  const direccionDisplay = ubicacionSeleccionada
+    ? `${ubicacionSeleccionada.calle} ${ubicacionSeleccionada.numero}, ${ubicacionSeleccionada.barrio}`
+    : null;
 
   return (
     <Card className="border-none shadow-none bg-transparent">
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 pt-4">
+
+          {/* Ubicación — mapa primero */}
+          <div className="space-y-2">
+            <Label className="text-slate-700 font-semibold ml-1">Ubicación</Label>
+            <p className="text-xs text-gray-400 ml-1 -mt-1">
+              Tu posición actual aparece en azul. Tocá el mapa para marcar el incidente en rojo.
+            </p>
+            <MapPicker
+              onChange={handleUbicacionChange}
+              className="w-full h-52 rounded-2xl z-0"
+            />
+            {direccionDisplay && (
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-[#D3D6FF]/50 rounded-2xl">
+                <MapPin size={13} className="text-[#3B418F] shrink-0" />
+                <span className="text-sm text-[#2F347A] font-medium truncate">{direccionDisplay}</span>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">¿Qué está pasando?</Label>
             <Input
@@ -97,17 +113,14 @@ const IncidentForm = () => {
               placeholder="Ej: Bache profundo, Luminaria rota..."
               className="rounded-2xl border-none bg-[#D3D6FF]/50 p-6 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
               value={formData.titulo}
-              onChange={handleInputChange} // Corregido aquí
+              onChange={handleInputChange}
               required
             />
           </div>
 
           <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">Categoría</Label>
-            <Select 
-              onValueChange={handleCategoryChange}
-              disabled={cargandoCategorias}
-            >
+            <Select onValueChange={handleCategoryChange} disabled={cargandoCategorias}>
               <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
                 <SelectValue placeholder={cargandoCategorias ? "Cargando..." : "Selecciona una categoría"} />
               </SelectTrigger>
@@ -122,27 +135,13 @@ const IncidentForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-slate-700 font-semibold ml-1">Ubicación</Label>
-            <div className="relative">
-              <Input
-                name="ubicacion"
-                placeholder="Calle y altura..."
-                className="rounded-2xl border-none bg-[#D3D6FF]/50 p-6 pr-12 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
-                value={formData.ubicacion}
-                onChange={handleInputChange} // Corregido aquí
-              />
-              <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
             <Label className="text-slate-700 font-semibold ml-1">Detalles</Label>
             <Textarea
               name="descripcion"
               placeholder="Danos más información..."
               className="rounded-2xl border-none bg-[#D3D6FF]/50 p-4 min-h-[100px] focus-visible:ring-2 focus-visible:ring-[#3B418F]"
               value={formData.descripcion}
-              onChange={handleInputChange} // Corregido aquí
+              onChange={handleInputChange}
             />
           </div>
 

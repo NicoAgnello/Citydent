@@ -39,7 +39,7 @@ function MarkerSelector({ onSelect }) {
   return position ? <Marker position={position} icon={incidentIcon} /> : null;
 }
 
-export default function MapPicker({ onChange }) {
+export default function MapPicker({ onChange, className = "w-full h-52 rounded-xl z-0" }) {
   const [userLocation, setUserLocation] = useState(DEFAULT_CENTER);
   const [locationFound, setLocationFound] = useState(false);
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function MapPicker({ onChange }) {
       key={userLocation.toString()}
       center={userLocation}
       zoom={DEFAULT_ZOOM}
-      className="w-full h-100 rounded-xl z-0"
+      className={className}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

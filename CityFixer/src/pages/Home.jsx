@@ -1,33 +1,54 @@
 import { useState } from "react";
-import { useClerk } from "@clerk/clerk-react";
-import IncidentModal from "../Components/map/IncidentModal";
-import { Button } from "@/components/ui/button";
-import MapPicker from "@/Components/map/MapPicker";
+import { useUser } from "@clerk/clerk-react";
+import { Plus } from "lucide-react";
 
-function Home() {
-  const { signOut } = useClerk();
-  const [ubicacion, setUbicacion] = useState(null);
+import AppHeader from "@/Components/home/AppHeader";
+import BottomNav from "@/Components/home/BottomNav";
+import InicioTab from "@/Components/home/InicioTab";
+import ReportesTab from "@/Components/home/ReportesTab";
+import PerfilTab from "@/Components/home/PerfilTab";
+import IncidentModal from "@/Components/map/IncidentModal";
+
+// Reemplazar con fetch a la API cuando esté disponible
+const MOCK_INCIDENTS = [
+  { id: 1, titulo: "Bache profundo en Av. Costanera", categoria: "Vialidad",      fecha: "2026-05-16", estado: "En revisión", direccion: "Av. Costanera 1200"       },
+  { id: 2, titulo: "Luminaria rota frente a plaza",   categoria: "Iluminación",   fecha: "2026-05-14", estado: "Pendiente",   direccion: "25 de Mayo 450"           },
+  { id: 3, titulo: "Árbol caído bloqueando vereda",   categoria: "Espacio verde", fecha: "2026-05-10", estado: "Resuelto",    direccion: "Belgrano 890"             },
+  { id: 4, titulo: "Semáforo sin funcionar",          categoria: "Tránsito",      fecha: "2026-05-08", estado: "Rechazado",   direccion: "Independencia y San Martín"},
+  { id: 5, titulo: "Contenedor desbordado",           categoria: "Higiene",       fecha: "2026-05-05", estado: "Resuelto",    direccion: "Las Heras 340"            },
+];
+
+export default function Home() {
+  const { user } = useUser();
+  const [activeTab, setActiveTab] = useState("inicio");
+  const [reportOpen, setReportOpen] = useState(false);
+
+  const incidents = MOCK_INCIDENTS;
 
   return (
-    <div className="p-4 flex flex-col gap-4">
-      <h1>Dashboard ciudadano</h1>
+    <div className="flex flex-col h-screen bg-gray-50">
+      <AppHeader user={user} />
 
-      <MapPicker onChange={setUbicacion} />
+      <main className="flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {activeTab === "inicio" && (
+          <InicioTab user={user} incidents={incidents} onVerTodos={() => setActiveTab("reportes")} />
+        )}
+        {activeTab === "reportes" && <ReportesTab incidents={incidents} />}
+        {activeTab === "perfil"   && <PerfilTab incidents={incidents} />}
+      </main>
 
-      {ubicacion && (
-        <p className="text-sm text-muted-foreground">
-          📍 {ubicacion.calle} {ubicacion.numero}, {ubicacion.barrio},{" "}
-          {ubicacion.ciudad}
-        </p>
+      {activeTab !== "perfil" && (
+        <button
+          onClick={() => setReportOpen(true)}
+          className="fixed bottom-20 right-5 w-14 h-14 rounded-full bg-[#292D60] hover:bg-[#3B418F] text-white shadow-xl flex items-center justify-center transition-all active:scale-95 z-40"
+        >
+          <Plus size={26} />
+        </button>
       )}
 
-      <IncidentModal />
+      <IncidentModal open={reportOpen} onOpenChange={setReportOpen} />
 
-      <Button variant="outline" onClick={() => signOut()}>
-        Cerrar sesión
-      </Button>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }
-
-export default Home;

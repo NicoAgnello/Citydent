@@ -10,15 +10,18 @@ import {
 } from "../ui/dialog"
 import IncidentForm from './IncidentForm'
 
-const IncidentModal = () => {
+const IncidentModal = ({ open, onOpenChange }) => {
+  const controlled = open !== undefined;
 return (
-<Dialog>
-      <DialogTrigger asChild>
-        <Button className="gap-2 bg-[#292D60] hover:bg-[#3B418F] text-white rounded-2xl px-6 py-6 shadow-lg transition-all font-bold">
-          <PlusCircle size={20} />
-          Reportar Incidente
-        </Button>
-      </DialogTrigger>
+<Dialog open={controlled ? open : undefined} onOpenChange={controlled ? onOpenChange : undefined}>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button className="gap-2 bg-[#292D60] hover:bg-[#3B418F] text-white rounded-2xl px-6 py-6 shadow-lg transition-all font-bold">
+            <PlusCircle size={20} />
+            Reportar Incidente
+          </Button>
+        </DialogTrigger>
+      )}
       
       {/* Añadimos estilos para ocultar el scrollbar manteniendo la funcionalidad */}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0 border-none rounded-3xl bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
