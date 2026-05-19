@@ -31,7 +31,7 @@ const IncidentForm = () => {
 
   useEffect(() => {
     getCategorias()
-      .then((res) => setCategorias(res.data))
+      .then((res) => setCategorias(res.data.categories))
       .catch(() => setErrorCategorias(true))
       .finally(() => setCargandoCategorias(false));
   }, []);
@@ -125,8 +125,8 @@ const IncidentForm = () => {
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200">
                   {categorias.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.nombre}
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
