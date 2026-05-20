@@ -1,33 +1,32 @@
 const { getAuth } = require('@clerk/express');
+const jwt = require('jsonwebtoken');
 
 const verifyTokenAndSetCookie = [
-  // 1. Verifica el JWT de Clerk
+  // 1. Verifica el token de Clerk (solo en el login)
   (req, res, next) => {
     const { userId } = getAuth(req);
-
     if (!userId) {
       return res.status(401).json({ error: 'No autorizado o token inválido' });
     }
-
+    req.clerkUserId = userId;
     next();
   },
 
-  // 2. Crea la cookie con el token
+  // 2. Genera el JWT propio del back y lo guarda en cookie
   (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+    const sessionToken = jwt.sign(
+      { sub: req.clerkUserId },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-    if (!token) {
-      return res.status(401).json({ error: 'Token no encontrado en el header' });
-    }
-
-    res.cookie('auth_token', token, {
+    res.cookie('auth_token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 24 // 1 día
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 días
     });
 
-    console.log('Pasó por el middleware de verify');
     next();
   }
 ];

@@ -6,6 +6,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
+
 // ─── Categorías ───────────────────────────────────────────────────────────────
 
 // Trae todas las categorías disponibles para clasificar un incidente

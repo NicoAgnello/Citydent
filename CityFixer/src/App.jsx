@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import AppRouter from "./routes/AppRouter";
@@ -7,9 +7,15 @@ import api from "./services/api";
 function App() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
   const { user } = useUser();
+  const [isSynced, setIsSynced] = useState(false);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      setIsSynced(true);
+      return;
+    }
 
     const sincronizar = async () => {
       try {
@@ -26,11 +32,15 @@ function App() {
         console.log("Usuario sincronizado", user);
       } catch (error) {
         console.error("Error sincronizando usuario:", error);
+      } finally {
+        setIsSynced(true);
       }
     };
 
     sincronizar();
   }, [isLoaded, isSignedIn]);
+
+  if (!isSynced) return null;
 
   return (
     <BrowserRouter>

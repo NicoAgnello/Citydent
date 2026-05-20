@@ -4,26 +4,16 @@ const authMiddleware = (req, res, next) => {
   const token = req.cookies.auth_token;
 
   if (!token) {
-    return res.status(401).json({ error: 'No autorizado, cookie no encontrada.' });
+    return res.status(401).json({ error: 'No autorizado, sesión no encontrada.' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.CLERK_JWT_KEY, {
-      algorithms: ['RS256']
-    });
-    req.auth = decoded;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.auth = { sub: decoded.sub };
     next();
   } catch (error) {
-    console.error('JWT error:', error.message); // para ver qué error tira exactamente
-    return res.status(401).json({ error: 'Token inválido o expirado.' });
+    return res.status(401).json({ error: 'Sesión inválida o expirada.' });
   }
 };
 
-module.exports = authMiddleware; 
-
-/* const authMiddleware = (req, res, next) => {
-  req.auth = { sub: 'user_3D2caIJDAlcnNYsQtFyMlRp9RMV' }; // tu clerkId
-  next();
-};
-
-module.exports = authMiddleware; */
+module.exports = authMiddleware;
