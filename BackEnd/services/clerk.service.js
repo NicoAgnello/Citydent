@@ -1,24 +1,29 @@
-const User = require('../models/user');
-
-const DNI_REGEX = /^\d{8}$/;
-
 const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
-  if (!dni) {
-    throw Object.assign(new Error('El DNI es requerido'), { status: 400 });
-  }
-
-  if (!DNI_REGEX.test(String(dni))) {
-    throw Object.assign(new Error('El DNI debe tener exactamente 8 dígitos numéricos'), { status: 400 });
-  }
-
   const existingUser = await User.findOne({ email });
-  const role = existingUser?.role ?? 'user';
+
+  if (!existingUser) {
+    // CREACIÓN — DNI obligatorio
+    if (!dni) {
+      throw Object.assign(new Error('El DNI es requerido'), { status: 400 });
+    }
+    if (!DNI_REGEX.test(String(dni))) {
+      throw Object.assign(new Error('El DNI debe tener exactamente 8 dígitos numéricos'), { status: 400 });
+    }
+  }
+
+  const updateFields = { clerkId, email, firstName, lastName };
+  
+  // Solo incluir DNI si viene y el usuario no existe aún
+  if (!existingUser && dni) {
+    updateFields.dni = dni;
+  }
+
+  // Preservar el role existente o asignar 'user' si es nuevo
+  updateFields.role = existingUser?.role ?? 'user';
 
   return await User.findOneAndUpdate(
     { email },
-    { $set: { clerkId, email, firstName, lastName, role, dni } },
+    { $set: updateFields },
     { upsert: true, returnDocument: 'after' }
   );
 };
-
-module.exports = { upsertUser };
