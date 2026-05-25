@@ -40,7 +40,7 @@ const analizarIncidenteIA = async (title, description) => {
          - Asigna un número del 1 (muy baja) al 5 (crítica) dependiendo del riesgo para los transeúntes o la urgencia de infraestructura.
       
       3. CATEGORÍA:
-         - Sugiere una categoría corta (ej: "Baches", "Iluminación", "Higiene Urbana", "Arbolado", "Vandalismo", "Tránsito", "Otro").
+         - Sugiere una categoría corta (ej: "bache", "alumbrado", "basura", "vandalismo", "otro").
 
       ESTRUCTURA DE RESPUESTA REQUERIDA (Genera solo este JSON):
       {
