@@ -4,19 +4,25 @@ const mongoose = require('mongoose');
 const mongoConnect = require('../config/mongoConnet');
 const Status = require('../models/status');
 const Category = require('../models/category');
+const Neighborhood = require('../models/neighborhood');
+const barrios = require('./barrios.geojson');
 
 const statuses = [
-  { name: 'pendiente', description: 'El incidente fue reportado y está esperando revisión.' },
-  { name: 'en_proceso', description: 'El incidente está siendo atendido.' },
-  { name: 'resuelto', description: 'El incidente fue resuelto.' }
+  { name: 'pendiente',   description: 'El incidente fue reportado y está esperando revisión.' },
+  { name: 'aceptado',    description: 'El incidente fue aceptado y será atendido.' },
+  { name: 'en_proceso',  description: 'El incidente está siendo atendido.' },
+  { name: 'resuelto',    description: 'El incidente fue resuelto.' },
+  { name: 'rechazado',   description: 'El incidente fue rechazado.' },
+  { name: 'cancelado',   description: 'El incidente fue cancelado por el usuario.' },
+  { name: 'dudoso',      description: 'El incidente no es visible hasta ser verificado.' }
 ];
 
 const categories = [
-  { name: 'bache', description: 'Problemas en el pavimento.' },
-  { name: 'alumbrado', description: 'Problemas con el alumbrado público.' },
-  { name: 'basura', description: 'Acumulación de residuos en la vía pública.' },
-  { name: 'vandalismo', description: 'Daños al mobiliario urbano.' },
-  { name: 'otro', description: 'Otros tipos de incidentes.' }
+  { name: 'bache',       description: 'Problemas en el pavimento.' },
+  { name: 'alumbrado',   description: 'Problemas con el alumbrado público.' },
+  { name: 'basura',      description: 'Acumulación de residuos en la vía pública.' },
+  { name: 'vandalismo',  description: 'Daños al mobiliario urbano.' },
+  { name: 'otro',        description: 'Otros tipos de incidentes.' }
 ];
 
 const seed = async () => {
@@ -24,7 +30,6 @@ const seed = async () => {
     await mongoConnect();
     console.log('Conectado a la DB');
 
-    // Insertar solo los que no existen
     for (const status of statuses) {
       await Status.findOneAndUpdate(
         { name: status.name },
@@ -41,6 +46,18 @@ const seed = async () => {
         { upsert: true, returnDocument: 'after' }
       );
       console.log(`✔ Categoría: ${category.name}`);
+    }
+
+    for (const feature of barrios.features) {
+      await Neighborhood.findOneAndUpdate(
+        { name: feature.properties.nombre },
+        {
+          name: feature.properties.nombre,
+          geometry: feature.geometry
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Barrio: ${feature.properties.nombre}`);
     }
 
     console.log('Seed completado.');

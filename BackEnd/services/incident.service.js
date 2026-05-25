@@ -51,7 +51,7 @@ const validateIncidentData = (data) => {
 // 2. CREACIÓN (Usuario)
 // ==========================================
 
-const createIncident = async (incidentData, userId) => {
+const createIncident = async (incidentData, userId, finalStatusId) => {
   // Primero validar
   const validation = validateIncidentData(incidentData);
   if (!validation.isValid) {
@@ -61,18 +61,11 @@ const createIncident = async (incidentData, userId) => {
     throw error;
   }
 
-  // Después ir a la DB
-  const defaultStatus = await Status.findOne({ name: 'pendiente' });
-  if (!defaultStatus) {
-    const error = new Error('Estado por defecto no encontrado');
-    error.status = 500;
-    throw error;
-  }
-
+  // Creación directa utilizando el estado determinado por el middleware
   const newIncident = new Incident({
     title: incidentData.title.trim(),
     description: incidentData.description.trim(),
-    status: defaultStatus._id,
+    status: finalStatusId,
     category: incidentData.category,
     location: incidentData.location,
     photos: incidentData.photos,
