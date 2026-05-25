@@ -7,10 +7,11 @@ const {
 } = require('../services/incident.service');
 
 const create = async (req, res) => {
-    console.log('Llegó a create');
+  console.log('Llegó a create');
   console.log('dbUser:', req.dbUser);
   try {
-    const incident = await createIncident(req.body, req.dbUser._id);
+    // Se añade req.finalStatusId como tercer parámetro
+    const incident = await createIncident(req.body, req.dbUser._id, req.finalStatusId);
     res.status(201).json({ success: true, incident });
   } catch (error) {
     if (error.status === 400) {

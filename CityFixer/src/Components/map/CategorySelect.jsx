@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
-import { getCategorias } from "@/services/api";
+import { getCategoriasActivas } from "@/services/api";
 import {
   Select,
   SelectContent,
@@ -15,7 +15,7 @@ export default function CategorySelect({ onValueChange }) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    getCategorias()
+    getCategoriasActivas()
       .then((res) => setCategorias(res.data.categories))
       .catch(() => setError(true))
       .finally(() => setCargando(false));

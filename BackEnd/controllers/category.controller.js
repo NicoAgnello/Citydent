@@ -2,10 +2,11 @@ const { getAllCategories, createCategory, toggleCategory } = require('../service
 
 const getAll = async (req, res) => {
   try {
-    const filter = req.filter || {};
+    const filter = (req.filter && typeof req.filter === 'object') ? req.filter : {};
     const categories = await getAllCategories(filter);
     res.status(200).json({ success: true, categories });
   } catch (error) {
+    console.error('Error en getAll categories:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };

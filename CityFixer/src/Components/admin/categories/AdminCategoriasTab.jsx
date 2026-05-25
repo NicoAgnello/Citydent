@@ -4,7 +4,8 @@ import { getCategorias } from "@/services/api";
 import CategoryList from "./CategoryList";
 import CategoryFormDialog from "./CategoryFormDialog";
 
-export default function AdminCategoriasTab() {
+// eslint-disable-next-line no-unused-vars
+export default function AdminCategoriasTab({ dbRole }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);

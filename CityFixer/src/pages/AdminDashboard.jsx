@@ -7,7 +7,7 @@ import AdminEstadisticasTab from "@/Components/admin/stats/AdminEstadisticasTab"
 import AdminCategoriasTab from "@/Components/admin/categories/AdminCategoriasTab";
 import IncidentModal from "@/Components/map/IncidentModal";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ dbRole }) {
   const [activeTab, setActiveTab] = useState("incidentes");
   const [reportOpen, setReportOpen] = useState(false);
   const { incidents, loading, refresh } = useAllIncidents();
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <AdminHeader />
-      <AdminTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <AdminTabBar activeTab={activeTab} onTabChange={setActiveTab} dbRole={dbRole} />
 
       <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
         <div className="max-w-6xl mx-auto px-4 py-5">
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
             <AdminEstadisticasTab incidents={incidents} loading={loading} />
           )}
           {activeTab === "categorias" && (
-            <AdminCategoriasTab />
+            <AdminCategoriasTab dbRole={dbRole} />
           )}
         </div>
       </main>

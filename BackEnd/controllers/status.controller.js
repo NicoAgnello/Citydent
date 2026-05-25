@@ -2,10 +2,11 @@ const { getAllStatuses, createStatus, toggleStatus } = require('../services/stat
 
 const getAll = async (req, res) => {
   try {
-    const filter = req.filter || {};
+    const filter = (req.filter && typeof req.filter === 'object') ? req.filter : {};
     const statuses = await getAllStatuses(filter);
     res.status(200).json({ success: true, statuses });
   } catch (error) {
+    console.error('Error en getAll statuses:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });
   }
 };

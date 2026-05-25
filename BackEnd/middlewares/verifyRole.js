@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const User = require("../models/user");
 
 const verifyRole = (...roles) => {
   return async (req, res, next) => {
@@ -7,17 +7,19 @@ const verifyRole = (...roles) => {
 
       const dbUser = await User.findOne({ clerkId });
       if (!dbUser) {
-        return res.status(404).json({ error: 'Usuario no encontrado.' });
+        return res.status(404).json({ error: "Usuario no encontrado." });
       }
 
       if (!roles.includes(dbUser.role)) {
-        return res.status(403).json({ error: 'No tenés permisos para realizar esta acción.' });
+        return res
+          .status(403)
+          .json({ error: "No tenés permisos para realizar esta acción." });
       }
 
       req.dbUser = dbUser;
       next();
     } catch (error) {
-      res.status(500).json({ error: 'Error interno del servidor.' });
+      res.status(500).json({ error: "Error interno del servidor." });
     }
   };
 };

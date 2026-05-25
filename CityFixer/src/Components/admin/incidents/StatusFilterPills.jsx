@@ -1,29 +1,49 @@
-import { STATUS_STYLES, STATUS_LABELS, STATUS_KEYS } from "@/lib/incidents";
+import { STATUS_STYLES, STATUS_LABELS, capitalize } from "@/lib/incidents";
 
-const FILTERS = [
-  { key: "todos", label: "Todos" },
-  { key: STATUS_KEYS.PENDING,    label: STATUS_LABELS[STATUS_KEYS.PENDING]    },
-  { key: STATUS_KEYS.IN_PROCESS, label: STATUS_LABELS[STATUS_KEYS.IN_PROCESS] },
-  { key: STATUS_KEYS.RESOLVED,   label: STATUS_LABELS[STATUS_KEYS.RESOLVED]   },
-  { key: STATUS_KEYS.REJECTED,   label: STATUS_LABELS[STATUS_KEYS.REJECTED]   },
+const STATUS_PALETTE = [
+  { bg: "bg-sky-100",     text: "text-sky-700"     },
+  { bg: "bg-violet-100",  text: "text-violet-700"  },
+  { bg: "bg-teal-100",    text: "text-teal-700"    },
+  { bg: "bg-pink-100",    text: "text-pink-700"    },
+  { bg: "bg-lime-100",    text: "text-lime-700"    },
+  { bg: "bg-cyan-100",    text: "text-cyan-700"    },
+  { bg: "bg-fuchsia-100", text: "text-fuchsia-700" },
+  { bg: "bg-rose-100",    text: "text-rose-700"    },
 ];
 
-export default function StatusFilterPills({ active, onChange }) {
+function getStatusStyle(name) {
+  if (STATUS_STYLES[name]) return STATUS_STYLES[name];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
+  return STATUS_PALETTE[hash % STATUS_PALETTE.length];
+}
+
+export default function StatusFilterPills({ active, onChange, statuses = [] }) {
   return (
-    <div className="flex gap-2 flex-wrap">
-      {FILTERS.map(({ key, label }) => {
-        const isActive = active === key;
-        const style = STATUS_STYLES[key];
+    <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden">
+      <button
+        onClick={() => onChange("todos")}
+        className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+          active === "todos"
+            ? "bg-[#292D60] text-white"
+            : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+        }`}
+      >
+        Todos
+      </button>
+
+      {statuses.map((s) => {
+        const isActive = active === s.name;
+        const style = getStatusStyle(s.name);
+        const label = STATUS_LABELS[s.name] ?? capitalize(s.name);
 
         return (
           <button
-            key={key}
-            onClick={() => onChange(key)}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+            key={s._id}
+            onClick={() => onChange(s.name)}
+            className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
               isActive
-                ? key === "todos"
-                  ? "bg-[#292D60] text-white"
-                  : `${style.bg} ${style.text}`
+                ? `${style.bg} ${style.text}`
                 : "bg-gray-100 text-gray-400 hover:bg-gray-200"
             }`}
           >

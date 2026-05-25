@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { Trash2, Loader2, Tag } from "lucide-react";
+import { Loader2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { deleteCategory } from "@/services/api";
+import { toggleCategory } from "@/services/api";
 import { capitalize } from "@/lib/incidents";
 
 function CategorySkeleton() {
@@ -20,52 +18,45 @@ function CategorySkeleton() {
   );
 }
 
-function DeleteConfirmDialog({ category, open, onOpenChange, onDeleted }) {
+function ToggleButton({ category, onUpdated }) {
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = async () => {
+  const handleToggle = async () => {
     setLoading(true);
     try {
-      await deleteCategory(category._id);
-      onDeleted?.();
-      onOpenChange(false);
+      await toggleCategory(category._id);
+      onUpdated?.();
     } finally {
       setLoading(false);
     }
   };
 
+  const isActive = category.isActive ?? true;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle className="text-[#292D60]">Eliminar categoría</DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-gray-600 mt-1">
-          ¿Estás seguro que querés eliminar{" "}
-          <span className="font-semibold">{capitalize(category?.name)}</span>?
-          Esta acción no se puede deshacer.
-        </p>
-        <div className="flex gap-2 justify-end mt-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleDelete}
-            disabled={loading}
-            className="bg-red-500 hover:bg-red-600 text-white rounded-xl"
-          >
-            {loading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
-            Eliminar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <button
+      onClick={handleToggle}
+      disabled={loading}
+      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 ${
+        isActive
+          ? "bg-green-50 text-green-600 hover:bg-green-100"
+          : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+      }`}
+      aria-label={isActive ? "Desactivar categoría" : "Activar categoría"}
+    >
+      {loading ? (
+        <Loader2 size={13} className="animate-spin" />
+      ) : isActive ? (
+        <ToggleRight size={15} />
+      ) : (
+        <ToggleLeft size={15} />
+      )}
+      {isActive ? "Activa" : "Inactiva"}
+    </button>
   );
 }
 
 export default function CategoryList({ categories, loading, onUpdated }) {
-  const [toDelete, setToDelete] = useState(null);
-
   if (loading) {
     return (
       <div className="flex flex-col gap-3">
@@ -83,42 +74,31 @@ export default function CategoryList({ categories, loading, onUpdated }) {
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        {categories.map((cat) => (
-          <Card key={cat._id} className="rounded-2xl border-none shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="shrink-0 w-8 h-8 rounded-xl bg-[#D3D6FF]/60 flex items-center justify-center">
-                  <Tag size={14} className="text-[#2F347A]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm text-[#292D60] truncate">
-                    {capitalize(cat.name)}
-                  </p>
-                  {cat.description && (
-                    <p className="text-xs text-gray-400 truncate">{cat.description}</p>
-                  )}
-                </div>
+    <div className="flex flex-col gap-3">
+      {categories.map((cat) => (
+        <Card key={cat._id} className="rounded-2xl border-none shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${
+                (cat.isActive ?? true) ? "bg-[#D3D6FF]/60" : "bg-gray-100"
+              }`}>
+                <Tag size={14} className={(cat.isActive ?? true) ? "text-[#2F347A]" : "text-gray-400"} />
               </div>
-              <button
-                onClick={() => setToDelete(cat)}
-                className="shrink-0 p-2 rounded-xl text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
-                aria-label="Eliminar categoría"
-              >
-                <Trash2 size={15} />
-              </button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <DeleteConfirmDialog
-        category={toDelete}
-        open={!!toDelete}
-        onOpenChange={(v) => !v && setToDelete(null)}
-        onDeleted={onUpdated}
-      />
-    </>
+              <div className="min-w-0">
+                <p className={`font-semibold text-sm truncate ${
+                  (cat.isActive ?? true) ? "text-[#292D60]" : "text-gray-400"
+                }`}>
+                  {capitalize(cat.name)}
+                </p>
+                {cat.description && (
+                  <p className="text-xs text-gray-400 truncate">{cat.description}</p>
+                )}
+              </div>
+            </div>
+            <ToggleButton category={cat} onUpdated={onUpdated} />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

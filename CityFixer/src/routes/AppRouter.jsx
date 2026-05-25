@@ -48,7 +48,7 @@ function AppRouter({ dbRole }) {
         path="/admin"
         element={
           <ProtectedRoute dbRole={dbRole} requiredRole="admin">
-            <AdminDashboard />
+            <AdminDashboard dbRole={dbRole} />
           </ProtectedRoute>
         }
       />

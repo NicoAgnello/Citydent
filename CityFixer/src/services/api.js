@@ -9,7 +9,10 @@ const api = axios.create({
 
 // ─── Categorías ───────────────────────────────────────────────────────────────
 
-// Trae todas las categorías disponibles para clasificar un incidente
+// Solo categorías activas — para usuarios al crear un incidente
+export const getCategoriasActivas = () => api.get("/api/categories/active");
+
+// Todas las categorías (activas + inactivas) — solo admin/superAdmin
 export const getCategorias = () => api.get("/api/categories");
 
 // ─── Incidentes ───────────────────────────────────────────────────────────────
@@ -39,11 +42,11 @@ export const updateIncidentCategory = (id, categoryId) =>
 
 // ─── Admin — Categorías ───────────────────────────────────────────────────────
 
-// Crea una nueva categoría
+// Crea una nueva categoría (solo superAdmin)
 export const createCategory = (body) => api.post("/api/categories", body);
 
-// Elimina una categoría por id
-export const deleteCategory = (id) => api.delete(`/api/categories/${id}`);
+// Activa o desactiva una categoría (solo superAdmin)
+export const toggleCategory = (id) => api.patch(`/api/categories/${id}/toggle`);
 
 // ─── Estados ─────────────────────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@ const TABS = [
   { id: "categorias",   label: "Categorías",    icon: Tag        },
 ];
 
-export default function AdminTabBar({ activeTab, onTabChange }) {
+export default function AdminTabBar({ activeTab, onTabChange, dbRole }) {
   return (
     <nav className="bg-white border-b border-gray-100 px-5 shrink-0">
       <div className="max-w-6xl mx-auto flex gap-1">
