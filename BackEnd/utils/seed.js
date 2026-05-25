@@ -7,7 +7,9 @@ const Category = require('../models/category');
 const statuses = [
   { name: 'pendiente', description: 'El incidente fue reportado y está esperando revisión.' },
   { name: 'en_proceso', description: 'El incidente está siendo atendido.' },
-  { name: 'resuelto', description: 'El incidente fue resuelto.' }
+  { name: 'resuelto', description: 'El incidente fue resuelto.' },
+  { name: 'dudoso', description: 'El incidente es dudoso y necesita revisión.' },
+  { name: 'rechazado', description: 'El incidente fue rechazado por no cumplir con los criterios.' }
 ];
 
 const categories = [
