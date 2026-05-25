@@ -6,9 +6,27 @@ import { useStatuses } from "@/hooks/useStatuses";
 import { getCategorias, updateIncidentStatus, updateIncidentCategory } from "@/services/api";
 import { STATUS_STYLES, STATUS_LABELS, capitalize } from "@/lib/incidents";
 
+const STATUS_PALETTE = [
+  { bg: "bg-sky-100",     text: "text-sky-700"     },
+  { bg: "bg-violet-100",  text: "text-violet-700"  },
+  { bg: "bg-teal-100",    text: "text-teal-700"    },
+  { bg: "bg-pink-100",    text: "text-pink-700"    },
+  { bg: "bg-lime-100",    text: "text-lime-700"    },
+  { bg: "bg-cyan-100",    text: "text-cyan-700"    },
+  { bg: "bg-fuchsia-100", text: "text-fuchsia-700" },
+  { bg: "bg-rose-100",    text: "text-rose-700"    },
+];
+
+function getStatusStyle(name) {
+  if (STATUS_STYLES[name]) return STATUS_STYLES[name];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
+  return STATUS_PALETTE[hash % STATUS_PALETTE.length];
+}
+
 function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, loading }) {
   if (!targetStatus) return null;
-  const style = STATUS_STYLES[targetStatus.name] ?? { bg: "bg-gray-100", text: "text-gray-600" };
+  const style = getStatusStyle(targetStatus.name);
   const label = STATUS_LABELS[targetStatus.name] ?? capitalize(targetStatus.name);
 
   return (
@@ -84,18 +102,18 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
 
         {/* Estado */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 sm:shrink-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</p>
           <div className="flex flex-wrap gap-1.5">
             {statuses.map((s) => {
               const isCurrent = s.name === incident.status?.name;
-              const st = STATUS_STYLES[s.name] ?? { bg: "bg-gray-100", text: "text-gray-600" };
+              const st = getStatusStyle(s.name);
               return (
                 <button
                   key={s._id}
                   disabled={isCurrent}
                   onClick={() => setConfirmStatus(s)}
-                  className={`flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                  className={`shrink-0 flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-full transition-all ${
                     isCurrent
                       ? `${st.bg} ${st.text} ring-1 ring-current cursor-default`
                       : `${st.bg} ${st.text} opacity-40 hover:opacity-100 cursor-pointer`
@@ -113,13 +131,13 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
         <div className="hidden sm:block w-px bg-gray-100 self-stretch" />
 
         {/* Categoría */}
-        <div className="flex flex-col gap-2 flex-1">
+        <div className="flex flex-col gap-2 sm:flex-1 min-w-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
           <div className="flex gap-2">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="flex-1 text-sm rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3B418F]"
+              className="flex-1 min-w-0 text-sm rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3B418F]"
             >
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>{capitalize(c.name)}</option>
@@ -128,7 +146,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
             <button
               onClick={handleCategoryChange}
               disabled={loadingCategory || selectedCategory === incident.category?._id}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#292D60] text-white text-xs font-semibold disabled:opacity-40 hover:bg-[#2F347A] transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#292D60] text-white text-xs font-semibold disabled:opacity-40 hover:bg-[#2F347A] transition-colors"
             >
               {loadingCategory && <Loader2 size={12} className="animate-spin" />}
               Aplicar

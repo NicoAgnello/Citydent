@@ -1,4 +1,5 @@
-require('dotenv').config({ path: './config/.env' });
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../config/.env') });
 const mongoose = require('mongoose');
 const mongoConnect = require('../config/mongoConnet');
 const Status = require('../models/status');
