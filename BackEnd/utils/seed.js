@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const mongoConnect = require('../config/mongoConnet');
 const Status = require('../models/status');
 const Category = require('../models/category');
+const Neighborhood = require('../models/neighborhood');
+const barrios = require('./barrios.geojson');
 
 const statuses = [
   { name: 'pendiente',   description: 'El incidente fue reportado y está esperando revisión.' },
@@ -43,6 +45,18 @@ const seed = async () => {
         { upsert: true, returnDocument: 'after' }
       );
       console.log(`✔ Categoría: ${category.name}`);
+    }
+
+    for (const feature of barrios.features) {
+      await Neighborhood.findOneAndUpdate(
+        { name: feature.properties.nombre },
+        {
+          name: feature.properties.nombre,
+          geometry: feature.geometry
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Barrio: ${feature.properties.nombre}`);
     }
 
     console.log('Seed completado.');
