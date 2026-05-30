@@ -18,6 +18,29 @@ const incidentSchema = new mongoose.Schema({
     ref: 'Status',
     required: [true, 'El estado es obligatorio']
   },
+  statusHistory: [
+    {
+      status: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Status',
+        required: true
+      },
+      changedAt: {
+        type: Date,
+        default: Date.now
+      },
+      changedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+      },
+      source: {
+        type: String,
+        enum: ['user', 'admin', 'ai'],
+        required: true
+      }
+    }
+  ],
   photos: {
     type: [String],
     default: []
