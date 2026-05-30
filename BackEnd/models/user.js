@@ -25,9 +25,9 @@ const userSchema = new mongoose.Schema({
     match: /^\d{8}$/
   },
   role: {
-    type: String,
-    enum: ['user', 'admin', 'superAdmin', 'ai'],
-    default: 'user'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role',
+    required: true
   },
   isBanned: {
     type: Boolean,

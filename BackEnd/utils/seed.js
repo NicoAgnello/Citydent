@@ -6,6 +6,7 @@ const Status = require('../models/status');
 const Category = require('../models/category');
 const Neighborhood = require('../models/neighborhood');
 const User = require('../models/user');
+const Role = require('../models/role');
 const fs = require('fs');
 const barrios = JSON.parse(fs.readFileSync(`${__dirname}/barrios.geojson`, 'utf-8'));
 
@@ -25,6 +26,13 @@ const categories = [
   { name: 'basura',      description: 'Acumulación de residuos en la vía pública.' },
   { name: 'vandalismo',  description: 'Daños al mobiliario urbano.' },
   { name: 'otro',        description: 'Otros tipos de incidentes.' }
+];
+
+const roles = [
+  { name: 'user',       description: 'Usuario estándar de la plataforma.' },
+  { name: 'admin',      description: 'Administrador con acceso a gestión de incidentes.' },
+  { name: 'superAdmin', description: 'Administrador con acceso total a la plataforma.' },
+  { name: 'ai',         description: 'Usuario sistema utilizado por el modelo de inteligencia artificial.' }
 ];
 
 const seed = async () => {
@@ -62,7 +70,18 @@ const seed = async () => {
       console.log(`✔ Barrio: ${feature.properties.nombre}`);
     }
 
+    // Roles
+    for (const role of roles) {
+      await Role.findOneAndUpdate(
+        { name: role.name },
+        role,
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Rol: ${role.name}`);
+    }
+
     // Usuario sistema para la IA
+    const aiRole = await Role.findOne({ name: 'ai' });
     const aiUser = await User.findOneAndUpdate(
       { clerkId: 'ai_system' },
       {
@@ -71,7 +90,7 @@ const seed = async () => {
         firstName: 'AI',
         lastName: 'Bot',
         dni: '00000000',
-        role: 'ai',
+        role: aiRole._id,
         isBanned: false
       },
       { upsert: true, returnDocument: 'after' }
