@@ -1,25 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
 import { getMisIncidentes } from "@/services/api";
+import { useFetch } from "./useFetch";
 
 export function useIncidents() {
-  const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { data } = await getMisIncidentes();
-      setIncidents(data.incidents ?? []);
-    } catch {
-      setIncidents([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  return { incidents, loading, refresh };
+  const { data: incidents, ...rest } = useFetch(getMisIncidentes, "incidents");
+  return { incidents, ...rest };
 }
