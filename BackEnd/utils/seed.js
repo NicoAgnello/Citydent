@@ -5,8 +5,10 @@ const mongoConnect = require('../config/mongoConnet');
 const Status = require('../models/status');
 const Category = require('../models/category');
 const Neighborhood = require('../models/neighborhood');
+const User = require('../models/user');
 const fs = require('fs');
 const barrios = JSON.parse(fs.readFileSync(`${__dirname}/barrios.geojson`, 'utf-8'));
+
 const statuses = [
   { name: 'pendiente',   description: 'El incidente fue reportado y está esperando revisión.' },
   { name: 'aceptado',    description: 'El incidente fue aceptado y será atendido.' },
@@ -14,7 +16,7 @@ const statuses = [
   { name: 'resuelto',    description: 'El incidente fue resuelto.' },
   { name: 'rechazado',   description: 'El incidente fue rechazado.' },
   { name: 'cancelado',   description: 'El incidente fue cancelado por el usuario.' },
-  { name: 'dudoso',      description: 'El incidente no es visible hasta ser verificado.' }
+  { name: 'dudoso',      description: 'El incidente es visible para el usuario como pendiente pero dudoso para el admin' }
 ];
 
 const categories = [
@@ -59,6 +61,22 @@ const seed = async () => {
       );
       console.log(`✔ Barrio: ${feature.properties.nombre}`);
     }
+
+    // Usuario sistema para la IA
+    const aiUser = await User.findOneAndUpdate(
+      { clerkId: 'ai_system' },
+      {
+        clerkId: 'ai_system',
+        email: 'ai@system.com',
+        firstName: 'AI',
+        lastName: 'Bot',
+        dni: '00000000',
+        role: 'ai',
+        isBanned: false
+      },
+      { upsert: true, returnDocument: 'after' }
+    );
+    console.log(`✔ Usuario IA: ${aiUser._id} — guardá este ID en tu .env como AI_USER_ID`);
 
     console.log('Seed completado.');
   } catch (error) {
