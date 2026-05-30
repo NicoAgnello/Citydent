@@ -16,12 +16,12 @@ export default function BottomNav({ activeTab, onTabChange }) {
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 flex flex-col items-center py-3 gap-1 transition-colors ${
-              active ? "text-[#292D60]" : "text-gray-400"
+              active ? "text-azul-oscuro" : "text-gray-400"
             }`}
           >
             <tab.icon size={22} strokeWidth={active ? 2.5 : 1.5} />
             <span className="text-[10px] font-semibold">{tab.label}</span>
-            {active && <span className="w-1 h-1 rounded-full bg-[#292D60]" />}
+            {active && <span className="w-1 h-1 rounded-full bg-azul-oscuro" />}
           </button>
         );
       })}

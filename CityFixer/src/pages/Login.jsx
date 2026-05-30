@@ -48,7 +48,7 @@ function LoginContent() {
             🏙️
           </div>
           <h1 className="text-white text-3xl font-bold tracking-tight">CityFixer</h1>
-          <p className="text-[#D3D6FF]/70 text-sm mt-1.5">Ingresá a tu cuenta para continuar</p>
+          <p className="text-blanquito/70 text-sm mt-1.5">Ingresá a tu cuenta para continuar</p>
         </div>
 
         <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
@@ -74,9 +74,9 @@ function LoginContent() {
                 socialButtonsBlockButton:
                   "border border-gray-200 hover:bg-[#f5f6ff] transition-colors font-medium",
                 formButtonPrimary:
-                  "bg-[#292D60] hover:bg-[#3B418F] transition-colors shadow-md",
+                  "bg-azul-oscuro hover:bg-celestito transition-colors shadow-md",
                 footerActionLink:
-                  "text-[#292D60] font-semibold hover:text-[#3B418F]",
+                  "text-azul-oscuro font-semibold hover:text-celestito",
                 footerPages: { display: "none" },
               },
             }}

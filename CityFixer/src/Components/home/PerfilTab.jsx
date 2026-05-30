@@ -19,18 +19,18 @@ export default function PerfilTab({ incidents, loading }) {
   return (
     <div className="px-4 py-5 flex flex-col gap-4">
       <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
-        <div className="bg-[#292D60] h-20" />
+        <div className="bg-azul-oscuro h-20" />
         <CardContent className="px-5 pb-5">
           <div className="-mt-10 mb-4">
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt="avatar" className="w-20 h-20 rounded-full border-4 border-white shadow-md" />
             ) : (
-              <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-[#D3D6FF]/50 flex items-center justify-center">
-                <User size={32} className="text-[#292D60]" />
+              <div className="w-20 h-20 rounded-full border-4 border-white shadow-md bg-blanquito/50 flex items-center justify-center">
+                <User size={32} className="text-azul-oscuro" />
               </div>
             )}
           </div>
-          <h2 className="font-bold text-[#292D60] text-xl leading-tight">
+          <h2 className="font-bold text-azul-oscuro text-xl leading-tight">
             {user?.fullName ?? "Ciudadano"}
           </h2>
           <div className="mt-3 flex flex-col gap-2">
@@ -62,7 +62,7 @@ export default function PerfilTab({ incidents, loading }) {
           stats.map((stat) => (
             <Card key={stat.label} className="rounded-2xl border-none shadow-sm">
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-[#292D60]">{stat.value}</p>
+                <p className="text-2xl font-bold text-azul-oscuro">{stat.value}</p>
                 <p className="text-[10px] text-gray-400 mt-1 leading-tight">{stat.label}</p>
               </CardContent>
             </Card>

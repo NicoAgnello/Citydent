@@ -18,7 +18,7 @@ export default function AdminTabBar({ activeTab, onTabChange, dbRole }) {
               onClick={() => onTabChange(id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
                 active
-                  ? "border-[#292D60] text-[#292D60]"
+                  ? "border-azul-oscuro text-azul-oscuro"
                   : "border-transparent text-gray-400 hover:text-gray-600"
               }`}
             >

@@ -34,7 +34,7 @@ export default function CategoryFormDialog({ open, onOpenChange, onCreated }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="text-[#292D60]">Nueva categoría</DialogTitle>
+          <DialogTitle className="text-azul-oscuro">Nueva categoría</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
@@ -44,7 +44,7 @@ export default function CategoryFormDialog({ open, onOpenChange, onCreated }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Alumbrado, Baches..."
-              className="rounded-xl border-none bg-[#D3D6FF]/50 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              className="rounded-xl border-none bg-blanquito/50 focus-visible:ring-2 focus-visible:ring-celestito"
               required
             />
           </div>
@@ -55,7 +55,7 @@ export default function CategoryFormDialog({ open, onOpenChange, onCreated }) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Breve descripción de la categoría..."
-              className="rounded-xl border-none bg-[#D3D6FF]/50 min-h-[80px] focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              className="rounded-xl border-none bg-blanquito/50 min-h-[80px] focus-visible:ring-2 focus-visible:ring-celestito"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function CategoryFormDialog({ open, onOpenChange, onCreated }) {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#292D60] hover:bg-[#2F347A] text-white rounded-xl"
+              className="bg-azul-oscuro hover:bg-azul text-white rounded-xl"
             >
               {loading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
               Crear categoría

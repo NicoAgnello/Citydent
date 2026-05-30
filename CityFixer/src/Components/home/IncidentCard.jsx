@@ -40,7 +40,7 @@ export default function IncidentCard({ incident }) {
       >
         <CardContent className="p-4 flex flex-col gap-2">
           <div className="flex items-start justify-between gap-2">
-            <p className="font-semibold text-[#292D60] text-sm leading-tight flex-1">{incident.title}</p>
+            <p className="font-semibold text-azul-oscuro text-sm leading-tight flex-1">{incident.title}</p>
             <span className={`text-[10px] font-semibold px-2 py-1 rounded-full shrink-0 ${style.bg} ${style.text}`}>
               {label}
             </span>
@@ -51,7 +51,7 @@ export default function IncidentCard({ incident }) {
             <span className="mx-1 shrink-0">·</span>
             <span className="shrink-0">{formatDate(incident.createdAt)}</span>
           </div>
-          <span className="self-start text-[10px] bg-[#D3D6FF]/50 text-[#2F347A] px-2 py-0.5 rounded-full font-medium">
+          <span className="self-start text-[10px] bg-blanquito/50 text-azul px-2 py-0.5 rounded-full font-medium">
             {capitalize(incident.category?.name)}
           </span>
         </CardContent>

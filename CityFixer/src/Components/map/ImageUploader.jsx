@@ -24,8 +24,8 @@ export default function ImageUploader({ imagenes, onChange, onRemove }) {
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-3">
         {!limite && (
-          <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-[#D3D6FF]/30 border-2 border-dashed border-[#3B418F]/30 cursor-pointer">
-            <Camera className="text-[#3B418F]" size={20} />
+          <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-blanquito/30 border-2 border-dashed border-celestito/30 cursor-pointer">
+            <Camera className="text-celestito" size={20} />
             <input
               type="file"
               multiple

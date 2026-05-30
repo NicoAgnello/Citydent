@@ -39,7 +39,7 @@ export default function UrgenciasModal({ open, onOpenChange }) {
         className="max-w-md p-0 overflow-hidden rounded-3xl"
         aria-describedby={undefined}
       >
-        <DialogHeader className="bg-[#292D60] px-5 pt-5 pb-6 text-left">
+        <DialogHeader className="bg-azul-oscuro px-5 pt-5 pb-6 text-left">
           <DialogTitle className="text-white text-lg font-bold">Números de emergencia</DialogTitle>
           <p className="text-white/60 text-xs mt-1">Tocá cualquier número para llamar directamente.</p>
         </DialogHeader>

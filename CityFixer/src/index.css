@@ -5,16 +5,16 @@
 
 :root {
   --color-blanquito: #D3D6FF;
-  --color-celestito: #3B418F;
-  --color-azul: #2F347A;
-  --color-azul-oscuro: #292D60;
+  --color-celestito: #6B4FA8;
+  --color-azul: #5C3F99;
+  --color-azul-oscuro: #50387E;
 }
 
 @theme {
   --color-blanquito: #D3D6FF;
-  --color-celestito: #3B418F;
-  --color-azul: #2F347A;
-  --color-azul-oscuro: #292D60;
+  --color-celestito: #6B4FA8;
+  --color-azul: #5C3F99;
+  --color-azul-oscuro: #50387E;
 }
 
 @custom-variant dark (&:is(.dark *));

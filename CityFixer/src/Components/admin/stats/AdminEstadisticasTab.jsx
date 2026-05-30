@@ -16,7 +16,7 @@ function KpiCard({ label, value, loading, style }) {
   return (
     <Card className="rounded-2xl border-none shadow-sm">
       <CardContent className="p-4">
-        <p className={`text-2xl font-bold ${style?.text ?? "text-[#292D60]"}`}>{value}</p>
+        <p className={`text-2xl font-bold ${style?.text ?? "text-azul-oscuro"}`}>{value}</p>
         <p className="text-xs text-gray-400 mt-1">{label}</p>
       </CardContent>
     </Card>

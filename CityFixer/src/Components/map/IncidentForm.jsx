@@ -70,7 +70,7 @@ const IncidentForm = ({ onSuccess }) => {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 px-6">
         <CheckCircle2 size={52} className="text-green-500" strokeWidth={1.5} />
-        <p className="text-lg font-bold text-[#292D60]">¡Reporte enviado!</p>
+        <p className="text-lg font-bold text-azul-oscuro">¡Reporte enviado!</p>
         <p className="text-sm text-gray-400 text-center">
           Tu incidente fue registrado correctamente. Gracias por contribuir.
         </p>
@@ -90,9 +90,9 @@ const IncidentForm = ({ onSuccess }) => {
             </p>
             <MapPicker onChange={setUbicacion} className="w-full h-52 rounded-2xl z-0" />
             {direccionDisplay && (
-              <div className="flex items-center gap-1.5 px-3 py-2 bg-[#D3D6FF]/50 rounded-2xl">
-                <MapPin size={13} className="text-[#3B418F] shrink-0" />
-                <span className="text-sm text-[#2F347A] font-medium truncate">
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-blanquito/50 rounded-2xl">
+                <MapPin size={13} className="text-celestito shrink-0" />
+                <span className="text-sm text-azul font-medium truncate">
                   {direccionDisplay}
                 </span>
               </div>
@@ -104,7 +104,7 @@ const IncidentForm = ({ onSuccess }) => {
             <Input
               name="title"
               placeholder="Ej: Bache profundo, Luminaria rota..."
-              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-6 focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              className="rounded-2xl border-none bg-blanquito/50 p-6 focus-visible:ring-2 focus-visible:ring-celestito"
               value={formData.title}
               onChange={handleInputChange}
               required
@@ -123,7 +123,7 @@ const IncidentForm = ({ onSuccess }) => {
             <Textarea
               name="description"
               placeholder="Danos más información..."
-              className="rounded-2xl border-none bg-[#D3D6FF]/50 p-4 min-h-[100px] focus-visible:ring-2 focus-visible:ring-[#3B418F]"
+              className="rounded-2xl border-none bg-blanquito/50 p-4 min-h-[100px] focus-visible:ring-2 focus-visible:ring-celestito"
               value={formData.description}
               onChange={handleInputChange}
               required
@@ -151,7 +151,7 @@ const IncidentForm = ({ onSuccess }) => {
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full h-12 rounded-2xl bg-[#292D60] hover:bg-[#2F347A] font-bold text-white disabled:opacity-60"
+            className="w-full h-12 rounded-2xl bg-azul-oscuro hover:bg-azul font-bold text-white disabled:opacity-60"
           >
             {submitting ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -32,7 +32,7 @@ export default function CategorySelect({ onValueChange }) {
 
   return (
     <Select onValueChange={onValueChange} disabled={cargando} required>
-      <SelectTrigger className="rounded-2xl border-none bg-[#D3D6FF]/50 h-12 focus:ring-2 focus:ring-[#3B418F]">
+      <SelectTrigger className="rounded-2xl border-none bg-blanquito/50 h-12 focus:ring-2 focus:ring-celestito">
         <SelectValue placeholder={cargando ? "Cargando..." : "Selecciona una categoría"} />
       </SelectTrigger>
       <SelectContent className="rounded-xl border-slate-200">

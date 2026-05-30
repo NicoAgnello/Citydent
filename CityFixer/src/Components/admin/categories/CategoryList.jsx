@@ -80,13 +80,13 @@ export default function CategoryList({ categories, loading, onUpdated }) {
           <CardContent className="p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${
-                (cat.isActive ?? true) ? "bg-[#D3D6FF]/60" : "bg-gray-100"
+                (cat.isActive ?? true) ? "bg-blanquito/60" : "bg-gray-100"
               }`}>
-                <Tag size={14} className={(cat.isActive ?? true) ? "text-[#2F347A]" : "text-gray-400"} />
+                <Tag size={14} className={(cat.isActive ?? true) ? "text-azul" : "text-gray-400"} />
               </div>
               <div className="min-w-0">
                 <p className={`font-semibold text-sm truncate ${
-                  (cat.isActive ?? true) ? "text-[#292D60]" : "text-gray-400"
+                  (cat.isActive ?? true) ? "text-azul-oscuro" : "text-gray-400"
                 }`}>
                   {capitalize(cat.name)}
                 </p>

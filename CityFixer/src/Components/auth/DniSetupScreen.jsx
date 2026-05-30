@@ -23,13 +23,13 @@ export default function DniSetupScreen({ onSubmit, loading }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#292D60] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-azul-oscuro flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm flex flex-col gap-8">
 
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2.5">
-            <span className="bg-[#D3D6FF] w-1.5 h-8 rounded-full inline-block" />
+            <span className="bg-blanquito w-1.5 h-8 rounded-full inline-block" />
             <h1 className="text-white text-2xl font-bold tracking-tight">CityFixer</h1>
           </div>
           <p className="text-white/50 text-xs text-center">Tu ciudad, tu voz</p>
@@ -38,7 +38,7 @@ export default function DniSetupScreen({ onSubmit, loading }) {
         {/* Card */}
         <div className="bg-white rounded-3xl p-6 flex flex-col gap-5 shadow-xl">
           <div className="flex flex-col gap-1">
-            <h2 className="text-[#292D60] font-bold text-lg">Un último paso</h2>
+            <h2 className="text-azul-oscuro font-bold text-lg">Un último paso</h2>
             <p className="text-gray-500 text-sm leading-relaxed">
               Para completar tu perfil necesitamos tu DNI. Solo se pedirá esta vez.
             </p>
@@ -59,7 +59,7 @@ export default function DniSetupScreen({ onSubmit, loading }) {
                   if (error) setError("");
                 }}
                 placeholder="12.345.678"
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3B418F]"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-celestito"
               />
               {error && (
                 <p className="text-xs text-red-500">{error}</p>
@@ -69,7 +69,7 @@ export default function DniSetupScreen({ onSubmit, loading }) {
             <button
               type="submit"
               disabled={loading || stripDni(dni).length !== 8}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-[#292D60] text-white text-sm font-semibold disabled:opacity-50 hover:bg-[#2F347A] transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-azul-oscuro text-white text-sm font-semibold disabled:opacity-50 hover:bg-azul transition-colors"
             >
               {loading && <Loader2 size={15} className="animate-spin" />}
               Continuar

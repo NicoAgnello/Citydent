@@ -23,7 +23,7 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
           </p>
           <button
             onClick={onNuevoReporte}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#292D60] text-white text-xs font-semibold hover:bg-[#2F347A] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-azul-oscuro text-white text-xs font-semibold hover:bg-azul transition-colors"
           >
             <Plus size={13} />
             Nuevo reporte

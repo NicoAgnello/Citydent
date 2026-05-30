@@ -25,7 +25,7 @@ export default function StatusFilterPills({ active, onChange, statuses = [] }) {
         onClick={() => onChange("todos")}
         className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
           active === "todos"
-            ? "bg-[#292D60] text-white"
+            ? "bg-azul-oscuro text-white"
             : "bg-gray-100 text-gray-400 hover:bg-gray-200"
         }`}
       >

@@ -32,7 +32,7 @@ export default function IncidentDetailSheet({
         className="rounded-t-3xl max-h-[92vh] p-0 flex flex-col [&::-webkit-scrollbar]:hidden"
       >
         {/* Header oscuro */}
-        <SheetHeader className="bg-[#292D60] px-5 pt-3 pb-5 text-left rounded-t-3xl shrink-0">
+        <SheetHeader className="bg-azul-oscuro px-5 pt-3 pb-5 text-left rounded-t-3xl shrink-0">
           <div className="flex justify-center pb-2 md:hidden">
             <div className="w-10 h-1 bg-white/30 rounded-full" />
           </div>

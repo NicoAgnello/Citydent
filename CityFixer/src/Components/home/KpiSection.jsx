@@ -36,8 +36,8 @@ export default function KpiSection({ incidents, loading }) {
   }
 
   const kpis = [
-    { label: "Reportados",  value: incidents.length,                                                                    icon: ClipboardList, color: "text-[#292D60]" },
-    { label: "En proceso",  value: incidents.filter((i) => i.status?.name === STATUS_KEYS.IN_PROCESS).length,           icon: Clock,         color: "text-[#3B418F]" },
+    { label: "Reportados",  value: incidents.length,                                                                    icon: ClipboardList, color: "text-azul-oscuro" },
+    { label: "En proceso",  value: incidents.filter((i) => i.status?.name === STATUS_KEYS.IN_PROCESS).length,           icon: Clock,         color: "text-celestito" },
     { label: "Resueltos",   value: incidents.filter((i) => i.status?.name === STATUS_KEYS.RESOLVED).length,             icon: CheckCircle2,  color: "text-green-600" },
     { label: "Rechazados",  value: incidents.filter((i) => i.status?.name === STATUS_KEYS.REJECTED).length,             icon: XCircle,       color: "text-red-500"   },
   ];

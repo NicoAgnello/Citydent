@@ -33,7 +33,7 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="text-[#292D60]">Confirmar cambio de estado</DialogTitle>
+          <DialogTitle className="text-azul-oscuro">Confirmar cambio de estado</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-600 mt-1">
           ¿Cambiar el estado a{" "}
@@ -49,7 +49,7 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
           <Button
             onClick={onConfirm}
             disabled={loading}
-            className="bg-[#292D60] hover:bg-[#2F347A] text-white rounded-xl"
+            className="bg-azul-oscuro hover:bg-azul text-white rounded-xl"
           >
             {loading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
             Confirmar
@@ -137,7 +137,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="flex-1 min-w-0 text-sm rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#3B418F]"
+              className="flex-1 min-w-0 text-sm rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-celestito"
             >
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>{capitalize(c.name)}</option>
@@ -146,7 +146,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
             <button
               onClick={handleCategoryChange}
               disabled={loadingCategory || selectedCategory === incident.category?._id}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#292D60] text-white text-xs font-semibold disabled:opacity-40 hover:bg-[#2F347A] transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-azul-oscuro text-white text-xs font-semibold disabled:opacity-40 hover:bg-azul transition-colors"
             >
               {loadingCategory && <Loader2 size={12} className="animate-spin" />}
               Aplicar
