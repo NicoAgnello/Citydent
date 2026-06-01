@@ -25,7 +25,7 @@ export function EmptyState({ message = "No tenés reportes todavía.\n¡Reportá
   );
 }
 
-export default function IncidentCard({ incident }) {
+export default function IncidentCard({ incident, onUpdated }) {
   const [open, setOpen] = useState(false);
 
   const statusKey = incident.status?.name;
@@ -57,7 +57,7 @@ export default function IncidentCard({ incident }) {
         </CardContent>
       </Card>
 
-      <IncidentDetailSheet incident={incident} open={open} onOpenChange={setOpen} />
+      <IncidentDetailSheet incident={incident} open={open} onOpenChange={setOpen} onUpdated={onUpdated} />
     </>
   );
 }

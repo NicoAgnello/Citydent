@@ -27,9 +27,10 @@ export default function Home() {
             loading={loading}
             onVerTodos={() => setActiveTab("reportes")}
             onNuevoReporte={() => setReportOpen(true)}
+            onUpdated={refresh}
           />
         )}
-        {activeTab === "reportes" && <ReportesTab incidents={incidents} loading={loading} />}
+        {activeTab === "reportes" && <ReportesTab incidents={incidents} loading={loading} onUpdated={refresh} />}
         {activeTab === "perfil"   && <PerfilTab incidents={incidents} loading={loading} />}
       </main>
 

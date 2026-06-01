@@ -3,7 +3,7 @@ import IncidentCard, { EmptyState } from "./IncidentCard";
 import IncidentSkeleton from "./IncidentSkeleton";
 import KpiSection from "./KpiSection";
 
-export default function InicioTab({ user, incidents, loading, onVerTodos, onNuevoReporte }) {
+export default function InicioTab({ user, incidents, loading, onVerTodos, onNuevoReporte, onUpdated }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
   const recent = incidents.slice(0, 3);
@@ -59,7 +59,7 @@ export default function InicioTab({ user, incidents, loading, onVerTodos, onNuev
           <EmptyState />
         ) : (
           <div className="flex flex-col gap-3">
-            {recent.map((inc) => <IncidentCard key={inc._id} incident={inc} />)}
+            {recent.map((inc) => <IncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} />)}
           </div>
         )}
       </section>

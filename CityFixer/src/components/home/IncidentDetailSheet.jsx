@@ -1,4 +1,6 @@
-import { MapPin, Tag, Calendar, FileText, X } from "lucide-react";
+import { MapPin, Tag, Calendar, FileText, X, Loader2, User } from "lucide-react";
+import { useState } from "react";
+import { cancelIncident } from "@/services/api";
 import StatusHistory from "@/components/admin/incidents/StatusHistory";
 import AIInsights from "@/components/admin/incidents/AIInsights";
 import {
@@ -13,6 +15,8 @@ import PhotoGallery from "./PhotoGallery";
 import LocationPanel from "./LocationPanel";
 import SectionLabel from "@/components/ui/SectionLabel";
 
+const CANCELABLE_STATUSES = ["pendiente", "dudoso"];
+
 export default function IncidentDetailSheet({
   incident,
   open,
@@ -21,9 +25,26 @@ export default function IncidentDetailSheet({
   isAdmin,
   onUpdated,
 }) {
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+
   if (!incident) return null;
 
   const statusKey = incident.status?.name;
+  const canCancel = !isAdmin && CANCELABLE_STATUSES.includes(statusKey);
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      await cancelIncident(incident._id);
+      onUpdated?.();
+      onOpenChange(false);
+    } catch (err) {
+      setCancelError(err.response?.data?.error ?? "No se pudo cancelar el reporte.");
+      setCancelling(false);
+    }
+  };
   const style = STATUS_STYLES[statusKey] ?? STATUS_STYLES.pendiente;
   const label = STATUS_LABELS[statusKey] ?? capitalize(statusKey);
   const location = incident.location;
@@ -68,6 +89,15 @@ export default function IncidentDetailSheet({
               <Calendar size={12} className="shrink-0" />
               <span>{formatDate(incident.createdAt)}</span>
             </div>
+            {incident.user?.firstName && (
+              <>
+                <span className="text-white/20">·</span>
+                <div className="flex items-center gap-1.5 text-xs text-white/60">
+                  <User size={12} className="shrink-0" />
+                  <span>{incident.user.firstName} {incident.user.lastName}</span>
+                </div>
+              </>
+            )}
           </div>
         </SheetHeader>
 
@@ -131,10 +161,25 @@ export default function IncidentDetailSheet({
           )}
         </div>
 
-        {/* Panel de acciones sticky — solo cuando hay actions (admin) */}
-        {actions && (
-          <div className="shrink-0 border-t border-gray-100 bg-white px-5 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+        {/* Panel de acciones sticky — admin o usuario con opción de cancelar */}
+        {(actions || canCancel) && (
+          <div className="shrink-0 border-t border-gray-100 bg-white px-5 py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] flex flex-col gap-2">
             {actions}
+            {canCancel && (
+              <>
+                {cancelError && (
+                  <p className="text-xs text-red-500 text-center">{cancelError}</p>
+                )}
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="w-full h-11 rounded-2xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {cancelling && <Loader2 size={14} className="animate-spin" />}
+                  {cancelling ? "Cancelando..." : "Cancelar reporte"}
+                </button>
+              </>
+            )}
           </div>
         )}
       </SheetContent>

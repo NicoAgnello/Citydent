@@ -27,6 +27,9 @@ export const postIncidente = (formData) =>
 // Trae los incidentes del usuario autenticado
 export const getMisIncidentes = () => api.get("/api/incidents/my-incidents");
 
+// Cancela un incidente propio (solo si está en estado cancelable)
+export const cancelIncident = (id) => api.patch(`/api/incidents/${id}/cancel`);
+
 // ─── Admin — Incidentes ───────────────────────────────────────────────────────
 
 // Trae todos los incidentes (solo admin/superAdmin)

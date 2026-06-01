@@ -19,9 +19,11 @@ export default function AdminUsuariosTab() {
   const [users, setUsers]               = useState([]);
   const [roles, setRoles]               = useState([]);
   const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState(null);
   const [searchTerm, setSearchTerm]     = useState("");
   const [activeRoleTab, setActiveRoleTab] = useState("todos");
   const [actionLoading, setActionLoading] = useState({});
+  const [actionError, setActionError]   = useState({});
 
   useEffect(() => {
     Promise.all([getUsers(), getRoles()])
@@ -29,6 +31,7 @@ export default function AdminUsuariosTab() {
         setUsers(usersRes.data.users);
         setRoles(rolesRes.data.roles);
       })
+      .catch(() => setLoadError("No se pudieron cargar los usuarios. Intentá de nuevo."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -43,13 +46,18 @@ export default function AdminUsuariosTab() {
     });
   }, [users, searchTerm, activeRoleTab]);
 
+  const setCardError = (userId, msg) => {
+    setActionError((prev) => ({ ...prev, [userId]: msg }));
+    setTimeout(() => setActionError((prev) => ({ ...prev, [userId]: null })), 3500);
+  };
+
   const handleRoleChange = async (userId, newRoleId) => {
     setActionLoading((prev) => ({ ...prev, [userId]: "role" }));
     try {
       const res = await updateUserRole(userId, newRoleId);
       setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, role: res.data.user.role } : u));
     } catch (e) {
-      console.error(e);
+      setCardError(userId, e.response?.data?.error ?? "No se pudo cambiar el rol.");
     } finally {
       setActionLoading((prev) => ({ ...prev, [userId]: null }));
     }
@@ -61,7 +69,7 @@ export default function AdminUsuariosTab() {
       const res = await updateUserBan(userId, isBanned);
       setUsers((prev) => prev.map((u) => u._id === userId ? { ...u, isBanned: res.data.user.isBanned } : u));
     } catch (e) {
-      console.error(e);
+      setCardError(userId, e.response?.data?.error ?? "No se pudo actualizar el estado.");
     } finally {
       setActionLoading((prev) => ({ ...prev, [userId]: null }));
     }
@@ -109,6 +117,10 @@ export default function AdminUsuariosTab() {
         <div className="flex justify-center py-16">
           <Loader2 size={24} className="animate-spin text-celestito" />
         </div>
+      ) : loadError ? (
+        <div className="flex justify-center py-16">
+          <p className="text-sm text-red-500 font-medium">{loadError}</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
           {filteredUsers.length > 0 ? filteredUsers.map((user) => {
@@ -142,6 +154,11 @@ export default function AdminUsuariosTab() {
                     </span>
                   )}
                 </div>
+
+                {/* Error de acción */}
+                {actionError[user._id] && (
+                  <p className="text-[11px] text-red-500 font-medium">{actionError[user._id]}</p>
+                )}
 
                 {/* Rol + acciones */}
                 <div className="flex items-center justify-between pt-3 border-t border-blanquito/30 gap-2 flex-wrap">

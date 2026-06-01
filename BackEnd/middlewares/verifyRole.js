@@ -10,6 +10,10 @@ const verifyRole = (...roles) => {
         return res.status(404).json({ error: 'Usuario no encontrado.' });
       }
 
+      if (dbUser.isBanned) {
+        return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
+      }
+
       if (!roles.includes(dbUser.role.name)) {
         return res.status(403).json({ error: 'No tenés permisos para realizar esta acción.' });
       }
