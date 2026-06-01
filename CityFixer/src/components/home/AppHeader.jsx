@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, LogOut, Siren } from "lucide-react";
+import { User, LogOut, Siren, ShieldOff } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UrgenciasModal from "./UrgenciasModal";
 
-export default function AppHeader({ user }) {
+export default function AppHeader({ user, isBanned }) {
   const { signOut } = useClerk();
   const navigate = useNavigate();
   const [urgenciasOpen, setUrgenciasOpen] = useState(false);
@@ -18,6 +18,23 @@ export default function AppHeader({ user }) {
   return (
     <>
       <UrgenciasModal open={urgenciasOpen} onOpenChange={setUrgenciasOpen} />
+
+      {isBanned && (
+        <div className="bg-red-600 px-4 py-2.5 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-white">
+            <ShieldOff size={15} className="shrink-0" />
+            <p className="text-xs font-semibold">
+              Tu cuenta ha sido suspendida. No podés realizar acciones.
+            </p>
+          </div>
+          <button
+            onClick={() => signOut(() => navigate("/login"))}
+            className="shrink-0 text-xs font-bold text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
 
       <header className="bg-azul-oscuro px-6 pt-12 md:pt-4 pb-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">

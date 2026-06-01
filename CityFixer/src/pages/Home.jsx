@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 
 import AppHeader from "@/components/home/AppHeader";
@@ -14,12 +14,20 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("inicio");
   const [reportOpen, setReportOpen] = useState(false);
   const { incidents, loading, refresh } = useIncidents();
+  const [isBanned, setIsBanned] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setIsBanned(true);
+    window.addEventListener('cityfixer:banned', handler);
+    return () => window.removeEventListener('cityfixer:banned', handler);
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <AppHeader user={user} />
+      <AppHeader user={user} isBanned={isBanned} />
 
-      <main className="flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <main className={`flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative ${isBanned ? "pointer-events-none select-none" : ""}`}>
+        {isBanned && <div className="absolute inset-0 bg-white/60 z-10" />}
         {activeTab === "inicio" && (
           <InicioTab
             user={user}
@@ -36,7 +44,7 @@ export default function Home() {
 
       <IncidentModal open={reportOpen} onOpenChange={setReportOpen} onCreated={refresh} />
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} disabled={isBanned} />
     </div>
   );
 }

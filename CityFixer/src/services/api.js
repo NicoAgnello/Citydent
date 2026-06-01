@@ -6,6 +6,19 @@ const api = axios.create({
   withCredentials: true,
 });
 
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.error === 'Tu cuenta ha sido suspendida.'
+    ) {
+      window.dispatchEvent(new CustomEvent('cityfixer:banned'));
+    }
+    return Promise.reject(error);
+  }
+);
+
 
 // ─── Categorías ───────────────────────────────────────────────────────────────
 

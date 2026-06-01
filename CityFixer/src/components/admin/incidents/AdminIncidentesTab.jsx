@@ -12,7 +12,7 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
   const filtered = useMemo(() => {
     let result = incidents;
     if (filter !== "todos") result = result.filter((inc) => inc.status?.name === filter);
-    if (userSearch.trim()) {
+    if (userSearch.trim().length >= 3) {
       const q = userSearch.trim().toLowerCase();
       result = result.filter((inc) => {
         const name = [inc.user?.firstName, inc.user?.lastName].filter(Boolean).join(" ").toLowerCase();
@@ -41,15 +41,22 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
         </div>
       </div>
 
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Buscar por usuario..."
-          value={userSearch}
-          onChange={(e) => setUserSearch(e.target.value)}
-          className="w-full pl-8 pr-4 py-2 text-sm rounded-xl bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
-        />
+      <div className="flex flex-col gap-1">
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar por usuario..."
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            className="w-full pl-8 pr-4 py-2 text-sm rounded-xl bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
+          />
+        </div>
+        {userSearch.trim().length > 0 && userSearch.trim().length < 3 && (
+          <p className="text-xs text-gray-400 pl-1">
+            Ingresá al menos 3 caracteres para buscar.
+          </p>
+        )}
       </div>
 
       <AdminIncidentList incidents={filtered} loading={loading} onUpdated={onUpdated} />
