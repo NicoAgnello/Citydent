@@ -19,7 +19,7 @@ export function useFetch(apiFn, key) {
     }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { data, loading, error, refresh };
 }

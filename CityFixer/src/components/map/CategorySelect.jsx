@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { getCategoriasActivas } from "@/services/api";
+import { capitalize } from "@/lib/incidents";
 import {
   Select,
   SelectContent,
@@ -38,7 +39,7 @@ export default function CategorySelect({ onValueChange }) {
       <SelectContent className="rounded-xl border-slate-200">
         {categorias.map((cat) => (
           <SelectItem key={cat._id} value={cat._id}>
-            {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+            {capitalize(cat.name)}
           </SelectItem>
         ))}
       </SelectContent>

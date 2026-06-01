@@ -3,12 +3,13 @@ import { getStatuses } from "@/services/api";
 
 export function useStatuses() {
   const [statuses, setStatuses] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     getStatuses()
       .then(({ data }) => setStatuses(data.statuses ?? []))
-      .catch(() => {});
+      .catch((err) => setError(err));
   }, []);
 
-  return { statuses };
+  return { statuses, error };
 }

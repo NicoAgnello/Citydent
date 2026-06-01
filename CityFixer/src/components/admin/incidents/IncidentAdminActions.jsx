@@ -4,25 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useStatuses } from "@/hooks/useStatuses";
 import { getCategorias, updateIncidentStatus, updateIncidentCategory } from "@/services/api";
-import { STATUS_STYLES, STATUS_LABELS, capitalize } from "@/lib/incidents";
-
-const STATUS_PALETTE = [
-  { bg: "bg-sky-100",     text: "text-sky-700"     },
-  { bg: "bg-violet-100",  text: "text-violet-700"  },
-  { bg: "bg-teal-100",    text: "text-teal-700"    },
-  { bg: "bg-pink-100",    text: "text-pink-700"    },
-  { bg: "bg-lime-100",    text: "text-lime-700"    },
-  { bg: "bg-cyan-100",    text: "text-cyan-700"    },
-  { bg: "bg-fuchsia-100", text: "text-fuchsia-700" },
-  { bg: "bg-rose-100",    text: "text-rose-700"    },
-];
-
-function getStatusStyle(name) {
-  if (STATUS_STYLES[name]) return STATUS_STYLES[name];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
-  return STATUS_PALETTE[hash % STATUS_PALETTE.length];
-}
+import { STATUS_LABELS, capitalize, getStatusStyle } from "@/lib/incidents";
 
 function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, loading }) {
   if (!targetStatus) return null;

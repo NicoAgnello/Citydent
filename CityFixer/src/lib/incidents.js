@@ -36,3 +36,22 @@ export const STATUS_STYLES = {
 
 export const capitalize = (str) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1) : '—';
+
+// Paleta de fallback para estados no definidos en STATUS_STYLES (ej: estados custom de la DB)
+export const STATUS_PALETTE = [
+  { bg: 'bg-sky-100',     text: 'text-sky-700'     },
+  { bg: 'bg-violet-100',  text: 'text-violet-700'  },
+  { bg: 'bg-teal-100',    text: 'text-teal-700'    },
+  { bg: 'bg-pink-100',    text: 'text-pink-700'    },
+  { bg: 'bg-lime-100',    text: 'text-lime-700'    },
+  { bg: 'bg-cyan-100',    text: 'text-cyan-700'    },
+  { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700' },
+  { bg: 'bg-rose-100',    text: 'text-rose-700'    },
+];
+
+export function getStatusStyle(name) {
+  if (STATUS_STYLES[name]) return STATUS_STYLES[name];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
+  return STATUS_PALETTE[hash % STATUS_PALETTE.length];
+}
