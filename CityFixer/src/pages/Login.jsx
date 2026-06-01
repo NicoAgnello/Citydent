@@ -33,15 +33,20 @@ async function initEngine(engine) {
   await loadSlim(engine);
 }
 
-function LoginContent() {
+function Login() {
   return (
     <div className="relative min-h-screen flex items-center justify-center p-5 bg-[#1a0f2e] overflow-hidden">
-      <Particles
-        id="tsparticles"
-        className="absolute inset-0 w-full h-full"
-        options={PARTICLE_OPTIONS}
-      />
 
+      {/* Partículas aisladas — su ciclo de init no afecta a SignIn */}
+      <ParticlesProvider init={initEngine}>
+        <Particles
+          id="tsparticles"
+          className="absolute inset-0 w-full h-full"
+          options={PARTICLE_OPTIONS}
+        />
+      </ParticlesProvider>
+
+      {/* SignIn fuera del árbol de ParticlesProvider */}
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
         <div className="mb-7 text-center flex flex-col items-center gap-2">
           <img src="/logoCityFixer.svg" alt="CityFixer" className="h-20 w-auto" />
@@ -84,14 +89,6 @@ function LoginContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Login() {
-  return (
-    <ParticlesProvider init={initEngine}>
-      <LoginContent />
-    </ParticlesProvider>
   );
 }
 

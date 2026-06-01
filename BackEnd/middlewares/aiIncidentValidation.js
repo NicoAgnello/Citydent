@@ -26,9 +26,7 @@ const aiIncidentValidation = async (req, res, next) => {
     const dudososCount = await Incident.countDocuments({ user: userId, status: dudosoStatus._id });
     if (dudososCount >= 5) {
       await User.findByIdAndUpdate(userId, { $set: { isBanned: true } });
-      return res.status(200).json({ success: false, message: 'Cuenta suspendida por acumular reportes dudosos.' });
-    } else {
-      await User.findByIdAndUpdate(userId, { $set: { isBanned: false } });
+      return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
     }
 
     let incidentesCercanos = [];

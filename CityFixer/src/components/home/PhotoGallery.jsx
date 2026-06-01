@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ImageOff } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export default function PhotoGallery({ photos }) {
   const [lightbox, setLightbox] = useState(null);
@@ -39,6 +39,7 @@ export default function PhotoGallery({ photos }) {
 
       <Dialog open={!!lightbox} onOpenChange={() => setLightbox(null)}>
         <DialogContent className="max-w-3xl p-0 bg-black border-none overflow-hidden" aria-describedby={undefined}>
+          <DialogTitle className="sr-only">Foto ampliada</DialogTitle>
           <img src={lightbox} alt="foto ampliada" className="w-full max-h-[85vh] object-contain" />
         </DialogContent>
       </Dialog>
