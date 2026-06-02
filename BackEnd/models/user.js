@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  imageUrl: {
+    type: String,
+    default: ''
+  },
   dni: {
     type: String,
     required: true,

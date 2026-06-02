@@ -16,7 +16,7 @@ export default function AdminSidebar({ activeTab, onTabChange, dbRole, onClose }
   const visibleItems = NAV_ITEMS.filter(item => !item.superAdminOnly || dbRole === "superAdmin");
 
   return (
-    <aside className="flex flex-col h-full w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border shrink-0">
+    <aside className="flex flex-col h-full w-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
 
       {/* Logo */}
       <div className="flex items-center gap-3 pt-7 px-6 pb-6 border-b border-sidebar-border shrink-0">

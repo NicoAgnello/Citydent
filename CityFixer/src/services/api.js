@@ -79,6 +79,7 @@ export const getStatuses = () => api.get("/api/statuses");
 
 export const getUsers = () => api.get("/api/users");
 export const getRoles = () => api.get("/api/users/roles");
+export const createUser = (body) => api.post("/api/users", body);
 export const updateUserRole = (id, roleId) => api.patch(`/api/users/${id}/role`, { role: roleId });
 export const updateUserBan = (id, isBanned) => api.patch(`/api/users/${id}/ban`, { isBanned });
 

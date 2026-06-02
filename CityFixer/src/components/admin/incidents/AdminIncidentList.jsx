@@ -1,10 +1,33 @@
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AdminIncidentRow from "./AdminIncidentRow";
 import AdminIncidentCard from "./AdminIncidentCard";
+import IncidentDetailSheet from "@/components/home/IncidentDetailSheet";
+import IncidentAdminActions from "./IncidentAdminActions";
 import IncidentSkeleton from "@/components/home/IncidentSkeleton";
 import { EmptyState } from "@/components/home/IncidentCard";
 
-export default function AdminIncidentList({ incidents, loading, onUpdated }) {
+export default function AdminIncidentList({ incidents, loading, onUpdated, focusedIncidentId, onClearFocus }) {
+  // Estado local para el incidente buscado — necesario para que el Sheet
+  // permanezca abierto después de que onClearFocus() pone focusedIncidentId a null
+  const [focusedIncident, setFocusedIncident] = useState(null);
+  const [focusedOpen,     setFocusedOpen]     = useState(false);
+
+  useEffect(() => {
+    if (!focusedIncidentId || focusedOpen) return;
+    const found = incidents.find((i) => i._id === focusedIncidentId);
+    if (found) {
+      setFocusedIncident(found);
+      setFocusedOpen(true);
+      onClearFocus?.();
+    }
+  }, [focusedIncidentId, incidents]);
+
+  const handleFocusedOpenChange = (v) => {
+    setFocusedOpen(v);
+    if (!v) setFocusedIncident(null);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col gap-3">
@@ -56,6 +79,23 @@ export default function AdminIncidentList({ incidents, loading, onUpdated }) {
           <AdminIncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} />
         ))}
       </div>
+
+      {/* ── Sheet único para el incidente buscado (desktop y mobile) ── */}
+      {focusedIncident && (
+        <IncidentDetailSheet
+          incident={focusedIncident}
+          open={focusedOpen}
+          onOpenChange={handleFocusedOpenChange}
+          isAdmin
+          onUpdated={onUpdated}
+          actions={
+            <IncidentAdminActions
+              incident={focusedIncident}
+              onUpdated={() => { onUpdated?.(); handleFocusedOpenChange(false); }}
+            />
+          }
+        />
+      )}
     </>
   );
 }

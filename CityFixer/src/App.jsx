@@ -24,6 +24,7 @@ function App() {
           email: user.primaryEmailAddress?.emailAddress,
           firstName: user.firstName,
           lastName: user.lastName,
+          imageUrl: user.imageUrl,
           dni,
         },
         { headers: { Authorization: `Bearer ${token}` } },

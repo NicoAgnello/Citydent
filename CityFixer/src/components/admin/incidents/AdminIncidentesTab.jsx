@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, X } from "lucide-react";
 import AdminIncidentList from "./AdminIncidentList";
 import { useStatuses } from "@/hooks/useStatuses";
@@ -11,7 +11,7 @@ const PRIORITY_LABELS = {
 const SELECT_CLASS =
   "text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
 
-export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNuevoReporte }) {
+export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNuevoReporte, focusedIncidentId, onClearFocus }) {
   const [filters, setFilters] = useState({
     status:     "todos",
     category:   "todas",
@@ -23,6 +23,11 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
   const DEFAULTS = { status: "todos", category: "todas", priority: "todas", userSearch: "" };
   const set = (key) => (value) => setFilters((prev) => ({ ...prev, [key]: value }));
   const clearFilters = () => setFilters(DEFAULTS);
+
+  // Cuando llega un incidente desde el buscador global, limpia los filtros para que sea visible
+  useEffect(() => {
+    if (focusedIncidentId) clearFilters();
+  }, [focusedIncidentId]);
   const hasActiveFilters =
     filters.status !== "todos" ||
     filters.category !== "todas" ||
@@ -146,7 +151,13 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
         </div>
       </div>
 
-      <AdminIncidentList incidents={filtered} loading={loading} onUpdated={onUpdated} />
+      <AdminIncidentList
+        incidents={filtered}
+        loading={loading}
+        onUpdated={onUpdated}
+        focusedIncidentId={focusedIncidentId}
+        onClearFocus={onClearFocus}
+      />
     </div>
   );
 }

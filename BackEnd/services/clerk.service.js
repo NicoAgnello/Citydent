@@ -3,7 +3,7 @@ const Role = require('../models/role');
 
 const DNI_REGEX = /^\d{8}$/;
 
-const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
+const upsertUser = async ({ clerkId, email, firstName, lastName, imageUrl, dni }) => {
   const existingUser = await User.findOne({ clerkId });
 
   if (!existingUser) {
@@ -16,7 +16,7 @@ const upsertUser = async ({ clerkId, email, firstName, lastName, dni }) => {
     }
   }
 
-  const updateFields = { clerkId, email, firstName, lastName };
+  const updateFields = { clerkId, email, firstName, lastName, ...(imageUrl && { imageUrl }) };
 
   // Solo incluir DNI si viene y el usuario no existe aún
   if (!existingUser && dni) {

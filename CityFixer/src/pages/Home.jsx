@@ -23,11 +23,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <AppHeader user={user} isBanned={isBanned} />
+    <div className="flex flex-col h-screen bg-slate-50">
+      <AppHeader
+        user={user}
+        isBanned={isBanned}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      <main className={`flex-1 overflow-y-auto pb-24 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative ${isBanned ? "pointer-events-none select-none" : ""}`}>
+      <main className={`flex-1 overflow-y-auto pb-20 md:pb-0 [&::-webkit-scrollbar]:hidden relative ${isBanned ? "pointer-events-none select-none" : ""}`}>
         {isBanned && <div className="absolute inset-0 bg-white/60 z-10" />}
+
         {activeTab === "inicio" && (
           <InicioTab
             user={user}
