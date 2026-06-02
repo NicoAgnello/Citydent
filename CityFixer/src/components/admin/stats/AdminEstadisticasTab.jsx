@@ -1,10 +1,12 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { STATUS_KEYS, capitalize } from "@/lib/incidents";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Legend,
 } from "recharts";
+import AdminHeatmapView from "./AdminHeatmapView";
 
 // ── Paleta de colores de marca para los gráficos ──
 const BRAND_COLORS = ["#5C3F99", "#7C5CBF", "#9B7DD4", "#6B4FA8", "#4C3080", "#A889CC", "#C4B8E0", "#8B6FC0"];
@@ -91,125 +93,143 @@ export default function AdminEstadisticasTab({ incidents, loading }) {
     .map(([name, value], i) => ({ name, value, fill: BRAND_COLORS[i % BRAND_COLORS.length] }));
 
   return (
-    <div className="min-h-screen">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900 mb-5">
         Panel de Estadísticas Municipales
       </h1>
 
-      {/* ── Fila KPIs ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Total Reportes"  value={total}              accent="text-slate-900"   loading={loading} />
-        <KpiCard label="En Proceso"      value={enProceso}          accent="text-celestito"   loading={loading} />
-        <KpiCard label="Resueltos"       value={resueltos}          accent="text-emerald-600" loading={loading} />
-        <KpiCard label="Eficiencia"      value={`${eficiencia}%`}   accent="text-primary"     loading={loading} />
-      </div>
+      <Tabs defaultValue="metricas">
 
-      {/* ── Grilla de gráficos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsList className="mb-6">
+          <TabsTrigger value="metricas">Métricas Generales</TabsTrigger>
+          <TabsTrigger value="mapa">Mapa de Calor Urbano</TabsTrigger>
+        </TabsList>
 
-        {/* ── Gráfico 1: Tendencia últimos 8 días ── */}
-        <Card className="border-slate-100 shadow-none">
-          <CardContent className="p-5">
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-slate-900">Actividad reciente</p>
-              <p className="text-xs text-slate-400 mt-0.5">Reportes ingresados por día</p>
-            </div>
-            <div className="h-72">
-              {loading ? (
-                <div className="h-full bg-slate-50 rounded-xl animate-pulse" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={trendData} barSize={28} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                    <XAxis
-                      dataKey="dia"
-                      tick={{ fontSize: 11, fill: "#94a3b8" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{ fontSize: 11, fill: "#94a3b8" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip content={<BarTooltip />} cursor={{ fill: "#f8fafc" }} />
-                    <Bar dataKey="reportes" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* ══ Tab 1: Métricas Generales ══ */}
+        <TabsContent value="metricas">
 
-        {/* ── Gráfico 2: Distribución por categoría ── */}
-        <Card className="border-slate-100 shadow-none">
-          <CardContent className="p-5">
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-slate-900">Distribución por categoría</p>
-              <p className="text-xs text-slate-400 mt-0.5">Tipos de incidentes más frecuentes</p>
-            </div>
-            <div className="h-72">
-              {loading || categoryData.length === 0 ? (
-                <div className="h-full flex items-center justify-center">
-                  <p className="text-xs text-slate-400">
-                    {loading ? "Cargando..." : "Sin datos suficientes"}
-                  </p>
+          {/* ── Fila KPIs ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <KpiCard label="Total Reportes"  value={total}              accent="text-slate-900"   loading={loading} />
+            <KpiCard label="En Proceso"      value={enProceso}          accent="text-celestito"   loading={loading} />
+            <KpiCard label="Resueltos"       value={resueltos}          accent="text-emerald-600" loading={loading} />
+            <KpiCard label="Eficiencia"      value={`${eficiencia}%`}   accent="text-primary"     loading={loading} />
+          </div>
+
+          {/* ── Grilla de gráficos ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* ── Gráfico 1: Tendencia últimos 8 días ── */}
+            <Card className="border-slate-100 shadow-none">
+              <CardContent className="p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-slate-900">Actividad reciente</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Reportes ingresados por día</p>
                 </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="42%"
-                      innerRadius={60}
-                      outerRadius={95}
-                      paddingAngle={3}
-                      dataKey="value"
-                    />
-                    <Tooltip content={<PieTooltip />} />
-                    <Legend
-                      iconType="circle"
-                      iconSize={8}
-                      formatter={(value) => (
-                        <span style={{ fontSize: 11, color: "#64748b" }}>{value}</span>
-                      )}
-                      wrapperStyle={{ paddingTop: 12 }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-      </div>
-
-      {/* ── Tabla de rechazados (si los hay) ── */}
-      {!loading && rechazados > 0 && (
-        <Card className="border-slate-100 shadow-none mt-6">
-          <CardContent className="p-5">
-            <p className="text-sm font-semibold text-slate-900 mb-1">Estado general</p>
-            <p className="text-xs text-slate-400 mb-4">Distribución completa de estados activos</p>
-            <div className="flex flex-wrap gap-3">
-              {[
-                { label: "Pendientes",  value: incidents.filter(i => i.status?.name === STATUS_KEYS.PENDING).length,    color: "bg-amber-50 text-amber-700 border-amber-200"   },
-                { label: "En proceso",  value: enProceso,                                                                color: "bg-blanquito/20 text-azul-oscuro border-blanquito/50" },
-                { label: "Resueltos",   value: resueltos,                                                                color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                { label: "Rechazados",  value: rechazados,                                                               color: "bg-rose-50 text-rose-700 border-rose-200"         },
-                { label: "Cancelados",  value: incidents.filter(i => i.status?.name === STATUS_KEYS.CANCELLED).length,  color: "bg-gray-50 text-gray-500 border-gray-200"         },
-              ].map(({ label, value, color }) => (
-                <div key={label} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm ${color}`}>
-                  <span className="font-bold text-base">{value}</span>
-                  <span className="text-xs font-medium">{label}</span>
+                <div className="h-72">
+                  {loading ? (
+                    <div className="h-full bg-slate-50 rounded-xl animate-pulse" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={trendData} barSize={28} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                        <XAxis
+                          dataKey="dia"
+                          tick={{ fontSize: 11, fill: "#94a3b8" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          tick={{ fontSize: 11, fill: "#94a3b8" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip content={<BarTooltip />} cursor={{ fill: "#f8fafc" }} />
+                        <Bar dataKey="reportes" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              </CardContent>
+            </Card>
 
+            {/* ── Gráfico 2: Distribución por categoría ── */}
+            <Card className="border-slate-100 shadow-none">
+              <CardContent className="p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-semibold text-slate-900">Distribución por categoría</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Tipos de incidentes más frecuentes</p>
+                </div>
+                <div className="h-72">
+                  {loading || categoryData.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-xs text-slate-400">
+                        {loading ? "Cargando..." : "Sin datos suficientes"}
+                      </p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="42%"
+                          innerRadius={60}
+                          outerRadius={95}
+                          paddingAngle={3}
+                          dataKey="value"
+                        />
+                        <Tooltip content={<PieTooltip />} />
+                        <Legend
+                          iconType="circle"
+                          iconSize={8}
+                          formatter={(value) => (
+                            <span style={{ fontSize: 11, color: "#64748b" }}>{value}</span>
+                          )}
+                          wrapperStyle={{ paddingTop: 12 }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+          </div>
+
+          {/* ── Estado general (si hay rechazados) ── */}
+          {!loading && rechazados > 0 && (
+            <Card className="border-slate-100 shadow-none mt-6">
+              <CardContent className="p-5">
+                <p className="text-sm font-semibold text-slate-900 mb-1">Estado general</p>
+                <p className="text-xs text-slate-400 mb-4">Distribución completa de estados activos</p>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { label: "Pendientes",  value: incidents.filter(i => i.status?.name === STATUS_KEYS.PENDING).length,    color: "bg-amber-50 text-amber-700 border-amber-200"          },
+                    { label: "En proceso",  value: enProceso,                                                                color: "bg-blanquito/20 text-azul-oscuro border-blanquito/50"  },
+                    { label: "Resueltos",   value: resueltos,                                                                color: "bg-emerald-50 text-emerald-700 border-emerald-200"     },
+                    { label: "Rechazados",  value: rechazados,                                                               color: "bg-rose-50 text-rose-700 border-rose-200"              },
+                    { label: "Cancelados",  value: incidents.filter(i => i.status?.name === STATUS_KEYS.CANCELLED).length,  color: "bg-gray-50 text-gray-500 border-gray-200"              },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm ${color}`}>
+                      <span className="font-bold text-base">{value}</span>
+                      <span className="text-xs font-medium">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+        </TabsContent>
+
+        {/* ══ Tab 2: Mapa de Calor Urbano ══ */}
+        <TabsContent value="mapa">
+          <AdminHeatmapView incidents={incidents} loading={loading} />
+        </TabsContent>
+
+      </Tabs>
     </div>
   );
 }
