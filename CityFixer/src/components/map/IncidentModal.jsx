@@ -1,47 +1,37 @@
 import React from 'react'
-import { PlusCircle } from "lucide-react"
-import { Button } from "../ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog"
+import { Dialog, DialogContent } from "../ui/dialog"
 import IncidentForm from './IncidentForm'
 
 const IncidentModal = ({ open, onOpenChange, onCreated }) => {
   const controlled = open !== undefined;
+
   return (
-    <Dialog open={controlled ? open : undefined} onOpenChange={controlled ? onOpenChange : undefined}>
-      {!controlled && (
-        <DialogTrigger asChild>
-          <Button className="gap-2 bg-azul-oscuro hover:bg-celestito text-white rounded-2xl px-6 py-6 shadow-lg transition-all font-bold">
-            <PlusCircle size={20} />
-            Reportar Incidente
-          </Button>
-        </DialogTrigger>
-      )}
-
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto p-0 border-none rounded-3xl bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <DialogHeader className="bg-azul-oscuro p-6 text-white shrink-0">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <span className="bg-blanquito w-2 h-8 rounded-full inline-block mr-1" />
-            Nuevo Reporte Urbano
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="p-2 bg-white">
-          <IncidentForm
-            onSuccess={() => {
-              onOpenChange?.(false);
-              onCreated?.();
-            }}
-          />
-        </div>
+    <Dialog
+      open={controlled ? open : undefined}
+      onOpenChange={controlled ? onOpenChange : undefined}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className="
+          p-0 gap-0 flex flex-col border-none bg-white overflow-hidden
+          !top-auto !bottom-0 !left-0 !right-0 !translate-x-0 !translate-y-0
+          !max-w-full !w-full h-[92dvh] rounded-t-2xl
+          sm:!top-1/2 sm:!bottom-auto sm:!left-1/2 sm:!right-auto
+          sm:!-translate-x-1/2 sm:!-translate-y-1/2
+          sm:!max-w-2xl sm:!w-full sm:h-auto sm:max-h-[90dvh]
+          sm:rounded-2xl
+        "
+      >
+        <IncidentForm
+          onSuccess={() => {
+            onOpenChange?.(false);
+            onCreated?.();
+          }}
+          onClose={() => onOpenChange?.(false)}
+        />
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default IncidentModal
+export default IncidentModal;

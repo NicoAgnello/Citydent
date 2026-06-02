@@ -31,7 +31,10 @@ export default function MapView({ lat, lng, className = "w-full h-48 rounded-2xl
       zoomControl={interactive}
       attributionControl={false}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      />
       <Marker position={[lat, lng]} icon={incidentIcon} />
       <InvalidateSize />
     </MapContainer>

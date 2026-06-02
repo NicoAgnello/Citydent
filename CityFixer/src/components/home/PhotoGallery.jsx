@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ImageOff } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-export default function PhotoGallery({ photos }) {
+export default function PhotoGallery({ photos, compact = false }) {
   const [lightbox, setLightbox] = useState(null);
 
   if (!photos?.length) {
@@ -16,7 +16,19 @@ export default function PhotoGallery({ photos }) {
 
   return (
     <>
-      {photos.length === 1 ? (
+      {compact ? (
+        <div className="grid grid-cols-3 gap-2">
+          {photos.map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt={`foto-${i + 1}`}
+              onClick={() => setLightbox(url)}
+              className="aspect-square w-full rounded-lg object-cover cursor-pointer hover:opacity-85 transition-opacity"
+            />
+          ))}
+        </div>
+      ) : photos.length === 1 ? (
         <img
           src={photos[0]}
           alt="foto-1"

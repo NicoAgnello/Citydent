@@ -80,8 +80,8 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
       className={className}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
       {userLocation && <FlyToLocation position={userLocation} />}
       {locationFound && <Marker position={userLocation} icon={userIcon} />}
