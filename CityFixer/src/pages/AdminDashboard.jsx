@@ -59,8 +59,6 @@ export default function AdminDashboard({ dbRole }) {
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "incidentes" && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
               <AdminIncidentesTab
                 incidents={incidents}
                 loading={loading}
@@ -69,7 +67,6 @@ export default function AdminDashboard({ dbRole }) {
                 focusedIncidentId={focusedIncidentId}
                 onClearFocus={() => setFocusedIncidentId(null)}
               />
-            </div>
             )}
 
             {/* Visible para admin y superAdmin */}
