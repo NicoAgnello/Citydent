@@ -1,49 +1,75 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const analizarIncidenteIA = async (title, description, incidentesCercanos = []) => {
+const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash", 
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const listadoCercanos = incidentesCercanos.length > 0
-      ? incidentesCercanos.map((inc) => `ID: ${inc._id} | TÍTULO: "${inc.title}" - DESCRIPCIÓN: "${inc.description}"`).join('\n')
-      : "No hay incidentes reportados cerca.";
+    const listadoCercanos = gruposCercanos.length > 0
+      ? gruposCercanos.map(g => {
+          const otros = g.incidentes.length > 1
+            ? g.incidentes
+                .filter(inc => inc.title !== g.title)
+                .map(inc => `  - "${inc.title}": "${inc.description}"`)
+                .join('\n')
+            : '  - (sin otros reportes)';
+
+          return `ID: ${g._id} | REPRESENTANTE: "${g.title}" - "${g.description}"\nOTROS REPORTES DEL GRUPO:\n${otros}`;
+        }).join('\n\n')
+      : "No hay grupos de incidentes reportados cerca.";
 
     const prompt = `
       Eres un analista experto del sistema de reportes urbanos "CityFixer" de una municipalidad.
-      Tu tarea es analizar un nuevo reporte ciudadano y compararlo con otros incidentes cercanos (si los hay) para detectar duplicados.
+      Tu tarea es analizar un nuevo reporte ciudadano y compararlo con grupos de incidentes cercanos para detectar si pertenece a un problema ya reportado.
 
       --- NUEVO REPORTE ---
       TÍTULO: "${title}"
       DESCRIPCIÓN: "${description}"
 
-      --- INCIDENTES CERCANOS (A menos de 20 metros) ---
+      --- GRUPOS DE INCIDENTES CERCANOS (radio 500m) ---
       ${listadoCercanos}
 
       REGLAS DE EVALUACIÓN:
-      1. ESTADO SUGERIDO: 
-         - Si el reporte es una emergencia vital, requiere policía, bomberos o ambulancia (ej. accidentes graves, incendios), el estado DEBE ser "rechazado".
-         - Si el título y la descripción parecen una broma, o se contradicen, el estado DEBE ser "dudoso".
-         - Si el titulo y la descripción son ininteligibles el estado debe ser "rechazado".
-         - Si es un reporte normal de infraestructura (baches, basura, luz), el estado DEBE ser "pendiente".
-      
-    2. PRIORIDAD: Asigna un número del 1 al 5, debe tener en cuenta la gravedad y urgencia del problema. 1 es baja prioridad (ej. un bache pequeño) y 5 es alta prioridad (ej. un gran árbol caído bloqueando una calle).
-      
-      3. CATEGORÍA: Sugiere una (ej: "bache", "alumbrado", "basura", "vandalismo", "otro").
 
-      4. DUPLICADOS:
-         - Si el NUEVO REPORTE describe el MISMO PROBLEMA exacto que un incidente cercano, marca "esDuplicado": true, y en "idIncidenteOriginal" pon el ID exacto de ese incidente cercano. Si no hay duplicado, pon null.
+      1. ESTADO SUGERIDO:
+         - "rechazado": el reporte es ilegible o completamente ininteligible.
+         - "dudoso": el título y la descripción se contradicen, o parece una broma.
+         - "pendiente": es un reporte válido de infraestructura urbana (baches, basura, luz, etc).
 
-      ESTRUCTURA DE RESPUESTA REQUERIDA (Genera solo este JSON):
+      2. EMERGENCIA (campo separado del estado):
+         - "isEmergency": true si requiere intervención urgente de policía, bomberos o ambulancia (accidentes graves, incendios, etc).
+         - Un reporte puede ser rechazado Y emergencia al mismo tiempo.
+
+      3. PRIORIDAD: número del 1 al 5 según gravedad y urgencia.
+         - 1: baja (ej. bache pequeño)
+         - 5: alta (ej. árbol caído bloqueando calle)
+
+      4. CATEGORÍA: sugiere una (ej: "bache", "alumbrado", "basura", "vandalismo", "otro").
+
+      5. DUPLICADOS:
+         - Si el nuevo reporte describe el MISMO PROBLEMA que uno de los grupos cercanos, marca "esDuplicado": true y en "idGrupoCandidato" pon el ID exacto de ese grupo.
+         - Si el reporte es "dudoso" o "rechazado", igualmente analizá similitud y completá "idGrupoCandidato" si corresponde.
+         - Si no hay candidato, pon null en "idGrupoCandidato".
+         - "confianza": número entre 0.0 y 1.0 que indica cuán seguro estás de que el nuevo reporte pertenece al grupo candidato. Si no hay candidato, pon 0.0.
+
+      6. REPRESENTANTE DEL GRUPO:
+         - Solo aplica cuando "esDuplicado" es true.
+         - Comparás el nuevo reporte contra el REPRESENTANTE actual del grupo candidato (el que aparece como "REPRESENTANTE" en los grupos cercanos).
+         - "esRepresentanteMejor": true si el nuevo reporte es más descriptivo, claro y completo que el representante actual para identificar el problema. false en cualquier otro caso o si no hay duplicado.
+
+      ESTRUCTURA DE RESPUESTA (solo este JSON):
       {
         "categoriaSugerida": "string",
         "estadoSugerido": "rechazado" | "dudoso" | "pendiente",
+        "isEmergency": boolean,
         "prioridadSugerida": number,
         "esDuplicado": boolean,
-        "idIncidenteOriginal": "string o null",
+        "idGrupoCandidato": "string o null",
+        "confianza": number,
+        "esRepresentanteMejor": boolean,
         "justificacion": "string"
       }
     `;
@@ -52,17 +78,17 @@ const analizarIncidenteIA = async (title, description, incidentesCercanos = []) 
     return JSON.parse(result.response.text());
 
   } catch (error) {
-    // Silenciamos el error gigante de la API y dejamos un aviso limpio en consola
-    console.warn(`⚠️ [Aviso IA] Gemini no disponible por alta demanda (503). Aplicando fallback manual al incidente.`);
-    
-    // Retornamos el objeto de respaldo con la aclaración exacta que solicitaste
+    console.warn(`⚠️ [Aviso IA] Gemini no disponible. Aplicando fallback.`);
     return {
       categoriaSugerida: "Requiere clasificación manual",
-      estadoSugerido: "pendiente", // Se fuerza explícitamente a pendiente
+      estadoSugerido: "pendiente",
+      isEmergency: false,
       prioridadSugerida: 1,
       esDuplicado: false,
-      idIncidenteOriginal: null,
-      justificacion: "[SISTEMA]: La Inteligencia Artificial no pudo procesar este reporte durante la carga debido a alta demanda del servidor. Se deben establecer la prioridad, categoría y posibles duplicados de manera manual."
+      idGrupoCandidato: null,
+      confianza: 0,
+      esRepresentanteMejor: false,
+      justificacion: "[SISTEMA]: La IA no pudo procesar este reporte. Se deben establecer prioridad, categoría y duplicados manualmente."
     };
   }
 };

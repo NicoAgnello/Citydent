@@ -16,7 +16,7 @@ const incidentSchema = new mongoose.Schema({
   status: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Status',
-    required: [true, 'El estado es obligatorio']
+    required: true
   },
   statusHistory: [
     {
@@ -25,10 +25,7 @@ const incidentSchema = new mongoose.Schema({
         ref: 'Status',
         required: true
       },
-      changedAt: {
-        type: Date,
-        default: Date.now
-      },
+      changedAt: { type: Date, default: Date.now },
       changedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -46,52 +43,30 @@ const incidentSchema = new mongoose.Schema({
     default: []
   },
   location: {
-    lat: {
-      type: Number,
-      required: [true, 'La ubicación es obligatoria'],
-    },
-    lng: {
-      type: Number,
-      required: [true, 'La ubicación es obligatoria'],
-    },
-    address: {
-      type: String,
-      required: false,
-      trim: true
-    }
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+    address: { type: String, trim: true }
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
-    required: [true, 'La categoría es obligatoria']
+    required: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
- priority: {
-    type: Number,
-    min: 1,
-    max: 5,
-    default: 1
+  group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'IncidentGroup',
+    required: true
   },
   ai_justification: { type: String, trim: true },
   ai_suggested_category: { type: String, trim: true },
-  
-  // --- NUEVOS CAMPOS DE DUPLICIDAD ---
-  is_duplicate: { 
-    type: Boolean, 
-    default: false 
-  },
-  original_incident: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Incident', 
-    default: null 
-  },
-  is_emergency: {
-    type: Boolean,
-    default: false},
+  is_emergency: { type: Boolean, default: false },
+  is_dubious: { type: Boolean, default: false },
+  is_cancelled: { type: Boolean, default: false }
 }, {
   timestamps: true
 });

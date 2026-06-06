@@ -1,6 +1,5 @@
-const Incident = require('../models/incident');
+const IncidentGroup = require('../models/incidentGroup');
 const Status = require('../models/status');
-const User = require('../models/user');
 const { analizarIncidenteIA } = require('../services/openai.service');
 
 const calcularDistanciaMetros = (lat1, lon1, lat2, lon2) => {
@@ -13,59 +12,53 @@ const calcularDistanciaMetros = (lat1, lon1, lat2, lon2) => {
 
 const aiIncidentValidation = async (req, res, next) => {
   try {
-    const userId = req.dbUser._id;
     const { title, description, location } = req.body;
 
-    const [pendienteStatus, dudosoStatus, rechazadoStatus, enProcesoStatus] = await Promise.all([
-      Status.findOne({ name: 'pendiente' }), Status.findOne({ name: 'dudoso' }),
-      Status.findOne({ name: 'rechazado' }), Status.findOne({ name: 'en_proceso' })
-    ]);
+    let gruposCercanos = [];
+    if (location?.lat && location?.lng) {
+      const estadosFinales = await Status.find({
+        name: { $in: ['rechazado', 'resuelto', 'cancelado'] }
+      }).select('_id');
 
-    if (!pendienteStatus || !dudosoStatus || !rechazadoStatus) return res.status(500).json({ error: 'Faltan estados requeridos.' });
+      const idsFinales = estadosFinales.map(s => s._id);
 
-    const dudososCount = await Incident.countDocuments({ user: userId, status: dudosoStatus._id });
-    if (dudososCount >= 5) {
-      await User.findByIdAndUpdate(userId, { $set: { isBanned: true } });
-      return res.status(403).json({ error: 'Tu cuenta ha sido suspendida.' });
+      const grupos = await IncidentGroup.find({
+        status: { $nin: idsFinales }
+      })
+        .populate('representativeId', '_id title description location')
+        .populate('incidents', 'title description');
+
+      gruposCercanos = grupos.filter(grupo => {
+        const rep = grupo.representativeId;
+        if (!rep?.location?.lat || !rep?.location?.lng) return false;
+        return calcularDistanciaMetros(
+          location.lat, location.lng,
+          rep.location.lat, rep.location.lng
+        ) <= 20;
+      }).map(grupo => ({
+        _id: grupo._id,
+        title: grupo.representativeId.title,
+        description: grupo.representativeId.description,
+        incidentes: grupo.incidents.map(inc => ({
+          title: inc.title,
+          description: inc.description
+        }))
+      }));
     }
 
-    let incidentesCercanos = [];
-    if (location && location.lat && location.lng) {
-      const statusActivos = [pendienteStatus._id];
-      if (enProcesoStatus) statusActivos.push(enProcesoStatus._id);
+    const evaluacionIA = await analizarIncidenteIA(title, description, gruposCercanos);
 
-      const activos = await Incident.find({ status: { $in: statusActivos } }).select('_id title description location');
-
-      incidentesCercanos = activos.filter(inc => {
-        if (!inc.location?.lat || !inc.location?.lng) return false;
-        return calcularDistanciaMetros(location.lat, location.lng, inc.location.lat, inc.location.lng) <= 20;
-      }).map(inc => ({ _id: inc._id, title: inc.title, description: inc.description }));
-    }
-
-    const evaluacionIA = await analizarIncidenteIA(title, description, incidentesCercanos);
-
-    // NUEVA LÓGICA: En vez de bloquear, asignamos los booleanos y el estado
-    let isEmergency = false;
-    let finalStatusId = pendienteStatus._id;
-
-    if (evaluacionIA.estadoSugerido === 'rechazado') {
-      isEmergency = true;
-      finalStatusId = rechazadoStatus._id;
-    } else if (evaluacionIA.estadoSugerido === 'dudoso') {
-      finalStatusId = dudosoStatus._id;
-    }
-
-    req.finalStatusId = finalStatusId;
-    
-    // Empaquetar TODOS los datos para que el servicio los guarde
     req.aiData = {
       isAI: true,
       prioridad: evaluacionIA.prioridadSugerida || 1,
       categoriaSugerida: evaluacionIA.categoriaSugerida,
       justificacion: evaluacionIA.justificacion,
       esDuplicado: evaluacionIA.esDuplicado,
-      idIncidenteOriginal: evaluacionIA.idIncidenteOriginal,
-      isEmergency: isEmergency // <-- Se lo pasamos al servicio
+      idGrupoCandidato: evaluacionIA.idGrupoCandidato,
+      confianza: evaluacionIA.confianza || 0.0,
+      esRepresentanteMejor: evaluacionIA.esRepresentanteMejor || false,
+      isEmergency: evaluacionIA.isEmergency || false,
+      estadoSugerido: evaluacionIA.estadoSugerido
     };
 
     next();
