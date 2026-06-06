@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
-import StatusFilterPills from "./StatusFilterPills";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Search, X } from "lucide-react";
 import AdminIncidentList from "./AdminIncidentList";
 import { useStatuses } from "@/hooks/useStatuses";
-import { capitalize } from "@/lib/incidents";
+import { capitalize, STATUS_LABELS } from "@/lib/incidents";
 
 const PRIORITY_LABELS = {
   1: "Muy baja", 2: "Baja", 3: "Media", 4: "Alta", 5: "Crítica",
@@ -12,7 +11,7 @@ const PRIORITY_LABELS = {
 const SELECT_CLASS =
   "text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
 
-export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNuevoReporte }) {
+export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNuevoReporte, focusedIncidentId, onClearFocus }) {
   const [filters, setFilters] = useState({
     status:     "todos",
     category:   "todas",
@@ -21,7 +20,19 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
   });
   const { statuses } = useStatuses();
 
+  const DEFAULTS = { status: "todos", category: "todas", priority: "todas", userSearch: "" };
   const set = (key) => (value) => setFilters((prev) => ({ ...prev, [key]: value }));
+  const clearFilters = () => setFilters(DEFAULTS);
+
+  // Cuando llega un incidente desde el buscador global, limpia los filtros para que sea visible
+  useEffect(() => {
+    if (focusedIncidentId) clearFilters();
+  }, [focusedIncidentId]);
+  const hasActiveFilters =
+    filters.status !== "todos" ||
+    filters.category !== "todas" ||
+    filters.priority !== "todas" ||
+    filters.userSearch.trim() !== "";
 
   // Categorías únicas derivadas de los incidentes cargados — sin llamada extra a la API
   const categories = useMemo(() => {
@@ -58,29 +69,10 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Fila 1: Pills de estado + contador + botón */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <StatusFilterPills
-          active={filters.status}
-          onChange={set("status")}
-          statuses={statuses}
-        />
-        <div className="flex items-center gap-3 shrink-0">
-          <p className="text-xs text-gray-400">
-            {loading ? "—" : `${filtered.length} incidente${filtered.length !== 1 ? "s" : ""}`}
-          </p>
-          <button
-            onClick={onNuevoReporte}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-azul-oscuro text-white text-xs font-semibold hover:bg-azul transition-colors"
-          >
-            <Plus size={13} />
-            Nuevo reporte
-          </button>
-        </div>
-      </div>
+      {/* Fila única: Búsqueda + Selects + Botón */}
+      <div className="flex gap-2 flex-wrap items-start">
 
-      {/* Fila 2: Búsqueda + Categoría + Prioridad */}
-      <div className="flex gap-2 flex-wrap">
+        {/* Buscador */}
         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -89,14 +81,29 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
               placeholder="Buscar por usuario..."
               value={filters.userSearch}
               onChange={(e) => set("userSearch")(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 text-sm rounded-xl bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
+              className="w-full pl-8 pr-4 py-2 text-xs rounded-xl bg-gray-100 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
             />
           </div>
           {filters.userSearch.trim().length > 0 && filters.userSearch.trim().length < 3 && (
-            <p className="text-xs text-gray-400 pl-1">Ingresá al menos 3 caracteres para buscar.</p>
+            <p className="text-xs text-gray-400 pl-1">Ingresá al menos 3 caracteres.</p>
           )}
         </div>
 
+        {/* Estado */}
+        <select
+          value={filters.status}
+          onChange={(e) => set("status")(e.target.value)}
+          className={SELECT_CLASS}
+        >
+          <option value="todos">Todos los estados</option>
+          {statuses.map((s) => (
+            <option key={s._id} value={s.name}>
+              {STATUS_LABELS[s.name] ?? capitalize(s.name)}
+            </option>
+          ))}
+        </select>
+
+        {/* Categoría */}
         <select
           value={filters.category}
           onChange={(e) => set("category")(e.target.value)}
@@ -108,6 +115,7 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
           ))}
         </select>
 
+        {/* Prioridad */}
         <select
           value={filters.priority}
           onChange={(e) => set("priority")(e.target.value)}
@@ -118,9 +126,38 @@ export default function AdminIncidentesTab({ incidents, loading, onUpdated, onNu
             <option key={p} value={p}>{p} — {PRIORITY_LABELS[p]}</option>
           ))}
         </select>
+
+        {/* Contador + Limpiar + Botón */}
+        <div className="flex items-center gap-3 shrink-0 ml-auto">
+          <p className="text-xs text-gray-400">
+            {loading ? "—" : `${filtered.length} incidente${filtered.length !== 1 ? "s" : ""}`}
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-gray-100 text-gray-500 text-xs font-medium hover:bg-gray-200 transition-colors"
+            >
+              <X size={12} />
+              Limpiar
+            </button>
+          )}
+          <button
+            onClick={onNuevoReporte}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-celestito transition-colors"
+          >
+            <Plus size={13} />
+            Nuevo reporte
+          </button>
+        </div>
       </div>
 
-      <AdminIncidentList incidents={filtered} loading={loading} onUpdated={onUpdated} />
+      <AdminIncidentList
+        incidents={filtered}
+        loading={loading}
+        onUpdated={onUpdated}
+        focusedIncidentId={focusedIncidentId}
+        onClearFocus={onClearFocus}
+      />
     </div>
   );
 }

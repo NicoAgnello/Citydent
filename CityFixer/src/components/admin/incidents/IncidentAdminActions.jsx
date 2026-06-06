@@ -81,10 +81,10 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
 
   return (
     <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
+      <div className="flex flex-col gap-4">
 
         {/* Estado */}
-        <div className="flex flex-col gap-2 sm:shrink-0">
+        <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</p>
           <div className="flex flex-wrap gap-1.5">
             {statuses.map((s) => {
@@ -109,11 +109,11 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
           </div>
         </div>
 
-        {/* Divisor vertical (solo desktop) */}
-        <div className="hidden sm:block w-px bg-gray-100 self-stretch" />
+        {/* Divisor */}
+        <div className="w-full h-px bg-gray-100" />
 
         {/* Categoría */}
-        <div className="flex flex-col gap-2 sm:flex-1 min-w-0">
+        <div className="flex flex-col gap-2 min-w-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
           <div className="flex gap-2">
             <select

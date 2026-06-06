@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUsers, getRoles, updateUserRole, updateUserBan } from "@/services/api";
+import { getUsers, getRoles, createUser, updateUserRole, updateUserBan } from "@/services/api";
 
 export function useUsers() {
   const [users, setUsers]             = useState([]);
@@ -8,6 +8,8 @@ export function useUsers() {
   const [loadError, setLoadError]     = useState(null);
   const [actionLoading, setActionLoading] = useState({});
   const [actionError, setActionError]     = useState({});
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError]     = useState(null);
 
   useEffect(() => {
     Promise.all([getUsers(), getRoles()])
@@ -36,6 +38,22 @@ export function useUsers() {
     }
   };
 
+  const handleCreate = async ({ firstName, lastName, email, password, roleId }) => {
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      await createUser({ firstName, lastName, email, password, ...(roleId && { role: roleId }) });
+      const res = await getUsers();
+      setUsers(res.data.users);
+      return true;
+    } catch (e) {
+      setCreateError(e.response?.data?.error ?? "No se pudo crear el usuario.");
+      return false;
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const handleBanToggle = async (userId, isBanned) => {
     setActionLoading((prev) => ({ ...prev, [userId]: "ban" }));
     try {
@@ -48,5 +66,9 @@ export function useUsers() {
     }
   };
 
-  return { users, roles, loading, loadError, actionLoading, actionError, handleRoleChange, handleBanToggle };
+  return {
+    users, roles, loading, loadError,
+    actionLoading, actionError, handleRoleChange, handleBanToggle,
+    handleCreate, createLoading, createError,
+  };
 }
