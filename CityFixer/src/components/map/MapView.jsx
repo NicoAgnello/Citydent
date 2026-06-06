@@ -1,42 +1,31 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
+import Map, { Marker } from "react-map-gl";
 
-const incidentIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-function InvalidateSize() {
-  const map = useMap();
-  useEffect(() => {
-    const t = setTimeout(() => map.invalidateSize(), 150);
-    return () => clearTimeout(t);
-  }, [map]);
-  return null;
+function PinIcon({ color }) {
+  return (
+    <svg width="24" height="36" viewBox="0 0 24 36">
+      <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24S24 21 24 12C24 5.4 18.6 0 12 0z" fill={color} />
+      <circle cx="12" cy="12" r="4.5" fill="white" />
+    </svg>
+  );
 }
 
 export default function MapView({ lat, lng, className = "w-full h-48 rounded-2xl z-0", interactive = true }) {
   if (!lat || !lng) return null;
 
   return (
-    <MapContainer
-      center={[lat, lng]}
-      zoom={16}
-      className={className}
-      scrollWheelZoom={interactive}
-      dragging={interactive}
-      zoomControl={interactive}
-      attributionControl={false}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      />
-      <Marker position={[lat, lng]} icon={incidentIcon} />
-      <InvalidateSize />
-    </MapContainer>
+    <div className={className} style={{ overflow: "hidden", pointerEvents: interactive ? "auto" : "none" }}>
+      <Map
+
+        initialViewState={{ longitude: lng, latitude: lat, zoom: 16 }}
+        mapStyle="mapbox://styles/mapbox/streets-v12"
+        style={{ width: "100%", height: "100%" }}
+        dragRotate={false}
+        attributionControl={false}
+      >
+        <Marker longitude={lng} latitude={lat} anchor="bottom">
+          <PinIcon color="#ef4444" />
+        </Marker>
+      </Map>
+    </div>
   );
 }
