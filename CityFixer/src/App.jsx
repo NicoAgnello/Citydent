@@ -5,8 +5,6 @@ import AppRouter from "./routes/AppRouter";
 import DniSetupScreen from "./components/auth/DniSetupScreen";
 import api from "./services/api";
 
-const DNI_KEY = "cityfixer_dni";
-
 function App() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
   const { user } = useUser();
@@ -14,6 +12,8 @@ function App() {
   const [dbRole, setDbRole] = useState(null);
   const [needsDni, setNeedsDni] = useState(false);
   const [dniLoading, setDniLoading] = useState(false);
+
+  const dniKey = user ? `cityfixer_dni_${user.id}` : null;
 
   const sincronizar = async (dni) => {
     try {
@@ -29,7 +29,7 @@ function App() {
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      localStorage.setItem(DNI_KEY, dni);
+      localStorage.setItem(dniKey, dni);
       setDbRole(data.user?.role?.name ?? "user");
     } catch (error) {
       console.error("Error sincronizando usuario:", error);
@@ -46,7 +46,7 @@ function App() {
       return;
     }
 
-    const dni = localStorage.getItem(DNI_KEY);
+    const dni = localStorage.getItem(dniKey);
     if (dni) {
       sincronizar(dni);
     } else {
