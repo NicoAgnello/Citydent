@@ -21,6 +21,7 @@ const verifyRole = (...roles) => {
       req.dbUser = dbUser;
       next();
     } catch (error) {
+      console.error('Error en verifyRole:', error);
       res.status(500).json({ error: 'Error interno del servidor.' });
     }
   };
