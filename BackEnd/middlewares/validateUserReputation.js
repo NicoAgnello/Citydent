@@ -11,9 +11,8 @@ const validateUserReputation = async (req, res, next) => {
     });
 
     if (dudososCount >= 5) {
-      return res.status(200).json({
-        success: false,
-        message: 'No es posible subir el incidente. Tenés muchos incidentes en revisión.'
+      return res.status(403).json({
+        error: 'No es posible subir el incidente. Tenés muchos incidentes en revisión.'
       });
     }
 

@@ -185,7 +185,7 @@ const getIncidentsByUser = async (userId) => {
     if (!obj.is_cancelled) {
       obj.status = obj.group?.status || obj.status;
       obj.category = obj.group?.category || obj.category;
-      if (obj.is_dubious) {
+      if (obj.is_dubious && obj.status) {
         obj.status = { ...obj.status, name: 'pendiente' };
       }
     }
