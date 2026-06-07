@@ -251,6 +251,8 @@ const getGroupHistory = async (groupId) => {
 // ACTUALIZACIÓN - ADMIN (sobre el grupo)
 // ==========================================
 
+const FINAL_STATUSES = ['rechazado', 'resuelto', 'cancelado'];
+
 const updateGroupStatus = async (groupId, newStatusId, userId) => {
   if (!mongoose.Types.ObjectId.isValid(newStatusId)) {
     const error = new Error('El estado enviado no es válido.');
@@ -258,10 +260,16 @@ const updateGroupStatus = async (groupId, newStatusId, userId) => {
     throw error;
   }
 
-  const group = await IncidentGroup.findById(groupId);
+  const group = await IncidentGroup.findById(groupId).populate('status', 'name');
   if (!group) {
     const error = new Error('Grupo no encontrado.');
     error.status = 404;
+    throw error;
+  }
+
+  if (FINAL_STATUSES.includes(group.status?.name)) {
+    const error = new Error(`El grupo está en estado "${group.status.name}" y no puede ser modificado.`);
+    error.status = 400;
     throw error;
   }
 
