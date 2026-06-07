@@ -9,6 +9,7 @@ const incidentRoutes = require('./routes/incident.routes');
 const categoryRoutes = require('./routes/category.routes');
 const statusRoutes = require('./routes/status.routes');
 const userRoutes = require('./routes/user.routes');
+const externalRoutes = require('./routes/external.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,6 +34,7 @@ app.use('/api/incidents', incidentRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/statuses', statusRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/external', externalRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
