@@ -13,27 +13,35 @@ const {
 
 const create = async (req, res) => {
   try {
-    const incident = await createIncident(req.body, req.dbUser._id, req.aiData, req.dbUser.role);
-
+    const incident = await createIncident(req.body, req.dbUser._id, req.finalStatusId, req.aiData, req.dbUser.role);
+    
     if (req.aiData.isEmergency) {
-      return res.status(201).json({
-        success: true,
-        incident,
-        isEmergency: true,
-        message: 'Atención: Tu reporte fue registrado en el municipio, pero parece ser una emergencia vital. La plataforma no despacha servicios de urgencia. Por favor, comunícate de inmediato con el 100 (Bomberos), 101 (Policía) o 107 (Ambulancia).'
-      });
+       return res.status(201).json({ 
+         success: true, 
+         incident, 
+         isEmergency: true,
+         message: 'Atención: Tu reporte fue registrado en el municipio, pero parece ser una emergencia vital. La plataforma no despacha servicios de urgencia. Por favor, comunícate de inmediato con el 100 (Bomberos), 101 (Policía) o 107 (Ambulancia).'
+       });
     }
 
     res.status(201).json({ success: true, incident });
   } catch (error) {
-    console.error("Error interno al crear incidente:", error);
+    console.error("🔴 Error interno en el controlador al crear incidente:", error); 
+    
+    // 👇 Inyectamos el req.body en todos los posibles retornos de error
+    const errorResponse = {
+      bodyRecibido: req.body
+    };
+
     if (error.status === 400) {
-      return res.status(400).json({ error: error.message, details: error.details });
+      return res.status(400).json({ error: error.message, details: error.details, ...errorResponse });
     }
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    if (error.status === 200) {
+      return res.status(200).json({ success: false, message: error.message, ...errorResponse });
+    }
+    res.status(500).json({ error: 'Error interno del servidor.', ...errorResponse });
   }
 };
-
 const getMyIncidents = async (req, res) => {
   try {
     const incidents = await getIncidentsByUser(req.dbUser._id);

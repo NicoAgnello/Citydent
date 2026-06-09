@@ -1,4 +1,4 @@
-//Generar un middel para hacer el upload a claudinary con las imagenes traidas en el post de incidentes, 
+// Generar un middel para hacer el upload a claudinary con las imagenes traidas en el post de incidentes, 
 // se debe rescatar la url de la imagen y parsear al objeto de incidente para grabar la url en la DB
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -19,6 +19,7 @@ const upload = multer({
 // Pasos 2 y 3: Lógica de subida y parseo
 const processIncidentData = async (req, res, next) => {
   try {
+    // Paso 2: Subir cada archivo a Cloudinary
     if (req.files && req.files.length > 0) {
       const urls = await Promise.all(
         req.files.map((file) =>
@@ -26,27 +27,46 @@ const processIncidentData = async (req, res, next) => {
             cloudinary.uploader.upload_stream(
               { 
                 folder: 'cityfixer/incidents',
-                resource_type: 'auto' // <-- ESTA LÍNEA ES LA CLAVE PARA LOS VIDEOS
+                resource_type: 'auto', // Permite que Cloudinary acepte videos automáticamente
+                timeout: 120000        // Aumenta el tiempo límite a 120 segundos para evitar el error 499
               },
-              (error, result) => error ? reject(error) : resolve(result.secure_url)
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result.secure_url);
+                }
+              }
             ).end(file.buffer);
           })
         )
       );
-      req.body.photos = urls; 
+      req.body.photos = urls; // Inyecta las URLs generadas
     } else {
-      req.body.photos = [];
+      req.body.photos = []; // Si no hay fotos, aseguramos que sea un array vacío
     }
 
+    // Paso 3: Parsear location de JSON string a objeto
     if (req.body.location && typeof req.body.location === 'string') {
       req.body.location = JSON.parse(req.body.location);
     }
 
+    // Todo listo, pasamos el objeto req limpio al Controller
     next();
+  // ... (tu lógica de try)
   } catch (error) {
     console.error('Error en uploadToCloudinary middleware:', error);
-    return res.status(500).json({ message: 'Error procesando los datos o subiendo imágenes', error: error.message });
+    return res.status(500).json({ 
+      message: 'Error procesando los datos o subiendo archivos (Timeout)', 
+      error: error.message,
+      // 👇 Agregamos el volcado de datos aquí
+      debugInfo: {
+        bodyRecibido: req.body,
+        archivosRecibidos: req.files ? req.files.map(f => ({ nombre: f.originalname, tamaño: f.size, tipo: f.mimetype })) : []
+      }
+    });
   }
 };
 
+// Exportamos el middleware como un arreglo. Express ejecutará upload.array primero, y processIncidentData después.
 module.exports = [upload.array('photos', 3), processIncidentData];
