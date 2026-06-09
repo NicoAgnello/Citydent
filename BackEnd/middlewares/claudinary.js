@@ -19,38 +19,34 @@ const upload = multer({
 // Pasos 2 y 3: Lógica de subida y parseo
 const processIncidentData = async (req, res, next) => {
   try {
-    // Paso 2: Subir cada archivo a Cloudinary
     if (req.files && req.files.length > 0) {
       const urls = await Promise.all(
         req.files.map((file) =>
           new Promise((resolve, reject) => {
             cloudinary.uploader.upload_stream(
-              { folder: 'cityfixer/incidents' },
+              { 
+                folder: 'cityfixer/incidents',
+                resource_type: 'auto' // <-- ESTA LÍNEA ES LA CLAVE PARA LOS VIDEOS
+              },
               (error, result) => error ? reject(error) : resolve(result.secure_url)
             ).end(file.buffer);
           })
         )
       );
-      req.body.photos = urls; // Inyecta las URLs generadas
+      req.body.photos = urls; 
     } else {
-      req.body.photos = []; // Si no hay fotos, aseguramos que sea un array vacío
+      req.body.photos = [];
     }
 
-    // Paso 3: Parsear location de JSON string a objeto
     if (req.body.location && typeof req.body.location === 'string') {
       req.body.location = JSON.parse(req.body.location);
     }
 
-    // Todo listo, pasamos el objeto req limpio al Controller
     next();
   } catch (error) {
     console.error('Error en uploadToCloudinary middleware:', error);
-    return res.status(500).json({ 
-      message: 'Error procesando los datos o subiendo imágenes', 
-      error: error.message 
-    });
+    return res.status(500).json({ message: 'Error procesando los datos o subiendo imágenes', error: error.message });
   }
 };
 
-// Exportamos el middleware como un arreglo. Express ejecutará upload.array primero, y processIncidentData después.
-module.exports = [upload.array('photos', 3), processIncidentData];//
+module.exports = [upload.array('photos', 3), processIncidentData];
