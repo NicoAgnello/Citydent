@@ -14,7 +14,12 @@ function getPriorityLabel(p) {
 }
 
 const SELECT_CLASS =
-  "w-full sm:w-auto text-xs rounded-xl bg-gray-100 text-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer border-none";
+  "w-full sm:w-auto px-3 text-xs font-medium " +
+  "rounded-full sm:rounded-xl " +
+  "bg-slate-100 sm:bg-gray-100 " +
+  "text-slate-600 sm:text-gray-700 " +
+  "border-0 sm:border " +
+  "focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all cursor-pointer";
 
 export default function AdminIncidentesTab({
   incidents,
@@ -114,20 +119,30 @@ export default function AdminIncidentesTab({
     <div className="flex flex-col gap-4">
 
       {/* ── Cabecera ── */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {loading ? "—" : `${filtered.length} ${isReadOnly ? "archivado" : "incidente"}${filtered.length !== 1 ? "s" : ""}`}
-          </p>
+      <div className="flex justify-between items-center gap-4">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
+            {!loading && (
+              <span className="sm:hidden text-sm text-slate-400 font-normal shrink-0">
+                ({filtered.length})
+              </span>
+            )}
+          </div>
+          {!loading && (
+            <p className="hidden sm:block text-xs text-gray-400 mt-0.5">
+              {`${filtered.length} ${isReadOnly ? "archivado" : "incidente"}${filtered.length !== 1 ? "s" : ""}`}
+            </p>
+          )}
         </div>
         {!isReadOnly && (
           <button
             onClick={onNuevoReporte}
-            className="shrink-0 flex items-center justify-center px-2.5 py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
+            className="shrink-0 flex items-center justify-center px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
           >
             <Plus size={15} />
-            Reportar Incidente
+            <span className="hidden sm:inline">Reportar Incidente</span>
+            <span className="sm:hidden">Nuevo</span>
           </button>
         )}
       </div>
@@ -187,72 +202,84 @@ export default function AdminIncidentesTab({
         {/* Divisor vertical — solo desktop */}
         <div className="hidden sm:block w-px h-8 bg-gray-200 self-center shrink-0" />
 
-        {/* Buscador — ancho completo en mobile */}
-        <div className="flex flex-col gap-1 w-full sm:flex-1 sm:min-w-[180px]">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Buscar por título, dirección o usuario..."
-              value={filters.search}
-              onChange={(e) => set("search")(e.target.value)}
-              className="w-full pl-8 pr-4 py-2 text-xs rounded-xl bg-white border border-gray-200 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all shadow-sm"
-            />
+        {/* Filter card — agrupa búsqueda + selects en mobile, transparente en desktop */}
+        <div className="flex flex-col gap-2.5 rounded-2xl bg-slate-50 border border-slate-200 p-3 sm:contents">
+
+          {/* Buscador */}
+          <div className="flex flex-col gap-1 w-full sm:flex-1 sm:min-w-[180px]">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Buscar por título, dirección o usuario..."
+                value={filters.search}
+                onChange={(e) => set("search")(e.target.value)}
+                className="w-full pl-8 pr-4 py-2 text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all
+                  rounded-full bg-white border border-slate-200
+                  sm:rounded-xl sm:bg-white sm:border sm:border-gray-200 sm:shadow-sm"
+              />
+            </div>
+            {filters.search.trim().length === 1 && (
+              <p className="text-xs text-gray-400 pl-1">Ingresá al menos 2 caracteres.</p>
+            )}
           </div>
-          {filters.search.trim().length === 1 && (
-            <p className="text-xs text-gray-400 pl-1">Ingresá al menos 2 caracteres.</p>
-          )}
-        </div>
 
-        {/* Selects: grilla 2×2 en mobile, inline en desktop */}
-        <div className="grid grid-cols-2 gap-2 sm:contents">
-          <Select value={filters.status} onValueChange={set("status")}>
-            <SelectTrigger className={SELECT_CLASS}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos los estados</SelectItem>
-              {statuses.map((s) => (
-                <SelectItem key={s._id} value={s.name}>{STATUS_LABELS[s.name] ?? capitalize(s.name)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Divisor interno — solo mobile */}
+          <div className="sm:hidden h-px bg-slate-200" />
 
-          <Select value={filters.category} onValueChange={set("category")}>
-            <SelectTrigger className={SELECT_CLASS}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas las categorías</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat._id} value={cat.name}>{capitalize(cat.name)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Selects: grilla 2×2 en mobile, inline en desktop */}
+          <div className="grid grid-cols-2 gap-1.5 sm:contents">
+            <Select value={filters.status} onValueChange={set("status")}>
+              <SelectTrigger className={SELECT_CLASS}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los estados</SelectItem>
+                {statuses.map((s) => (
+                  <SelectItem key={s._id} value={s.name}>{STATUS_LABELS[s.name] ?? capitalize(s.name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={filters.priority} onValueChange={set("priority")}>
-            <SelectTrigger className={SELECT_CLASS}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas las prioridades</SelectItem>
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((p) => (
-                <SelectItem key={p} value={String(p)}>{p} — {getPriorityLabel(p)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Select value={filters.category} onValueChange={set("category")}>
+              <SelectTrigger className={SELECT_CLASS}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las categorías</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat._id} value={cat.name}>{capitalize(cat.name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {hasActiveFilters ? (
-            <button
-              onClick={clearFilters}
-              className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl bg-gray-100 text-gray-500 text-xs font-medium hover:bg-gray-200 transition-colors"
-            >
-              <X size={12} />
-              Limpiar
-            </button>
-          ) : (
-            <div className="sm:hidden" />
-          )}
+            <Select value={filters.priority} onValueChange={set("priority")}>
+              <SelectTrigger className={SELECT_CLASS}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las prioridades</SelectItem>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((p) => (
+                  <SelectItem key={p} value={String(p)}>{p} — {getPriorityLabel(p)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters ? (
+              <button
+                onClick={clearFilters}
+                className="flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium transition-colors
+                  rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500
+                  sm:rounded-xl sm:bg-gray-100 sm:text-gray-500 sm:hover:bg-gray-200 sm:hover:text-gray-500"
+              >
+                <X size={12} />
+                Limpiar
+              </button>
+            ) : (
+              <div className="sm:hidden" />
+            )}
+          </div>
+
         </div>
 
       </div>
