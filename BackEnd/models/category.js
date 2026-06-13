@@ -10,7 +10,8 @@ const categorySchema = new mongoose.Schema({
   description: {
     type: String,
     trim: true,
-    default: ''
+    default: '',
+    maxlength: [100, 'La descripción no puede exceder los 100 caracteres']
   },
   isActive: {
     type: Boolean,
