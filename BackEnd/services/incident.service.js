@@ -583,7 +583,7 @@ const cancelIncident = async (incidentId, userId) => {
 
     if (remainingCount === 0) {
       group.status = cancelledStatus._id;
-      group.statusHistory.push({ status: cancelledStatus._id, changedBy: userId, source: 'user' });
+      group.statusHistory.push({ status: cancelledStatus._id, changedBy: userId, source: 'system' });
       group.finalizedAt = new Date();
     } else if (group.representativeId.toString() === incidentId.toString()) {
       const remaining = await Incident.find({

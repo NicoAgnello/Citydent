@@ -21,7 +21,7 @@ const incidentGroupSchema = new mongoose.Schema({
       },
       source: {
         type: String,
-        enum: ['admin', 'ai'],
+        enum: ['admin', 'ai', 'system'],
         required: true
       }
     }
