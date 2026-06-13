@@ -13,7 +13,7 @@ const {
 
 const create = async (req, res) => {
   try {
-    const incident = await createIncident(req.body, req.dbUser._id, req.finalStatusId, req.aiData, req.dbUser.role);
+    const incident = await createIncident(req.body, req.dbUser._id, req.aiData, req.dbUser.role);
     
     if (req.aiData.isEmergency) {
        return res.status(201).json({ 
