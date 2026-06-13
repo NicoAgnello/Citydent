@@ -53,6 +53,20 @@ app.use('/api/external', externalRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/neighborhoods', neighborhoodRoutes);
 
+// 404 — ninguna ruta coincidió
+app.use((req, res) => {
+  res.status(404).json({ error: 'Ruta no encontrada.' });
+});
+
+// Manejador de errores global — última red de seguridad
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('🔴 Error no manejado:', err);
+  const status = err.status || 500;
+  const message = status === 500 ? 'Error interno del servidor.' : err.message;
+  res.status(status).json({ error: message, ...(err.details && { details: err.details }) });
+});
+
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
