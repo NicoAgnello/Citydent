@@ -36,7 +36,7 @@ const sendExternalOtpEmail = async (to, code) => {
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2>Solicitud de acceso a datos externos</h2>
-        <p>Se realizó una solicitud de datos desde Power BI. Para autorizar el acceso, ingresá el siguiente código en el header <strong>x-otp-code</strong> de Power BI. Expira en <strong>5 minutos</strong> y es de un solo uso.</p>
+        <p>Se realizó una solicitud de datos desde Power BI. Para autorizar el acceso, ingresá el siguiente código en el header <strong>x-otp-code</strong> de Power BI. Es válido durante <strong>5 minutos</strong> y podés usarlo para actualizar los datos las veces que necesites dentro de ese lapso.</p>
         <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 24px 0;">
           ${code}
         </div>
