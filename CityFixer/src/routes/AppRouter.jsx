@@ -4,6 +4,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Login from "../pages/Login";
 import Home from "../pages/Home";
 import AdminDashboard from "../pages/AdminDashboard";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 function RootRedirect({ dbRole }) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -40,7 +41,9 @@ function AppRouter({ dbRole }) {
         path="/home"
         element={
           <ProtectedRoute dbRole={dbRole} requiredRole="user">
-            <Home />
+            <NotificationProvider>
+              <Home />
+            </NotificationProvider>
           </ProtectedRoute>
         }
       />

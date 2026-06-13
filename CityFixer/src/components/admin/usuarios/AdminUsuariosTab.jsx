@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, Loader2, MoreHorizontal, Shield, ShieldOff, X, User, Plus, Edit3, Check } from "lucide-react";
+import { Search, Loader2, Settings2, Shield, ShieldOff, X, User, Plus, Edit3, Check } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
 import { getNeighborhoods } from "@/services/api";
 import { Combobox } from "@/components/ui/combobox";
@@ -321,8 +321,8 @@ export default function AdminUsuariosTab() {
                         <TableCell className="py-2.5 pr-4">
                           {!isSuperAdmin(user) && (
                             <DropdownMenu>
-                              <DropdownMenuTrigger className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
-                                <MoreHorizontal size={15} />
+                              <DropdownMenuTrigger className="group p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
+                                <Settings2 size={15} className="transition-transform duration-200 group-hover:rotate-45" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-44">
                                 <DropdownMenuItem
@@ -400,9 +400,9 @@ export default function AdminUsuariosTab() {
                     {!isSuperAdmin(user) && (
                       <button
                         onClick={() => setSelectedUserId(user._id)}
-                        className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                        className="group shrink-0 p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
                       >
-                        <MoreHorizontal size={16} />
+                        <Settings2 size={16} className="transition-transform duration-200 group-hover:rotate-45" />
                       </button>
                     )}
                   </div>

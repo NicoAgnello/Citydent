@@ -3,7 +3,6 @@ import { BrowserRouter } from "react-router-dom";
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import AppRouter from "./routes/AppRouter";
 import ProfileSetupScreen from "./components/auth/ProfileSetupScreen";
-import { NotificationProvider } from "./context/NotificationContext";
 import api from "./services/api";
 
 function App() {
@@ -56,13 +55,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      {isSignedIn ? (
-        <NotificationProvider>
-          <AppRouter dbRole={dbRole} />
-        </NotificationProvider>
-      ) : (
-        <AppRouter dbRole={dbRole} />
-      )}
+      <AppRouter dbRole={dbRole} />
     </BrowserRouter>
   );
 }

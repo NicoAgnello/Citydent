@@ -43,8 +43,14 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
   );
 }
 
-const DUBIOUS_ALLOWED = ["aceptado", "rechazado"];
-const FINAL_STATES    = new Set(["resuelto", "rechazado", "cancelado"]);
+const TRANSITIONS = {
+  pendiente:  ["aceptado", "rechazado"],
+  aceptado:   ["en_proceso", "rechazado"],
+  en_proceso: ["resuelto", "rechazado"],
+  resuelto:   [],
+  rechazado:  [],
+  cancelado:  [],
+};
 
 export default function IncidentAdminActions({ incident, onUpdated }) {
   const { statuses } = useStatuses();
@@ -55,11 +61,10 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
   const [loadingCategory, setLoadingCategory] = useState(false);
 
   const currentStatus = incident.status?.name;
-  const isFinal   = FINAL_STATES.has(currentStatus);
-  const isDubious  = incident.representativeId?.is_dubious ?? false;
-  const visibleStatuses = isDubious
-    ? statuses.filter((s) => DUBIOUS_ALLOWED.includes(s.name))
-    : statuses;
+  const allowed = TRANSITIONS[currentStatus] ?? [];
+  const isFinal = allowed.length === 0;
+  const isDubious = incident.representativeId?.is_dubious ?? false;
+  const visibleStatuses = statuses.filter((s) => allowed.includes(s.name));
 
   useEffect(() => {
     getCategorias()
@@ -99,7 +104,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-orange-50 border border-orange-200">
             <AlertTriangle size={14} className="shrink-0 text-orange-500 mt-0.5" />
             <p className="text-xs text-orange-700 leading-snug">
-              Este incidente fue marcado como <span className="font-semibold">dudoso</span> por la IA. Solo podés cambiarlo a <span className="font-semibold">Aceptado</span> o <span className="font-semibold">Rechazado</span>.
+              La IA marcó este incidente como <span className="font-semibold">dudoso</span>. Revisá el contenido antes de aceptarlo.
             </p>
           </div>
         )}
