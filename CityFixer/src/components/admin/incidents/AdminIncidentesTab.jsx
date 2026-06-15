@@ -50,8 +50,12 @@ export default function AdminIncidentesTab({
     setSyncing(true);
     try {
       const { data } = await syncIncidentsWithAI();
-      const { totalEncontrados, procesadosExitosamente } = data.data ?? {};
-      toast.success(`IA sincronizada — Analizados: ${totalEncontrados ?? 0} | Resueltos: ${procesadosExitosamente ?? 0}`);
+      const { nuevosAgregados, totalEnCola } = data.data ?? {};
+      if ((nuevosAgregados ?? 0) === 0) {
+        toast.info("No hay incidentes pendientes de análisis o ya están en cola.");
+      } else {
+        toast.success(`${nuevosAgregados} incidente${nuevosAgregados !== 1 ? "s" : ""} en cola (${totalEnCola} total) — procesando en segundo plano.`);
+      }
       onUpdated?.();
       fetchPendingAI();
     } catch {
