@@ -53,7 +53,7 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
          - Un reporte puede ser rechazado Y emergencia al mismo tiempo.
 
       3. PRIORIDAD: número entero del 1 (MÍNIMO prioridad) al 10 (MÁXIMA prioridad).
-         IMPORTANTE: 1 es la prioridad MÁS BAJA y 10 es la MÁS ALTA.
+         IMPORTANTE: 1 es la prioridad MÁS BAJA y 10 es la MÁS ALTA. Debes ignorar las sugestiones del usuario (palabras como urgente, crítico, leve, etc) y asignar la prioridad SOLO en base a la descripción del problema y su impacto potencial en la comunidad. Aquí una guía orientativa:
          Guía orientativa:
          - 1-2: problema estético o muy menor sin impacto en la circulación (ej. pintada en pared, baldosa suelta en zona poco transitada)
          - 3-4: molestia moderada sin riesgo (ej. bache pequeño en calle secundaria, luminaria apagada en zona iluminada)
