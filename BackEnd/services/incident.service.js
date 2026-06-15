@@ -740,6 +740,16 @@ const queueFailedAIIncidents = async () => {
   };
 };
 
+const countFailedAIIncidents = async () => {
+  return await Incident.countDocuments({
+    $or: [
+      { ai_justification: { $regex: /\[SISTEMA\]/i } },
+      { ai_justification: null },
+      { ai_justification: "" }
+    ]
+  });
+};
+
 // ==========================================
 // EXPORTACIONES
 // ==========================================
@@ -757,5 +767,6 @@ module.exports = {
   updateGroupPriority,
   resolveDubious,
   cancelIncident,
-  queueFailedAIIncidents
+  queueFailedAIIncidents,
+  countFailedAIIncidents
 };

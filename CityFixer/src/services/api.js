@@ -66,7 +66,8 @@ export const getIncidentHistory = (id) => api.get(`/api/incidents/${id}/history`
 export const getGroupHistory = (groupId) => api.get(`/api/incidents/${groupId}/group-history`);
 
 // ─── Admin — IA Sincronización ───────────────────────────────────────────────
-export const syncIncidentsWithAI = () => api.post("/api/incidents/sync-ai");
+export const syncIncidentsWithAI     = () => api.post("/api/incidents/sync-ai");
+export const countIncidentsPendingAI = () => api.get("/api/incidents/sync-ai/count");
 
 // ─── Perfil de usuario ────────────────────────────────────────────────────────
 

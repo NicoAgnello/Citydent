@@ -5,7 +5,7 @@ import AdminIncidentList from "./AdminIncidentList";
 import { useStatuses } from "@/hooks/useStatuses";
 import { capitalize, STATUS_LABELS } from "@/lib/incidents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { syncIncidentsWithAI } from "@/services/api";
+import { syncIncidentsWithAI, countIncidentsPendingAI } from "@/services/api";
 
 function getPriorityLabel(p) {
   if (p <= 2) return "Muy baja";
@@ -33,6 +33,18 @@ export default function AdminIncidentesTab({
 }) {
   const [activeTab, setActiveTab] = useState("activos");
   const [syncing, setSyncing] = useState(false);
+  const [pendingAI, setPendingAI] = useState(null);
+
+  const fetchPendingAI = async () => {
+    try {
+      const { data } = await countIncidentsPendingAI();
+      setPendingAI(data.count ?? 0);
+    } catch {
+      setPendingAI(null);
+    }
+  };
+
+  useEffect(() => { fetchPendingAI(); }, []);
 
   const handleSyncAI = async () => {
     setSyncing(true);
@@ -41,6 +53,7 @@ export default function AdminIncidentesTab({
       const { totalEncontrados, procesadosExitosamente } = data.data ?? {};
       toast.success(`IA sincronizada — Analizados: ${totalEncontrados ?? 0} | Resueltos: ${procesadosExitosamente ?? 0}`);
       onUpdated?.();
+      fetchPendingAI();
     } catch {
       toast.error("No se pudo sincronizar con la IA.");
     } finally {
@@ -155,18 +168,25 @@ export default function AdminIncidentesTab({
         </div>
         {!isReadOnly && (
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={handleSyncAI}
-              disabled={syncing}
-              title="Reintentar análisis de IA en incidentes pendientes"
-              className="flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-primary/40 bg-white hover:bg-primary/5 text-primary text-sm font-semibold transition-colors disabled:opacity-50"
-            >
-              {syncing
-                ? <Loader2 size={15} className="animate-spin" />
-                : <RefreshCw size={15} />
-              }
-              <span className="hidden sm:inline">Sincronizar IA</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleSyncAI}
+                disabled={syncing}
+                title="Reintentar análisis de IA en incidentes pendientes"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-primary/40 bg-white hover:bg-primary/5 text-primary text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {syncing
+                  ? <Loader2 size={15} className="animate-spin" />
+                  : <RefreshCw size={15} />
+                }
+                <span className="hidden sm:inline">Sincronizar IA</span>
+              </button>
+              {pendingAI > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 ring-2 ring-white flex items-center justify-center text-white text-[10px] font-bold leading-none">
+                  {pendingAI > 99 ? "99+" : pendingAI}
+                </span>
+              )}
+            </div>
             <button
               onClick={onNuevoReporte}
               className="flex items-center justify-center px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
