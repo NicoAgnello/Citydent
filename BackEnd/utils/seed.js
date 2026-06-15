@@ -57,18 +57,6 @@ const seed = async () => {
       console.log(`✔ Categoría: ${category.name}`);
     }
 
-    for (const feature of barrios.features) {
-      await Neighborhood.findOneAndUpdate(
-        { name: feature.properties.nombre },
-        {
-          name: feature.properties.nombre,
-          geometry: feature.geometry
-        },
-        { upsert: true, returnDocument: 'after' }
-      );
-      console.log(`✔ Barrio: ${feature.properties.nombre}`);
-    }
-
     // Roles
     for (const role of roles) {
       await Role.findOneAndUpdate(
@@ -94,7 +82,21 @@ const seed = async () => {
       },
       { upsert: true, returnDocument: 'after' }
     );
-    console.log(`✔ Usuario IA: ${aiUser._id} — guardá este ID en tu .env como AI_USER_ID`);
+    console.log(`✔ Usuario IA: ${aiUser._id}`);
+
+    // Barrios al final: si alguno fallara (geometría inválida para el índice 2dsphere),
+    // los datos críticos de arriba (estados, categorías, roles, usuario IA) ya quedaron cargados.
+    for (const feature of barrios.features) {
+      await Neighborhood.findOneAndUpdate(
+        { name: feature.properties.nombre },
+        {
+          name: feature.properties.nombre,
+          geometry: feature.geometry
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+      console.log(`✔ Barrio: ${feature.properties.nombre}`);
+    }
 
     console.log('Seed completado.');
   } catch (error) {
