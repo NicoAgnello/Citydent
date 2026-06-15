@@ -180,7 +180,7 @@ const createIncident = async (incidentData, userId, aiData, userRole = 'user') =
     status: grupoStatusId,
     statusHistory: [{ status: grupoStatusId, changedBy, source }],
     category: incidentData.category,
-    priority: aiData?.prioridad || 1,
+    priority: aiData?.prioridad ?? 0, 
     representativeId: incidentId,
     incidents: [incidentId],
     is_emergency: aiData?.isEmergency || false,
@@ -645,55 +645,98 @@ const cancelIncident = async (incidentId, userId) => {
 };
 
 // ==========================================
-// SINCRONIZACIÓN MANUAL DE IA (FALLBACKS)
+// SINCRONIZACIÓN MANUAL DE IA (SISTEMA DE COLA)
 // ==========================================
 
-const syncFailedAIIncidents = async () => {
-  // Buscamos incidentes donde la IA falló previamente (tienen la etiqueta [SISTEMA])
+let syncQueue = [];
+let isSyncRunning = false;
+
+const processSyncQueue = async () => {
+  isSyncRunning = true;
+  console.log(`\n⚙️ [SYNC INIT] Arrancando procesador en segundo plano. Total en cola inicial: ${syncQueue.length}`);
+
+  while (syncQueue.length > 0) {
+    // Extraemos hasta 5 incidentes de la cola (el límite de Gemini por minuto)
+    const batch = syncQueue.splice(0, 5);
+    console.log(`\n🚀 [SYNC BATCH] Iniciando lote de ${batch.length} solicitudes...`);
+
+    for (const incident of batch) {
+      console.log(`  -> Sincronizando ID: ${incident._id} | Título: "${incident.title}"`);
+      try {
+        const aiData = await analizarIncidenteIA(incident.title, incident.description, []);
+
+        if (!aiData.justificacion.includes('[SISTEMA]')) {
+          
+          // 1. Actualizamos el Incidente (Justificación, Categoría y Emergencia)
+          const updatedIncident = await Incident.findByIdAndUpdate(incident._id, {
+            ai_justification: aiData.justificacion,
+            ai_suggested_category: aiData.categoriaSugerida || 'No sugerida',
+            ...(aiData.isEmergency ? { is_emergency: true } : {})
+          }, { new: true });
+
+         // 2. Actualizamos la Prioridad (y Emergencia) en su respectivo Grupo
+          if (updatedIncident && updatedIncident.group) {
+            const group = await IncidentGroup.findById(updatedIncident.group);
+            if (group) {
+              // Asignamos la prioridad sugerida, respetando si el grupo ya tenía una mayor
+              group.priority = Math.max(group.priority, aiData.prioridadSugerida ?? 1); // <-- Usar ?? 1
+              if (aiData.isEmergency) group.is_emergency = true;
+              
+              await group.save();
+            }
+          }
+
+          console.log(`  ✅ Éxito: Incidente y Grupo (Prioridad sugerida: ${aiData.prioridadSugerida || 1}) actualizados.`);
+        } else {
+          console.log(`  ⚠️ Advertencia: Gemini volvió a fallar por sobrecarga o devolvió fallback para este incidente.`);
+        }
+        
+        // Pausa de 2 segundos entre incidentes del mismo lote
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`  ❌ Error Crítico en ID ${incident._id}:`, error.message || error);
+      }
+    }
+
+    // Si después de procesar estos 5 aún quedan elementos en la cola, esperamos 60s
+    if (syncQueue.length > 0) {
+      console.log(`\n⏳ [SYNC WAIT] Límite de 5 solicitudes/minuto alcanzado.`);
+      console.log(`📋 Siguen en cola: ${syncQueue.map(inc => inc._id).join(', ')}`);
+      console.log(`💤 Congelando proceso por 60 segundos...`);
+      await new Promise(resolve => setTimeout(resolve, 60000)); // 60 segundos
+    }
+  }
+
+  isSyncRunning = false;
+  console.log(`\n🎉 [SYNC DONE] La cola de sincronización ha finalizado por completo.\n`);
+};
+
+const queueFailedAIIncidents = async () => {
+  // Buscamos los incidentes que requieran revisión
   const incidentsToUpdate = await Incident.find({
     $or: [
       { ai_justification: { $regex: /\[SISTEMA\]/i } },
       { ai_justification: null },
       { ai_justification: "" }
     ]
-  }).limit(50); // Límite de 50 para evitar Timeouts HTTP
+  }).select('_id title description group'); // <-- Nos aseguramos de traer el campo "group"
 
-  let procesados = 0;
-  let fallidos = 0;
+  // Filtramos para evitar meter duplicados a la cola
+  const newIncidents = incidentsToUpdate.filter(
+    inc => !syncQueue.some(queued => queued._id.toString() === inc._id.toString())
+  );
 
-  for (const incident of incidentsToUpdate) {
-    try {
-      // Re-analizamos con la IA (enviamos un array vacío de grupos cercanos 
-      // ya que el objetivo es solo recuperar justificación y prioridad del incidente en sí)
-      const aiData = await analizarIncidenteIA(incident.title, incident.description, []);
+  syncQueue.push(...newIncidents);
 
-      // Si la IA respondió bien (no devolvió el fallback de nuevo)
-      if (!aiData.justificacion.includes('[SISTEMA]')) {
-        incident.priority = aiData.prioridadSugerida || 1;
-        incident.ai_justification = aiData.justificacion;
-        incident.ai_suggested_category = aiData.categoriaSugerida || 'No sugerida';
-        
-        if (aiData.isEmergency) incident.is_emergency = true;
-
-        await incident.save();
-        procesados++;
-      } else {
-        fallidos++;
-      }
-
-      // Pausa de 1.5 segundos para respetar los límites (Rate Limit) de Gemini
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-    } catch (error) {
-      console.error(`Error sincronizando incidente ${incident._id}:`, error);
-      fallidos++;
-    }
+  // Si el procesador no está corriendo y hay incidentes, lo arrancamos de forma asíncrona
+  if (!isSyncRunning && syncQueue.length > 0) {
+    processSyncQueue();
   }
 
   return {
-    totalEncontrados: incidentsToUpdate.length,
-    procesadosExitosamente: procesados,
-    fallidos: fallidos
+    message: "Proceso de sincronización iniciado en el servidor.",
+    totalEnCola: syncQueue.length,
+    nuevosAgregados: newIncidents.length
   };
 };
 
@@ -714,5 +757,5 @@ module.exports = {
   updateGroupPriority,
   resolveDubious,
   cancelIncident,
-  syncFailedAIIncidents
+  queueFailedAIIncidents
 };

@@ -115,12 +115,12 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
     if (error.status) console.error("   - HTTP Status:", error.status);
     if (error.message) console.error("   - Mensaje:", error.message);
 
-    console.warn(`⚠️ [IA FALLBACK] Aplicando datos manuales de contingencia...`);
+   console.warn(`⚠️ [IA FALLBACK] Aplicando datos manuales de contingencia...`);
     return {
       categoriaSugerida: "Requiere clasificación manual",
       estadoSugerido: "pendiente",
       isEmergency: false,
-      prioridadSugerida: 1,
+      prioridadSugerida: 0, // <-- Cambiar de 1 a 0
       esDuplicado: false,
       idGrupoCandidato: null,
       confianza: 0,
