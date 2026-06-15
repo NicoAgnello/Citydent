@@ -9,7 +9,7 @@ const {
   updateGroupCategory,
   updateGroupPriority,
   cancelIncident,
-  syncFailedAIIncidents
+  queueFailedAIIncidents
 } = require('../services/incident.service');
 const { respondError, logError } = require('../utils/logger');
 
@@ -129,14 +129,13 @@ const cancel = async (req, res) => {
   }
 };
 
-
 const syncAIFallbacks = async (req, res) => {
   try {
-    const result = await syncFailedAIIncidents();
+    const result = await queueFailedAIIncidents();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("🔴 Error interno sincronizando la IA:", error);
-    res.status(500).json({ error: 'Error interno al intentar sincronizar incidentes con Gemini.' });
+    console.error("🔴 Error interno encolando la IA:", error);
+    res.status(500).json({ error: 'Error interno al intentar encolar incidentes con Gemini.' });
   }
 };
 

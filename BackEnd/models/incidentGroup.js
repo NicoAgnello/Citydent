@@ -33,9 +33,9 @@ const incidentGroupSchema = new mongoose.Schema({
   },
   priority: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 10,
-    default: 1
+    default: 0
   },
   representativeId: {
     type: mongoose.Schema.Types.ObjectId,

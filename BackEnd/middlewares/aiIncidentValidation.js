@@ -46,11 +46,11 @@ const aiIncidentValidation = async (req, res, next) => {
       }));
     }
 
-    const evaluacionIA = await analizarIncidenteIA(title, description, gruposCercanos);
+ const evaluacionIA = await analizarIncidenteIA(title, description, gruposCercanos);
 
     req.aiData = {
       isAI: true,
-      prioridad: evaluacionIA.prioridadSugerida || 1,
+      prioridad: evaluacionIA.prioridadSugerida ?? 0, // <-- Usamos ?? para que respete el 0
       categoriaSugerida: evaluacionIA.categoriaSugerida,
       justificacion: evaluacionIA.justificacion,
       esDuplicado: evaluacionIA.esDuplicado,
