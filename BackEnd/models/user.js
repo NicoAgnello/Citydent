@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
   dni: {
     type: String,
     default: null,
+    unique: true,
+    sparse: true,
     match: /^\d{8}$/
   },
   role: {

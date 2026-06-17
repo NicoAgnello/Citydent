@@ -148,6 +148,15 @@ const updateProfile = async (userId, data) => {
     throw error;
   }
 
+  if (!user.dni && dni) {
+    const dniExists = await User.findOne({ dni: String(dni), _id: { $ne: user._id } });
+    if (dniExists) {
+      const error = new Error('Ya existe un usuario con ese DNI.');
+      error.status = 409;
+      throw error;
+    }
+  }
+
   if (barrioId) {
     const barrio = await Neighborhood.findById(barrioId);
     if (!barrio) {
@@ -221,6 +230,15 @@ const createUserByAdmin = async (data) => {
     const error = new Error('Ya existe un usuario con ese email.');
     error.status = 409;
     throw error;
+  }
+
+  if (dni) {
+    const dniExists = await User.findOne({ dni: String(dni) });
+    if (dniExists) {
+      const error = new Error('Ya existe un usuario con ese DNI.');
+      error.status = 409;
+      throw error;
+    }
   }
 
   if (barrioId) {
@@ -316,6 +334,15 @@ const updateUserProfileByAdmin = async (targetUserId, data) => {
     error.status = 400;
     error.details = errors;
     throw error;
+  }
+
+  if (updateFields.dni && updateFields.dni !== user.dni) {
+    const dniExists = await User.findOne({ dni: updateFields.dni, _id: { $ne: user._id } });
+    if (dniExists) {
+      const error = new Error('Ya existe un usuario con ese DNI.');
+      error.status = 409;
+      throw error;
+    }
   }
 
   const merged = { ...user.toObject(), ...updateFields };
