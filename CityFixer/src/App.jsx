@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import AppRouter from "./routes/AppRouter";
 import ProfileSetupScreen from "./components/auth/ProfileSetupScreen";
+import TutorialScreen from "./components/auth/TutorialScreen";
 import api from "./services/api";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [isSynced, setIsSynced]             = useState(false);
   const [dbRole, setDbRole]                 = useState(null);
   const [needsProfile, setNeedsProfile]     = useState(false);
+  const [showTutorial, setShowTutorial]     = useState(false);
 
   const sincronizar = async () => {
     try {
@@ -43,12 +45,19 @@ function App() {
     sincronizar();
   }, [isLoaded, isSignedIn]);
 
-  const handleProfileComplete = () => setNeedsProfile(false);
+  const handleProfileComplete = () => {
+    setNeedsProfile(false);
+    setShowTutorial(true);
+  };
 
   if (!isLoaded) return null;
 
   if (isSignedIn && isSynced && needsProfile) {
     return <ProfileSetupScreen onComplete={handleProfileComplete} onSignOut={() => signOut()} />;
+  }
+
+  if (isSignedIn && isSynced && showTutorial) {
+    return <TutorialScreen onFinish={() => setShowTutorial(false)} />;
   }
 
   if (!isSynced) return null;
