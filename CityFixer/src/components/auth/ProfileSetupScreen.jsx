@@ -305,11 +305,7 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
               </>
             ) : (
               <>
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <CheckCircle2 size={15} className="shrink-0" />
-                  <p className="text-xs font-medium">Código enviado a tu correo.</p>
-                </div>
-
+               
                 <Field label="Código de verificación" error={errors.token}>
                   <input
                     type="text" inputMode="numeric" maxLength={6}
@@ -321,6 +317,14 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
                     }}
                     className={INPUT_CLS}
                   />
+                   <div className="flex items-center gap-2 text-emerald-600">
+                  <CheckCircle2 size={15} className="shrink-0" />
+                  <p className="text-xs font-medium">Código enviado a tu correo.</p>
+                </div>
+
+                  <p className="text-xs text-gray-400">
+                    Si no lo ves, revisá la carpeta de spam o correo no deseado.
+                  </p>
                 </Field>
 
                 {serverError && (
