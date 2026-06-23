@@ -19,9 +19,10 @@ const neighborhoodRoutes = require('./routes/neighborhood.routes');
 const { setupSocket } = require('./services/socket.service');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
-app.set('trust proxy', 1);
+
 
 
 mongoConnect();
