@@ -136,12 +136,12 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
       categoriaSugerida: "Requiere clasificación manual",
       estadoSugerido: "pendiente",
       isEmergency: false,
-      prioridadSugerida: 0, // <-- Cambiar de 1 a 0
+      prioridadSugerida: 0,
       esDuplicado: false,
       idGrupoCandidato: null,
       confianza: 0,
       esRepresentanteMejor: false,
-      justificacion: `[SISTEMA]: La IA falló al procesar (${error.message || "Error desconocido"}). Revisión manual requerida.`
+      justificacion: "[SISTEMA] La IA no resolvió este incidente, utilice el botón Sincronizar IA."
     };
   }
 };
