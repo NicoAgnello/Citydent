@@ -13,7 +13,7 @@
 // Se usa en AdminDashboard.jsx en la parte superior de la pantalla.
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { Bell, Menu, Search, User, X, AlertTriangle } from "lucide-react";
+import { Siren, Menu, Search, User, X, AlertTriangle } from "lucide-react";
 import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import {
   DropdownMenu,
@@ -255,7 +255,7 @@ export default function AdminTopbar({
         <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
           <DropdownMenuTrigger asChild>
             <button className="relative p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors focus:outline-none">
-              <Bell size={20} />
+              <Siren size={20} />
               {total > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 ring-2 ring-white flex items-center justify-center text-white text-[10px] font-bold leading-none">
                   {total > 99 ? "99+" : total}
