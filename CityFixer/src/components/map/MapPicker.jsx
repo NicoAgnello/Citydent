@@ -1,3 +1,12 @@
+// Mapa interactivo para que el usuario elija la ubicación de un incidente.
+// Al hacer clic en el mapa, coloca un pin y llama a reverseGeocode (Nominatim/OSM)
+// para convertir las coordenadas en una dirección de texto legible.
+// El centro por defecto es Villa María, Córdoba.
+//
+// Props:
+//   onChange → función que recibe { lat, lng, address } cuando el usuario elige un punto
+//
+// Se usa dentro de IncidentForm (paso de ubicación del formulario de reporte).
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import { reverseGeocode } from "@/lib/geocoding";

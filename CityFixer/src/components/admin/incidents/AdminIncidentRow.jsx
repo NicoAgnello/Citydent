@@ -1,3 +1,13 @@
+// Fila de incidente para la vista desktop del panel admin (tabla HTML).
+// Muestra: prioridad, título, categoría, dirección, fecha, cantidad de duplicados,
+// badge de estado, y un menú de acciones (⋯) con opciones de ver detalle.
+// Al hacer clic en "Ver" o en la fila, abre IncidentDetailSheet.
+//
+// Props:
+//   incident  → objeto de incidente con todos sus datos
+//   onUpdated → función sin argumentos, recarga la lista tras cambios de estado
+//
+// Se usa en AdminIncidentList.jsx en pantallas medianas/grandes (desktop).
 import { useState } from "react";
 import { MoreHorizontal, Eye, AlertTriangle, Archive, Users } from "lucide-react";
 import { TableRow, TableCell } from "@/components/ui/table";
@@ -10,7 +20,7 @@ import {
 import IncidentDetailSheet from "@/components/home/IncidentDetailSheet";
 import IncidentAdminActions from "./IncidentAdminActions";
 import { STATUS_LABELS, capitalize } from "@/lib/incidents";
-import { formatDate } from "@/components/home/IncidentCard";
+import { formatDate } from "@/lib/dates";
 
 function getPriorityLabel(p) {
   if (p <= 2) return "Muy baja";
@@ -32,7 +42,7 @@ const STATUS_TABLE_STYLES = {
   pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
   dudoso:     "bg-orange-50 text-orange-700 border border-orange-200",
   aceptado:   "bg-teal-50 text-teal-700 border border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border border-blanquito/50",
+  en_proceso: "bg-brand-light/20 text-brand-dark border border-brand-light/50",
   resuelto:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
   rechazado:  "bg-rose-50 text-rose-700 border border-rose-200",
   cancelado:  "bg-gray-50 text-gray-500 border border-gray-200",
@@ -83,7 +93,7 @@ export default function AdminIncidentRow({ incident, onUpdated, isReadOnly = fal
 
         {/* Categoría */}
         <TableCell className="py-2.5 cursor-pointer" onClick={() => setOpen(true)}>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blanquito/20 text-azul border border-blanquito/40 whitespace-nowrap">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-brand-light/20 text-brand border border-brand-light/40 whitespace-nowrap">
             {capitalize(incident.category?.name ?? "—")}
           </span>
         </TableCell>

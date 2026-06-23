@@ -1,3 +1,13 @@
+// Tab "Perfil" — muestra y permite editar los datos personales del usuario.
+// Cada campo (DNI, teléfono, barrio, código postal) tiene un botón de lápiz que
+// lo activa para edición inline. Los cambios se validan con los mismos regex que el back-end
+// antes de hacer PATCH al servidor.
+// Si el municipio es Villa María, aparece un selector de barrio (igual que en ProfileSetupScreen).
+// También muestra el avatar, nombre y email de Clerk (no editables desde acá).
+//
+// No recibe props — obtiene todo de Clerk (useUser) y de la API interna (getMyProfile).
+//
+// Se usa en Home.jsx como contenido del tab "perfil".
 import { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import {
@@ -64,7 +74,7 @@ function EditField({ label, error, children }) {
   );
 }
 
-const INPUT_CLS = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-celestito focus:border-transparent transition-all";
+const INPUT_CLS = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-mid focus:border-transparent transition-all";
 const INPUT_DISABLED = "w-full rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5 text-sm text-slate-400 cursor-not-allowed";
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -209,7 +219,7 @@ export default function PerfilTab({ incidents, loading }) {
               <button
                 onClick={handleEdit}
                 disabled={profileLoading}
-                className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-celestito transition-colors disabled:opacity-40"
+                className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-brand-mid transition-colors disabled:opacity-40"
               >
                 <Edit3 size={13} />
                 Editar
@@ -226,7 +236,7 @@ export default function PerfilTab({ incidents, loading }) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-celestito transition-colors disabled:opacity-60"
+                  className="flex items-center gap-1.5 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-brand-mid transition-colors disabled:opacity-60"
                 >
                   {saving
                     ? <Loader2 size={12} className="animate-spin" />

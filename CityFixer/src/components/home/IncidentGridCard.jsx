@@ -1,18 +1,18 @@
+// Tarjeta de incidente en formato grilla (con foto de portada).
+// Al hacer clic abre IncidentDetailSheet con el detalle completo.
+// Si el primer archivo adjunto es un video, muestra un ícono de play superpuesto.
+// Muestra: foto/video, título, badge de estado, dirección y fecha relativa.
+//
+// Props:
+//   incident  → objeto de incidente (id, title, status, location, photos, etc.)
+//   onUpdated → función sin argumentos, se pasa a IncidentDetailSheet para recargar tras cancelar
+//
+// Se usa en ReportesTab (grilla de todos los reportes del usuario).
 import { useState } from "react";
-import { MapPin, ImageOff, Play } from "lucide-react";
-import { STATUS_LABELS, capitalize } from "@/lib/incidents";
-import { formatDate } from "./IncidentCard";
+import { MapPin, Play } from "lucide-react";
+import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
+import { formatDate } from "@/lib/dates";
 import IncidentDetailSheet from "./IncidentDetailSheet";
-
-const STATUS_BADGE = {
-  pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
-  dudoso:     "bg-orange-50 text-orange-700 border border-orange-200",
-  aceptado:   "bg-teal-50 text-teal-700 border border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border border-blanquito/50",
-  resuelto:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  rechazado:  "bg-rose-50 text-rose-700 border border-rose-200",
-  cancelado:  "bg-gray-50 text-gray-500 border border-gray-200",
-};
 
 export default function IncidentGridCard({ incident, onUpdated }) {
   const [open, setOpen] = useState(false);

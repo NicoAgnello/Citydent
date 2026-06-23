@@ -1,3 +1,14 @@
+// Barra superior de la app de usuario (Home).
+// Muestra el logo, el botón de urgencias (Siren) y el avatar del usuario con un menú desplegable.
+// El menú tiene: acceso a cada tab, historial de notificaciones, cerrar sesión, y una
+// alerta en rojo visible si la cuenta está baneada (ShieldOff).
+// Recibe las notificaciones del contexto global (NotificationContext) para mostrar el badge.
+//
+// Props:
+//   activeTab      → tab actualmente visible ("inicio" | "reportes" | "perfil")
+//   onTabChange    → función que recibe el nombre del tab al hacer clic en el menú
+//   onUrgencias    → función sin argumentos, abre el modal de urgencias (UrgenciasModal)
+//   isBanned       → booleano, si true muestra el banner de cuenta suspendida
 import { useState } from "react";
 import { LogOut, Siren, ShieldOff, User, Home as HomeIcon, FileText, HelpCircle, Bell, CheckCheck } from "lucide-react";
 import SupportInfo from "./SupportInfo";
@@ -65,7 +76,7 @@ function NotificationPanel({ onNavigate }) {
         {unreadCount > 0 && (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-celestito transition-colors"
+            className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-brand-mid transition-colors"
           >
             <CheckCheck size={12} />
             Marcar todas

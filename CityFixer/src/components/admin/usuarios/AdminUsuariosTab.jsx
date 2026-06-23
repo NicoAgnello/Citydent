@@ -1,3 +1,17 @@
+// Tab de gestión de usuarios (solo accesible para superAdmin).
+// Muestra una tabla con todos los usuarios registrados. Permite:
+//   - Buscar por nombre o email
+//   - Filtrar por rol (ciudadano / admin / superAdmin)
+//   - Cambiar el rol de un usuario
+//   - Banear o desbanear una cuenta
+//   - Ver y editar el perfil completo de un usuario en un Sheet lateral
+//
+// Los datos se obtienen del hook useUsers que hace CRUD sobre /api/users.
+// Los roles se representan con badges de colores (violeta = superAdmin, brand = admin, gris = ciudadano).
+//
+// No recibe props — todo viene de useUsers y del propio componente.
+//
+// Se usa en AdminDashboard.jsx como contenido del tab "usuarios".
 import { useState, useMemo, useEffect } from "react";
 import { Search, Loader2, Settings2, Shield, ShieldOff, X, User, Plus, Edit3, Check, RefreshCw } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
@@ -23,7 +37,7 @@ const ROLE_LABELS = { user: "Ciudadano", admin: "Admin", superAdmin: "Super Admi
 
 const ROLE_BADGE = {
   superAdmin: "bg-violet-50 text-violet-700 border border-violet-200",
-  admin:      "bg-blanquito/30 text-azul border border-blanquito/50",
+  admin:      "bg-brand-light/30 text-brand border border-brand-light/50",
   user:       "bg-gray-50 text-gray-500 border border-gray-200",
 };
 
@@ -208,7 +222,7 @@ export default function AdminUsuariosTab() {
           </button>
           <Button
             onClick={openCreate}
-            className="shrink-0 rounded-xl bg-primary hover:bg-celestito text-white font-semibold gap-1.5"
+            className="shrink-0 rounded-xl bg-primary hover:bg-brand-mid text-white font-semibold gap-1.5"
           >
             <Plus size={15} />
             Nuevo Usuario
@@ -542,7 +556,7 @@ export default function AdminUsuariosTab() {
                     {!profileEditing ? (
                       <button
                         onClick={() => openProfileEdit(selectedUser)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-celestito transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-brand-mid transition-colors"
                       >
                         <Edit3 size={12} /> Editar
                       </button>
@@ -558,7 +572,7 @@ export default function AdminUsuariosTab() {
                         <button
                           onClick={submitProfileEdit}
                           disabled={actionLoading[selectedUser._id] === "profile"}
-                          className="flex items-center gap-1 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-celestito transition-colors disabled:opacity-60"
+                          className="flex items-center gap-1 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-brand-mid transition-colors disabled:opacity-60"
                         >
                           {actionLoading[selectedUser._id] === "profile"
                             ? <Loader2 size={11} className="animate-spin" />
@@ -757,7 +771,7 @@ export default function AdminUsuariosTab() {
               <Button
                 type="submit"
                 disabled={createLoading}
-                className="w-full rounded-xl bg-primary hover:bg-celestito text-white font-semibold mt-2"
+                className="w-full rounded-xl bg-primary hover:bg-brand-mid text-white font-semibold mt-2"
               >
                 {createLoading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
                 Crear usuario

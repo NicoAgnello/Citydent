@@ -1,3 +1,17 @@
+// Tab de inicio (pantalla principal del usuario).
+// Muestra un saludo según la hora del día, 4 contadores KPI (total, en proceso,
+// resueltos, rechazados) y una lista de los últimos 5 incidentes del usuario.
+// También tiene un botón flotante para crear un nuevo reporte.
+//
+// Props:
+//   user          → datos del usuario de Clerk (para mostrar el nombre en el saludo)
+//   incidents     → array de incidentes del usuario (de useIncidents)
+//   loading       → booleano, muestra skeletons mientras carga
+//   onVerTodos    → función sin argumentos, cambia al tab "reportes"
+//   onNuevoReporte → función sin argumentos, abre el modal de nuevo reporte
+//   onUpdated     → función sin argumentos, recarga la lista tras cancelar un incidente
+//
+// Se usa en Home.jsx como contenido del tab "inicio".
 import { ChevronRight, Plus, MapPin } from "lucide-react";
 import IncidentCard, { EmptyState } from "./IncidentCard";
 import IncidentSkeleton from "./IncidentSkeleton";
@@ -57,7 +71,7 @@ export default function InicioTab({ user, incidents, loading, onVerTodos, onNuev
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-0 bg-white rounded-xl border border-slate-100 shadow-xs overflow-hidden">
               {[
                 { value: total,      label: "Reportados",  color: "text-slate-900"   },
-                { value: enProceso,  label: "En proceso",  color: "text-celestito"   },
+                { value: enProceso,  label: "En proceso",  color: "text-brand-mid"   },
                 { value: resueltos,  label: "Resueltos",   color: "text-emerald-600" },
                 { value: rechazados, label: "Rechazados",  color: "text-red-500"     },
               ].map(({ value, label, color }, i) => (

@@ -1,3 +1,34 @@
+// ─── Home ─────────────────────────────────────────────────────────────────────
+//
+// Pantalla principal del ciudadano. Solo accesible si el usuario tiene rol "user"
+// y completó su perfil. Se monta en la ruta /home.
+//
+// Layout:
+//   ┌─────────────────────┐
+//   │      AppHeader       │  ← barra superior con notificaciones y tabs
+//   ├─────────────────────┤
+//   │                     │
+//   │   Contenido del tab │  ← cambia según la pestaña activa
+//   │   (inicio/reportes/ │
+//   │    perfil)          │
+//   │                     │
+//   ├─────────────────────┤
+//   │      BottomNav       │  ← barra de navegación inferior (solo mobile)
+//   └─────────────────────┘
+//
+// Tabs disponibles:
+//   "inicio"   → resumen de incidentes, accesos rápidos, emergencias
+//   "reportes" → lista completa de incidentes del usuario con filtros
+//   "perfil"   → datos personales y configuración de cuenta
+//
+// Estado "baneado":
+//   Si el backend responde con error de cuenta suspendida, App.jsx dispara el
+//   evento "cityfixer:banned". Home lo escucha y activa isBanned=true, que:
+//     - Deshabilita todos los clicks (pointer-events-none)
+//     - Muestra una capa semitransparente sobre el contenido
+//     - Bloquea la barra de navegación inferior
+//   Esto evita que el usuario siga interactuando sin tener que cerrar sesión.
+
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 
@@ -16,6 +47,7 @@ export default function Home() {
   const { incidents, loading, refresh } = useIncidents();
   const [isBanned, setIsBanned] = useState(false);
 
+  // Escucha el evento global de cuenta suspendida disparado por el interceptor de Axios.
   useEffect(() => {
     const handler = () => setIsBanned(true);
     window.addEventListener('cityfixer:banned', handler);
@@ -48,6 +80,7 @@ export default function Home() {
         {activeTab === "perfil"   && <PerfilTab incidents={incidents} loading={loading} />}
       </main>
 
+      {/* Modal para crear un nuevo reporte. Se abre desde InicioTab o BottomNav. */}
       <IncidentModal open={reportOpen} onOpenChange={setReportOpen} onCreated={refresh} />
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} disabled={isBanned} />

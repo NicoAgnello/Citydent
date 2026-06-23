@@ -1,65 +1,39 @@
+// Barra superior del panel admin.
+// Contiene: botón de menú mobile (hamburguesa), barra de búsqueda global (por título
+// de incidente), campana de notificaciones con dropdown que muestra hasta 5 emergencias activas,
+// y el avatar del usuario.
+// Las notificaciones se obtienen del contexto global (NotificationContext).
+// Al hacer clic en una emergencia del dropdown, llama a onIncidentSelect para que
+// AdminDashboard abra ese incidente directamente.
+//
+// Props:
+//   onMenuToggle    → función sin argumentos, abre/cierra el sidebar en mobile
+//   onIncidentSelect → función que recibe un id de incidente para enfocarlo en la lista
+//
+// Se usa en AdminDashboard.jsx en la parte superior de la pantalla.
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { Bell, Menu, Search, User, X, AlertTriangle, Flame, Clock } from "lucide-react";
-import { STATUS_LABELS, capitalize } from "@/lib/incidents";
+import { Bell, Menu, Search, User, X, AlertTriangle } from "lucide-react";
+import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// ── Estilos de badge por status (mismo patrón que el resto del panel) ──
-const STATUS_BADGE = {
-  pendiente:  "bg-amber-50 text-amber-700 border-amber-200",
-  dudoso:     "bg-orange-50 text-orange-700 border-orange-200",
-  aceptado:   "bg-teal-50 text-teal-700 border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border-blanquito/50",
-  resuelto:   "bg-emerald-50 text-emerald-700 border-emerald-200",
-  rechazado:  "bg-rose-50 text-rose-700 border-rose-200",
-  cancelado:  "bg-gray-50 text-gray-500 border-gray-200",
-};
+const MAX_VISIBLE = 5;
 
-const SECTIONS = [
-  {
-    key:   "emergencias",
-    icon:  AlertTriangle,
-    label: "Emergencias activas",
-    color: "text-red-500",
-    bg:    "bg-red-50",
-    empty: "Sin emergencias activas",
-  },
-  {
-    key:   "criticos",
-    icon:  Flame,
-    label: "Alta prioridad sin atender",
-    color: "text-orange-500",
-    bg:    "bg-orange-50",
-    empty: "Sin incidentes críticos pendientes",
-  },
-  {
-    key:   "nuevosHoy",
-    icon:  Clock,
-    label: "Nuevos hoy",
-    color: "text-blue-500",
-    bg:    "bg-blue-50",
-    empty: "Sin incidentes nuevos hoy",
-  },
-];
-
-const MAX_PER_SECTION = 4;
-
-// ── Item de notificación ──
-function NotifItem({ incident, onSelect }) {
+function EmergencyItem({ incident, onSelect }) {
   const statusName = incident.status?.name;
   const badgeCls   = STATUS_BADGE[statusName] ?? "bg-gray-50 text-gray-500 border-gray-200";
 
   return (
     <button
       onClick={() => onSelect(incident)}
-      className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3 group"
+      className="w-full text-left px-4 py-2.5 hover:bg-red-50/60 transition-colors flex items-center justify-between gap-3 group"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-800 truncate group-hover:text-primary transition-colors">
+        <p className="text-sm font-medium text-slate-800 truncate group-hover:text-red-600 transition-colors">
           {incident.representativeId?.title}
         </p>
         {incident.representativeId?.location?.address && (
@@ -75,50 +49,12 @@ function NotifItem({ incident, onSelect }) {
   );
 }
 
-// ── Sección del dropdown ──
-function NotifSection({ section, items, onSelect }) {
-  const Icon    = section.icon;
-  const visible = items.slice(0, MAX_PER_SECTION);
-  const extra   = items.length - MAX_PER_SECTION;
-
-  return (
-    <div>
-      {/* Header de sección */}
-      <div className={`flex items-center gap-2 px-4 py-2 ${section.bg}`}>
-        <Icon size={13} className={section.color} />
-        <p className={`text-[11px] font-semibold uppercase tracking-wider ${section.color}`}>
-          {section.label}
-        </p>
-        <span className={`ml-auto text-[11px] font-bold ${section.color}`}>
-          {items.length}
-        </span>
-      </div>
-
-      {/* Items */}
-      {visible.length === 0 ? (
-        <p className="px-4 py-2.5 text-xs text-slate-400 italic">{section.empty}</p>
-      ) : (
-        <>
-          {visible.map((inc) => (
-            <NotifItem key={inc._id} incident={inc} onSelect={onSelect} />
-          ))}
-          {extra > 0 && (
-            <p className="px-4 py-1.5 text-xs text-slate-400 text-right">
-              +{extra} más
-            </p>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
 // ── Topbar principal ──
 export default function AdminTopbar({
   dbRole,
   onMobileMenuOpen,
   incidents = [],
-  notifications = { emergencias: [], criticos: [], nuevosHoy: [], total: 0 },
+  notifications = { emergencias: [], total: 0 },
   onTabChange,
   onFocusIncident,
 }) {
@@ -334,34 +270,34 @@ export default function AdminTopbar({
             className="w-80 p-0 rounded-xl border border-slate-100 shadow-lg overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <p className="text-sm font-semibold text-slate-900">Notificaciones</p>
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100">
+              <AlertTriangle size={13} className="text-red-500 shrink-0" />
+              <p className="text-sm font-semibold text-slate-900">Emergencias activas</p>
               {total > 0 && (
-                <span className="text-xs font-semibold bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-100">
-                  {total} pendiente{total !== 1 ? "s" : ""}
+                <span className="ml-auto text-xs font-bold text-red-600">
+                  {total}
                 </span>
-              )}
-              {total === 0 && (
-                <span className="text-xs text-slate-400">Al día</span>
               )}
             </div>
 
-            {/* Secciones */}
-            <div className="max-h-[420px] overflow-y-auto [&::-webkit-scrollbar]:hidden divide-y divide-slate-50">
+            {/* Lista */}
+            <div className="max-h-[360px] overflow-y-auto [&::-webkit-scrollbar]:hidden">
               {total === 0 ? (
                 <div className="px-4 py-8 text-center">
-                  <p className="text-sm font-medium text-slate-500">Todo bajo control</p>
-                  <p className="text-xs text-slate-400 mt-1">No hay incidentes que requieran atención inmediata.</p>
+                  <p className="text-sm font-medium text-slate-500">Sin emergencias activas</p>
+                  <p className="text-xs text-slate-400 mt-1">No hay incidentes de emergencia sin resolver.</p>
                 </div>
               ) : (
-                SECTIONS.map((section) => (
-                  <NotifSection
-                    key={section.key}
-                    section={section}
-                    items={notifications[section.key]}
-                    onSelect={handleNotifSelect}
-                  />
-                ))
+                <>
+                  {notifications.emergencias.slice(0, MAX_VISIBLE).map((inc) => (
+                    <EmergencyItem key={inc._id} incident={inc} onSelect={handleNotifSelect} />
+                  ))}
+                  {notifications.emergencias.length > MAX_VISIBLE && (
+                    <p className="px-4 py-2 text-xs text-slate-400 text-right">
+                      +{notifications.emergencias.length - MAX_VISIBLE} más
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -369,11 +305,8 @@ export default function AdminTopbar({
             {total > 0 && (
               <div className="border-t border-slate-100">
                 <button
-                  onClick={() => {
-                    onTabChange?.("incidentes");
-                    setNotifOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors text-center"
+                  onClick={() => { onTabChange?.("incidentes"); setNotifOpen(false); }}
+                  className="w-full px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors text-center"
                 >
                   Ver todos los incidentes →
                 </button>
@@ -393,15 +326,15 @@ export default function AdminTopbar({
               className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-100"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-azul flex items-center justify-center ring-2 ring-blanquito/30">
-              <User size={15} className="text-blanquito" />
+            <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center ring-2 ring-brand-light/30">
+              <User size={15} className="text-brand-light" />
             </div>
           )}
           <div className="hidden sm:block leading-tight">
             <p className="text-sm font-semibold text-gray-800">
               {user?.fullName ?? "Administrador"}
             </p>
-            <p className="text-xs text-celestito font-medium">{roleLabel}</p>
+            <p className="text-xs text-brand-mid font-medium">{roleLabel}</p>
           </div>
         </div>
 

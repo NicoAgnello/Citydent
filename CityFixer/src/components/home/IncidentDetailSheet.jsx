@@ -1,3 +1,21 @@
+// Panel deslizante (Sheet) con el detalle completo de un incidente del usuario.
+// Se abre al hacer clic en un IncidentCard o IncidentGridCard.
+//
+// Contenido mostrado:
+//   - Badge de estado y título
+//   - Opción de cancelar (si el estado es "pendiente" o "aceptado")
+//   - Galería de fotos/videos (PhotoGallery)
+//   - Mapa de ubicación (LocationPanel)
+//   - Historial de cambios de estado (StatusHistory, componente de /admin reutilizado)
+//   - Insights de IA sobre el incidente (AIInsights, componente de /admin reutilizado)
+//
+// Props:
+//   incident  → objeto de incidente completo
+//   open      → booleano que controla si el panel está abierto
+//   onClose   → función sin argumentos, cierra el panel
+//   onUpdated → función sin argumentos, recarga la lista padre tras cancelar
+//
+// Se usa en IncidentCard e IncidentGridCard.
 import { X, Loader2, User, AlertTriangle, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cancelIncident } from "@/services/api";
@@ -9,32 +27,12 @@ import {
   SheetContent,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { STATUS_LABELS, capitalize } from "@/lib/incidents";
-
-function formatExactDate(dateStr) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("es-AR", {
-    day:    "2-digit",
-    month:  "short",
-    year:   "numeric",
-    hour:   "2-digit",
-    minute: "2-digit",
-  });
-}
+import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import PhotoGallery from "./PhotoGallery";
 import LocationPanel from "./LocationPanel";
 
 const CANCELABLE_STATUSES = ["pendiente", "aceptado"];
 
-const STATUS_BADGE_STYLES = {
-  pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
-  dudoso:     "bg-orange-50 text-orange-700 border border-orange-200",
-  aceptado:   "bg-teal-50 text-teal-700 border border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border border-blanquito/50",
-  resuelto:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  rechazado:  "bg-rose-50 text-rose-700 border border-rose-200",
-  cancelado:  "bg-gray-50 text-gray-500 border border-gray-200",
-};
 
 export default function IncidentDetailSheet({
   incident,
@@ -74,7 +72,7 @@ export default function IncidentDetailSheet({
   };
 
   const label     = STATUS_LABELS[statusKey] ?? capitalize(statusKey);
-  const statusCls = STATUS_BADGE_STYLES[statusKey] ?? "bg-gray-50 text-gray-500 border border-gray-200";
+  const statusCls = STATUS_BADGE[statusKey] ?? "bg-gray-50 text-gray-500 border border-gray-200";
 
   // En contexto admin, `incident` es un grupo — los datos de display viven en representativeId
   const display = isAdmin ? (incident.representativeId ?? {}) : incident;

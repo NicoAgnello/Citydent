@@ -1,3 +1,16 @@
+// Dropdown con búsqueda de texto (componente propio, no shadcn estándar).
+// A diferencia de <Select>, permite filtrar las opciones escribiendo en un input.
+// El ancho del panel se ajusta automáticamente al ancho del botón que lo abre.
+//
+// Props:
+//   options      → array de { value, label } con las opciones disponibles
+//   value        → valor seleccionado actualmente (string)
+//   onChange     → función que recibe el value cuando el usuario elige una opción
+//   placeholder  → texto que aparece cuando no hay nada seleccionado
+//   loading      → booleano, muestra un spinner mientras se cargan las opciones
+//   disabled     → booleano, deshabilita el componente
+//
+// Se usa en ProfileSetupScreen para seleccionar provincia y municipio (carga desde Georef API).
 import { useState, useEffect, useRef } from "react";
 import { ChevronsUpDown, Check, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

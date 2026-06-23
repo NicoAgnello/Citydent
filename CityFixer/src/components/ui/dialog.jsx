@@ -1,3 +1,17 @@
+// Modal centrado en pantalla con overlay oscuro (shadcn/ui).
+// A diferencia del Sheet (que desliza desde un lado), el Dialog aparece al centro.
+//
+// Uso básico:
+//   <Dialog open={open} onOpenChange={setOpen}>
+//     <DialogContent>
+//       <DialogTitle>Confirmar acción</DialogTitle>
+//       <DialogDescription>¿Estás seguro?</DialogDescription>
+//       <DialogFooter>...</DialogFooter>
+//     </DialogContent>
+//   </Dialog>
+//
+// Se usa para confirmaciones de acciones críticas (cambio de estado, cancelar incidente).
+// DialogContent acepta showCloseButton={false} para ocultar la X de cierre.
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 

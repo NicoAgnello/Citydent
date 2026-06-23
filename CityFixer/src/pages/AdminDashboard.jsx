@@ -1,3 +1,29 @@
+// ─── AdminDashboard ───────────────────────────────────────────────────────────
+//
+// Panel de administración. Accesible para roles "admin" y "superAdmin".
+// Se monta en la ruta /admin.
+//
+// Layout:
+//   ┌──────────┬──────────────────────────────────────┐
+//   │          │           AdminTopbar                 │
+//   │ Sidebar  ├──────────────────────────────────────┤
+//   │ (desktop)│                                      │
+//   │          │     Contenido del tab activo         │
+//   │          │                                      │
+//   └──────────┴──────────────────────────────────────┘
+//   En mobile el sidebar se oculta y se abre con un botón (Sheet lateral).
+//
+// Tabs disponibles:
+//   "incidentes"  → lista y gestión de todos los incidentes (admin + superAdmin)
+//   "estadisticas"→ gráficos y mapa de calor + acceso a Power BI (admin + superAdmin)
+//   "categorias"  → gestión de categorías de incidentes (SOLO superAdmin)
+//   "usuarios"    → gestión de usuarios y roles (SOLO superAdmin)
+//
+// focusedIncidentId:
+//   Permite que el buscador del Topbar haga foco en un incidente específico
+//   dentro de la tabla. Cuando el admin selecciona un resultado de búsqueda,
+//   se guarda su ID acá y AdminIncidentesTab lo usa para resaltarlo y scrollear.
+
 import { useState } from "react";
 import { useAllIncidents } from "@/hooks/useAllIncidents";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -16,17 +42,19 @@ export default function AdminDashboard({ dbRole }) {
   const [mobileOpen, setMobileOpen]             = useState(false);
   const [focusedIncidentId, setFocusedIncidentId] = useState(null);
   const { groups, loading, refresh } = useAllIncidents();
+
+  // Filtra las emergencias activas para mostrar alertas en el Topbar.
   const notifications = useNotifications(groups);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
 
-      {/* ── Sidebar desktop (oculto en mobile) ── */}
+      {/* Sidebar fijo, visible solo en pantallas grandes (lg+) */}
       <div className="hidden lg:flex h-full w-64 shrink-0">
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} dbRole={dbRole} />
       </div>
 
-      {/* ── Sidebar mobile via Sheet (slide desde izquierda) ── */}
+      {/* Sidebar mobile: se desliza desde la izquierda al tocar el botón de menú */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
           side="left"
@@ -42,7 +70,7 @@ export default function AdminDashboard({ dbRole }) {
         </SheetContent>
       </Sheet>
 
-      {/* ── Columna derecha ── */}
+      {/* Columna derecha: topbar + contenido del tab */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
         <AdminTopbar
@@ -71,7 +99,13 @@ export default function AdminDashboard({ dbRole }) {
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "estadisticas" && (
-              <AdminEstadisticasTab incidents={groups} loading={loading} dbRole={dbRole} />
+              <AdminEstadisticasTab
+                incidents={groups}
+                loading={loading}
+                dbRole={dbRole}
+                onTabChange={setActiveTab}
+                onFocusIncident={setFocusedIncidentId}
+              />
             )}
 
             {/* EXCLUSIVO SUPERADMIN */}
@@ -88,6 +122,7 @@ export default function AdminDashboard({ dbRole }) {
         </main>
       </div>
 
+      {/* Modal para crear un incidente desde el panel admin */}
       <IncidentModal open={reportOpen} onOpenChange={setReportOpen} onCreated={refresh} />
     </div>
   );

@@ -1,7 +1,29 @@
+// ─── Login ────────────────────────────────────────────────────────────────────
+//
+// Pantalla de inicio de sesión. Solo accesible si el usuario NO tiene sesión
+// activa (PublicRoute en AppRouter la protege). Se monta en la ruta /login.
+//
+// Qué muestra:
+//   - Fondo oscuro con animación de partículas (tsparticles)
+//   - Logo y nombre de la app
+//   - Formulario de login de Clerk (maneja email, contraseña, OAuth, etc.)
+//
+// Clerk maneja todo el flujo de autenticación: validación, errores, sesión.
+// Una vez que el usuario se loguea, Clerk redirige a "/" y App.jsx se encarga
+// de sincronizar el usuario con la base de datos antes de mostrar la app.
+//
+// Por qué <SignIn> está fuera de <ParticlesProvider>:
+//   ParticlesProvider inicializa el motor de partículas de forma asíncrona.
+//   Si Clerk estuviera dentro de ese árbol, su propio proceso de init podría
+//   interferir. Tenerlos como hermanos los mantiene independientes.
+
 import { SignIn } from "@clerk/clerk-react";
 import Particles, { ParticlesProvider } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
+// Configuración de las partículas del fondo animado.
+// Los colores usan hex directamente porque tsparticles no puede leer
+// variables CSS de Tailwind (brand-light, brand-mid) en tiempo de ejecución.
 const PARTICLE_OPTIONS = {
   fullScreen: false,
   background: { color: { value: "transparent" } },
@@ -28,7 +50,9 @@ const PARTICLE_OPTIONS = {
   detectRetina: true,
 };
 
-// Definido fuera del componente para que sea estable (requisito de ParticlesProvider v4)
+// Definido fuera del componente para que la referencia sea estable.
+// ParticlesProvider v4 exige que la función init no cambie entre renders,
+// de lo contrario reinicializa el motor innecesariamente.
 async function initEngine(engine) {
   await loadSlim(engine);
 }
@@ -50,13 +74,15 @@ function Login() {
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
         <div className="mb-7 text-center flex flex-col items-center gap-2">
           <img src="/logoCityFixer.svg" alt="CityFixer" className="h-20 w-auto" />
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-blanquito/60 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-brand-light/60 bg-clip-text text-transparent">
             CityFixer
           </h1>
-          <p className="text-blanquito/50 text-sm tracking-wide">Ingresá a tu cuenta para continuar</p>
+          <p className="text-brand-light/50 text-sm tracking-wide">Ingresá a tu cuenta para continuar</p>
         </div>
 
         <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
+          {/* appearance personaliza los colores y tipografía del formulario de Clerk
+              para que coincida con el diseño de la app. */}
           <SignIn
             routing="path"
             path="/login"
@@ -79,9 +105,9 @@ function Login() {
                 socialButtonsBlockButton:
                   "border border-gray-200 hover:bg-[#f5f6ff] transition-colors font-medium",
                 formButtonPrimary:
-                  "bg-azul-oscuro hover:bg-celestito transition-colors shadow-md",
+                  "bg-brand-dark hover:bg-brand-mid transition-colors shadow-md",
                 footerActionLink:
-                  "text-azul-oscuro font-semibold hover:text-celestito",
+                  "text-brand-dark font-semibold hover:text-brand-mid",
                 footerPages: { display: "none" },
               },
             }}

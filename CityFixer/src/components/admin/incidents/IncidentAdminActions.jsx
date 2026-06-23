@@ -1,3 +1,15 @@
+// Panel de acciones administrativas para un incidente.
+// Permite al admin cambiar el estado (con diálogo de confirmación) y la categoría.
+// La lista de estados disponibles viene de useStatuses y filtra los inválidos según
+// el estado actual (por ejemplo, no se puede pasar de "resuelto" a "pendiente").
+// Si el incidente está archivado (isReadOnly), muestra un aviso y bloquea los cambios.
+//
+// Props:
+//   incident  → objeto de incidente (para obtener estado actual, id, etc.)
+//   onUpdated → función sin argumentos, recarga el incidente tras cambiar estado/categoría
+//
+// Se usa dentro de IncidentDetailSheet cuando se monta en el contexto admin
+// (AdminIncidentCard y AdminIncidentRow pasan isAdmin=true a IncidentDetailSheet).
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle, Lock } from "lucide-react";
@@ -17,7 +29,7 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="text-azul-oscuro">Confirmar cambio de estado</DialogTitle>
+          <DialogTitle className="text-brand-dark">Confirmar cambio de estado</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-gray-600 mt-1">
           ¿Cambiar el estado a{" "}
@@ -33,7 +45,7 @@ function StatusConfirmDialog({ targetStatus, open, onOpenChange, onConfirm, load
           <Button
             onClick={onConfirm}
             disabled={loading}
-            className="bg-azul-oscuro hover:bg-azul text-white rounded-xl"
+            className="bg-brand-dark hover:bg-brand text-white rounded-xl"
           >
             {loading && <Loader2 size={14} className="mr-1.5 animate-spin" />}
             Confirmar
@@ -175,7 +187,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</p>
           <div className="flex gap-2">
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="flex-1 min-w-0 text-sm rounded-xl border-gray-200 bg-gray-50 text-gray-700 focus:ring-celestito">
+              <SelectTrigger className="flex-1 min-w-0 text-sm rounded-xl border-gray-200 bg-gray-50 text-gray-700 focus:ring-brand-mid">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -187,7 +199,7 @@ export default function IncidentAdminActions({ incident, onUpdated }) {
             <button
               onClick={handleCategoryChange}
               disabled={loadingCategory || selectedCategory === incident.category?._id}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-azul-oscuro text-white text-xs font-semibold disabled:opacity-40 hover:bg-azul transition-colors"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-dark text-white text-xs font-semibold disabled:opacity-40 hover:bg-brand transition-colors"
             >
               {loadingCategory && <Loader2 size={12} className="animate-spin" />}
               Aplicar

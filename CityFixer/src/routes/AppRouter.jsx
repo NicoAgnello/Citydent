@@ -1,3 +1,22 @@
+// ─── AppRouter ────────────────────────────────────────────────────────────────
+//
+// Define todas las rutas (páginas) de la aplicación y quién puede acceder a cada una.
+//
+// Mapa de rutas:
+//   /           → RootRedirect: redirige según si el usuario está logueado y su rol
+//   /login      → Pantalla de login (solo accesible si NO está logueado)
+//   /home       → Pantalla principal del ciudadano (requiere rol "user")
+//   /admin      → Panel de administración (requiere rol "admin" o "superAdmin")
+//   /unauthorized → Pantalla de acceso denegado
+//   *           → Cualquier ruta desconocida redirige a /
+//
+// Componentes auxiliares definidos acá:
+//   RootRedirect → Decide a dónde ir cuando el usuario entra a "/"
+//   PublicRoute  → Envuelve rutas que solo deben verse si NO hay sesión activa
+//
+// El <NotificationProvider> envuelve solo la ruta /home porque las notificaciones
+// en tiempo real solo son necesarias para el usuario ciudadano, no para el admin.
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import ProtectedRoute from "./ProtectedRoute";
@@ -6,6 +25,10 @@ import Home from "../pages/Home";
 import AdminDashboard from "../pages/AdminDashboard";
 import { NotificationProvider } from "@/context/NotificationContext";
 
+// Redirige al usuario según su estado de sesión y rol.
+// Si no está logueado → /login
+// Si es admin/superAdmin → /admin
+// Si es usuario común → /home
 function RootRedirect({ dbRole }) {
   const { isSignedIn, isLoaded } = useAuth();
 
@@ -16,6 +39,8 @@ function RootRedirect({ dbRole }) {
   return <Navigate to="/home" replace />;
 }
 
+// Envuelve rutas que solo deben mostrarse si el usuario NO está autenticado.
+// Si ya tiene sesión activa, lo redirige a / para que RootRedirect lo lleve a su pantalla.
 function PublicRoute({ children }) {
   const { isSignedIn, isLoaded } = useAuth();
 

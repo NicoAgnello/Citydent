@@ -1,3 +1,14 @@
+// Contenedor con estilo de tarjeta elevada (shadcn/ui).
+// Se compone de subcomponentes que se pueden combinar libremente:
+//   <Card>
+//     <CardHeader>
+//       <CardTitle>Título</CardTitle>
+//       <CardDescription>Subtítulo</CardDescription>
+//     </CardHeader>
+//     <CardContent>...contenido...</CardContent>
+//     <CardFooter>...acciones...</CardFooter>
+//   </Card>
+// Se usa en el panel admin para mostrar estadísticas, categorías y usuarios.
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

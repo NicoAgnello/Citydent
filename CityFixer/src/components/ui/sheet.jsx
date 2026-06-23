@@ -1,3 +1,17 @@
+// Panel deslizante que aparece desde un lado de la pantalla (shadcn/ui).
+// A diferencia del Dialog (centrado), el Sheet se desliza desde right/left/top/bottom.
+//
+// Uso básico:
+//   <Sheet open={open} onOpenChange={setOpen}>
+//     <SheetContent side="right">
+//       ...contenido...
+//     </SheetContent>
+//   </Sheet>
+//
+// Se usa para:
+//   - Sidebar mobile en AdminDashboard (side="left")
+//   - Detalle de incidente en IncidentDetailSheet (side="right" por defecto)
+//   - Formularios de edición en AdminCategoriasTab y AdminUsuariosTab
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 

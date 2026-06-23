@@ -1,3 +1,21 @@
+// Pantalla de configuración inicial de perfil. Aparece al usuario justo después del
+// primer login si aún no completó sus datos (nombre, DNI, teléfono, dirección).
+//
+// Flujo en dos pasos:
+//   1. El usuario llena el formulario y presiona "Continuar"
+//      → el backend envía un código OTP al email de Clerk
+//   2. El usuario ingresa el código de 6 dígitos
+//      → si es correcto, el perfil queda guardado y se llama a onComplete()
+//
+// Localización geográfica (Georef API):
+//   - Se cargan todas las provincias de Argentina al montar el componente.
+//   - Al seleccionar una provincia, se cargan sus municipios automáticamente.
+//   - Si el municipio elegido es "Villa María", aparece un selector adicional
+//     de barrio (obtenido de la API interna /neighborhoods).
+//
+// Props:
+//   onComplete  → función sin argumentos, se llama cuando el perfil quedó guardado
+//   onSignOut   → función sin argumentos, se llama si el usuario presiona "Cerrar sesión"
 import { useState, useEffect } from "react";
 import { Loader2, Mail, CheckCircle2 } from "lucide-react";
 import { sendVerificationCode, patchProfile, getNeighborhoods } from "@/services/api";
@@ -6,7 +24,7 @@ import { Combobox } from "@/components/ui/combobox";
 const GEOREF = "https://apis.datos.gob.ar/georef/api";
 
 const INPUT_CLS =
-  "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-celestito";
+  "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-mid";
 
 const LABEL_CLS = "text-xs font-semibold text-gray-500 uppercase tracking-wider";
 
@@ -170,12 +188,12 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
   const barrioOptions = neighborhoods.map((n) => ({ value: n._id, label: n.name }));
 
   return (
-    <div className="min-h-screen bg-azul-oscuro flex flex-col items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm flex flex-col gap-8">
 
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2.5">
-            <span className="bg-blanquito w-1.5 h-8 rounded-full inline-block" />
+            <span className="bg-brand-light w-1.5 h-8 rounded-full inline-block" />
             <h1 className="text-white text-2xl font-bold tracking-tight">CityFixer</h1>
           </div>
           <p className="text-white/50 text-xs text-center">Tu ciudad, tu voz</p>
@@ -184,7 +202,7 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
         <div className="bg-white rounded-3xl p-6 flex flex-col gap-5 shadow-xl">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1">
-              <h2 className="text-azul-oscuro font-bold text-lg">Completá tu perfil</h2>
+              <h2 className="text-brand-dark font-bold text-lg">Completá tu perfil</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Necesitamos tus datos para que puedas reportar incidentes.
               </p>
@@ -295,7 +313,7 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
                   type="button"
                   onClick={handleSendCode}
                   disabled={sending}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-azul-oscuro text-white text-sm font-semibold disabled:opacity-50 hover:bg-azul transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-brand-dark text-white text-sm font-semibold disabled:opacity-50 hover:bg-brand transition-colors"
                 >
                   {sending
                     ? <><Loader2 size={15} className="animate-spin" /> Enviando...</>
@@ -334,7 +352,7 @@ export default function ProfileSetupScreen({ onComplete, onSignOut }) {
                 <button
                   type="submit"
                   disabled={submitting || !verificationToken.trim()}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-azul-oscuro text-white text-sm font-semibold disabled:opacity-50 hover:bg-azul transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl bg-brand-dark text-white text-sm font-semibold disabled:opacity-50 hover:bg-brand transition-colors"
                 >
                   {submitting && <Loader2 size={15} className="animate-spin" />}
                   Completar perfil

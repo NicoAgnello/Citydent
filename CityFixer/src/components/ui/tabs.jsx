@@ -1,3 +1,15 @@
+// Navegación por pestañas accesible (shadcn/ui).
+//
+// Uso básico:
+//   <Tabs value={tab} onValueChange={setTab}>
+//     <TabsList>
+//       <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+//     </TabsList>
+//     <TabsContent value="tab1">Contenido del tab 1</TabsContent>
+//   </Tabs>
+//
+// Se usa en AdminEstadisticasTab para alternar entre gráficos y mapa de calor,
+// y en AdminCategoriasTab para la vista desktop del detalle de categoría.
 import * as React from "react"
 import { Tabs as TabsPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"

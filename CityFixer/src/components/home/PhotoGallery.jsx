@@ -1,3 +1,13 @@
+// Galería de fotos y videos adjuntos a un incidente.
+// Muestra una fila de miniaturas. Al hacer clic en una, se abre en un Dialog a pantalla
+// completa (foto grande o video con controles nativos del navegador).
+// Acepta tanto URLs de string como objetos { url, type } del uploader.
+// Si una imagen no carga, muestra un ícono de ImageOff como fallback.
+//
+// Props:
+//   media → array de items (string URL o { url, type }) — fotos y videos del incidente
+//
+// Se usa en IncidentDetailSheet (vista usuario) y en AdminIncidentDetailSheet (vista admin).
 import { useState } from "react";
 import { ImageOff, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";

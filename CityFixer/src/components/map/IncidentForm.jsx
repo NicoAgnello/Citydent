@@ -1,3 +1,17 @@
+// Formulario principal para crear un nuevo reporte de incidente.
+// Es el componente central del flujo de reporte — orquesta todos los demás componentes de /map.
+//
+// Flujo interno (pantallas que puede mostrar):
+//   1. Formulario normal  → título, categoría, descripción, ubicación (MapPicker), fotos
+//   2. EmergencyScreen   → si el backend detecta una emergencia al procesar el texto
+//   3. SuccessScreen     → si el incidente fue creado con éxito
+//
+// Props:
+//   onSuccess → función sin argumentos, se llama después de mostrar SuccessScreen
+//   onClose   → función sin argumentos, se llama al presionar el botón de cerrar/cancelar
+//
+// El formulario tiene dos pasos en mobile: primero la info básica, luego la ubicación y fotos.
+// Al enviar, hace POST a /incidentes con FormData (multipart, incluye imágenes si las hay).
 import { useState, useEffect, useRef } from "react";
 import { Send, MapPin, AlertCircle, Loader2, X, ChevronRight, ChevronLeft } from "lucide-react";
 import { postIncidente } from "@/services/api";
@@ -170,8 +184,8 @@ const IncidentForm = ({ onSuccess, onClose }) => {
                 <span>{fieldErrors.ubicacion}</span>
               </div>
             ) : direccionDisplay ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-blanquito/20 text-azul-oscuro border border-blanquito/50 text-sm">
-                <MapPin size={13} className="shrink-0 text-celestito" />
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-brand-light/20 text-brand-dark border border-brand-light/50 text-sm">
+                <MapPin size={13} className="shrink-0 text-brand-mid" />
                 <span className="font-medium truncate">{direccionDisplay}</span>
               </div>
             ) : (
@@ -277,7 +291,7 @@ const IncidentForm = ({ onSuccess, onClose }) => {
             <button
               type="button"
               onClick={handleNext}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white font-medium hover:bg-celestito transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white font-medium hover:bg-brand-mid transition-colors"
             >
               Siguiente: Detalles
               <ChevronRight size={16} />
@@ -298,7 +312,7 @@ const IncidentForm = ({ onSuccess, onClose }) => {
         <Button
           type="submit"
           disabled={submitting}
-          className={`w-full h-11 rounded-xl bg-primary hover:bg-celestito text-white font-bold disabled:opacity-60 transition-colors ${
+          className={`w-full h-11 rounded-xl bg-primary hover:bg-brand-mid text-white font-bold disabled:opacity-60 transition-colors ${
             step === 1 ? "hidden sm:flex" : "flex"
           }`}
         >

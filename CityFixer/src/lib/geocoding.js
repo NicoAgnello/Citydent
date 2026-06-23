@@ -1,3 +1,7 @@
+// Dado un punto en el mapa (latitud y longitud), devuelve la dirección
+// en texto: calle, número, barrio, ciudad, provincia y código postal.
+// Usa la API gratuita de OpenStreetMap (Nominatim), sin necesidad de API key.
+// Se usa en MapPicker.jsx cuando el usuario elige una ubicación en el mapa.
 export async function reverseGeocode(lat, lng) {
   const res = await fetch(
     `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,

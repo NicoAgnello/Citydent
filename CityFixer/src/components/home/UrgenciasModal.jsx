@@ -1,3 +1,16 @@
+// Modal con números de emergencia y asistencia de Argentina.
+// Cada número es un enlace tel: que permite llamar directamente desde el celular.
+// La lista está hardcodeada (no viene del servidor) ya que son números nacionales fijos.
+//
+// Grupos mostrados:
+//   Emergencias → 911 (Policía), 100 (Bomberos), 107 (SAME), 103 (Defensa Civil)
+//   Asistencia  → 144 (Violencia de género), 102 (Niñez), 135 (Crisis)
+//
+// Props:
+//   open         → booleano que controla si el modal está abierto
+//   onOpenChange → función que recibe true/false al abrir o cerrar
+//
+// Se usa en AppHeader y en Home.jsx al presionar el botón de sirena (Siren).
 import { Phone, TriangleAlert } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -39,7 +52,7 @@ export default function UrgenciasModal({ open, onOpenChange }) {
         className="max-w-md p-0 overflow-hidden rounded-3xl"
         aria-describedby={undefined}
       >
-        <DialogHeader className="bg-azul-oscuro px-5 pt-5 pb-6 text-left">
+        <DialogHeader className="bg-brand-dark px-5 pt-5 pb-6 text-left">
           <DialogTitle className="text-white text-lg font-bold">Números de emergencia</DialogTitle>
           <p className="text-white/60 text-xs mt-1">Tocá cualquier número para llamar directamente.</p>
         </DialogHeader>

@@ -1,3 +1,20 @@
+// Tab de estadísticas del panel admin.
+// Contiene:
+//   - 4 tarjetas KPI: total de reportes, activos, resueltos, tasa de resolución
+//   - Gráfico de barras de reportes por categoría (Recharts)
+//   - Gráfico de barras de reportes por estado (Recharts)
+//   - Vista de mapa de calor (AdminHeatmapView) accesible por tab
+//   - Botón "Exportar a Power BI" con flujo OTP (envía código por email, tiene cooldown de 5 min)
+//
+// No recibe los incidentes por prop — los deriva de la lista completa que viene de AdminDashboard
+// a través de useAllIncidents, pasados como prop.
+//
+// Props:
+//   incidents    → array de todos los incidentes
+//   onTabChange  → función que recibe un tab id, para que el heatmap pueda navegar a incidentes
+//   onFocusIncident → función que recibe un id de incidente, para focalizarlo desde el heatmap
+//
+// Se usa en AdminDashboard.jsx como contenido del tab "estadisticas".
 import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -68,7 +85,7 @@ function KpiCard({ label, value, accent = "text-slate-900", loading, icon: Icon,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
+export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTabChange, onFocusIncident }) {
 
   // ── Power BI OTP ──────────────────────────────────────────────────────────
   const [otpLoading,    setOtpLoading]    = useState(false);
@@ -269,7 +286,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
                   {loading ? (
                     <div className="h-full bg-slate-50 rounded-xl animate-pulse" />
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" debounce={50}>
                       <BarChart data={trendData} barSize={24} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis dataKey="dia" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
@@ -404,7 +421,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
                     <p className="text-xs text-slate-400">{loading ? "Cargando..." : "Sin datos suficientes"}</p>
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" debounce={50}>
                     <BarChart
                       data={categoryData}
                       layout="vertical"
@@ -491,7 +508,12 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole }) {
 
         {/* ══ Tab 2: Mapa de Calor Urbano ════════════════════════════════════ */}
         <TabsContent value="mapa">
-          <AdminHeatmapView incidents={incidents} loading={loading} />
+          <AdminHeatmapView
+            incidents={incidents}
+            loading={loading}
+            onTabChange={onTabChange}
+            onFocusIncident={onFocusIncident}
+          />
         </TabsContent>
 
       </Tabs>

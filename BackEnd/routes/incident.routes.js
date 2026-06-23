@@ -6,7 +6,7 @@ const { aiIncidentValidation } = require('../middlewares/aiIncidentValidation');
 const middleClaudinary = require('../middlewares/claudinary');
 
 // IMPORTANTE: Asegúrate de tener syncAIFallbacks exportado en tu controlador y sumarlo aquí
-const { create, getMyIncidents, getAll, getHistory, getGroupHistory, getGroupIncidents, updateStatus, updateCategory, updatePriority, cancel, syncAIFallbacks } = require('../controllers/incident.controller');
+const { create, getMyIncidents, getAll, getHistory, getGroupHistory, getGroupIncidents, updateStatus, updateCategory, updatePriority, cancel, syncAIFallbacks, countAIFallbacks } = require('../controllers/incident.controller');
 
 const { validateUserReputation } = require('../middlewares/validateUserReputation');
 const { validateLocation } = require('../middlewares/validateLocation');
@@ -53,6 +53,7 @@ router.post('/cron/sync-ai', (req, res, next) => {
  *       200: { description: Sincronización ejecutada }
  *       403: { description: Sin permisos }
  */
+router.get('/sync-ai/count', authMiddleware, verifyRole('admin', 'superAdmin'), countAIFallbacks);
 router.post('/sync-ai', authMiddleware, verifyRole('admin', 'superAdmin'), syncAIFallbacks);
 
 // ==========================================

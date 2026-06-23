@@ -1,3 +1,12 @@
+// Panel de ubicación de un incidente. Combina el mapa estático (MapView)
+// con la dirección en texto y las coordenadas exactas debajo.
+// Si no hay lat/lng, el mapa no se renderiza (MapView devuelve null).
+//
+// Props:
+//   location      → objeto { lat, lng, address } del incidente
+//   mapClassName  → clase CSS del contenedor del mapa (tamaño por defecto: h-44)
+//
+// Se usa en IncidentDetailSheet (vista del usuario) y en AdminIncidentDetailSheet (vista admin).
 import MapView from "@/components/map/MapView";
 
 export default function LocationPanel({ location, mapClassName = "w-full h-44 rounded-2xl z-0" }) {

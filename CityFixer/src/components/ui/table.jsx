@@ -1,3 +1,17 @@
+// Tabla HTML estilizada con subcomponentes (shadcn/ui).
+// Tiene scroll horizontal automático en pantallas chicas.
+//
+// Estructura típica:
+//   <Table>
+//     <TableHeader>
+//       <TableRow><TableHead>Columna</TableHead></TableRow>
+//     </TableHeader>
+//     <TableBody>
+//       <TableRow><TableCell>Dato</TableCell></TableRow>
+//     </TableBody>
+//   </Table>
+//
+// Se usa en AdminUsuariosTab para mostrar la lista de usuarios.
 import * as React from "react"
 import { cn } from "@/lib/utils"
 

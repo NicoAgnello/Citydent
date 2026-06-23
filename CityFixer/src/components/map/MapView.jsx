@@ -1,3 +1,12 @@
+// Mapa estático que muestra un pin en una ubicación fija (solo lectura).
+// A diferencia de MapPicker, el usuario no puede mover el pin ni interactuar.
+//
+// Props:
+//   lat, lng    → coordenadas del pin (si falta alguna, no renderiza nada)
+//   className   → clase CSS del contenedor (por defecto tamaño mediano redondeado)
+//   interactive → si es false, deshabilita el zoom y el arrastre del mapa
+//
+// Se usa en IncidentDetailSheet para mostrar la ubicación del incidente reportado.
 import Map, { Marker } from "react-map-gl";
 
 function PinIcon({ color }) {

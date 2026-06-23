@@ -1,3 +1,13 @@
+// Barra de navegación inferior (visible solo en mobile, oculta en md+).
+// Tiene tres botones: Inicio, Mis Reportes y Perfil.
+// Se deshabilita completamente si el usuario está baneado (prop disabled).
+//
+// Props:
+//   activeTab   → tab actualmente activo, para resaltar el botón correcto
+//   onTabChange → función que recibe el id del tab ("inicio" | "reportes" | "perfil")
+//   disabled    → booleano, si true bloquea la interacción (cuenta baneada)
+//
+// Se usa en Home.jsx en la parte inferior de la pantalla.
 import { Home as HomeIcon, FileText, User } from "lucide-react";
 
 const TABS = [
@@ -16,12 +26,12 @@ export default function BottomNav({ activeTab, onTabChange, disabled }) {
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 flex flex-col items-center py-3 gap-1 transition-colors ${
-              active ? "text-azul-oscuro" : "text-gray-400"
+              active ? "text-brand-dark" : "text-gray-400"
             }`}
           >
             <tab.icon size={22} strokeWidth={active ? 2.5 : 1.5} />
             <span className="text-[10px] font-semibold">{tab.label}</span>
-            {active && <span className="w-1 h-1 rounded-full bg-azul-oscuro" />}
+            {active && <span className="w-1 h-1 rounded-full bg-brand-dark" />}
           </button>
         );
       })}

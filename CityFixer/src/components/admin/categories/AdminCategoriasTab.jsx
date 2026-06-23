@@ -1,3 +1,12 @@
+// Tab de gestión de categorías de incidentes (solo accesible para superAdmin).
+// Permite ver todas las categorías, activarlas/desactivarlas con un toggle,
+// editar el nombre, descripción e ícono de una categoría existente, y crear nuevas.
+// Las ediciones se hacen en un Sheet lateral.
+// Las categorías desactivadas no aparecen en el formulario de reporte del usuario.
+//
+// No recibe props — carga las categorías directamente desde la API al montar.
+//
+// Se usa en AdminDashboard.jsx como contenido del tab "categorias".
 import { useState, useEffect, useCallback } from "react";
 import {
   Loader2,
@@ -207,7 +216,7 @@ export default function AdminCategoriasTab() {
           </button>
           <Button
             onClick={() => setCreateOpen(true)}
-            className="shrink-0 rounded-xl bg-primary hover:bg-celestito text-white font-semibold gap-1.5"
+            className="shrink-0 rounded-xl bg-primary hover:bg-brand-mid text-white font-semibold gap-1.5"
           >
             <Plus size={15} />
             <span className="sm:hidden">Nueva</span>
@@ -250,11 +259,11 @@ export default function AdminCategoriasTab() {
                 className="w-full grid grid-cols-[36px_1fr_auto_36px] sm:grid-cols-[44px_1fr_1fr_128px_40px] items-center gap-2 sm:gap-0 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50/80 transition-colors"
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.isActive ? "bg-blanquito/30" : "bg-gray-100"}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.isActive ? "bg-brand-light/30" : "bg-gray-100"}`}
                 >
                   <Tag
                     size={14}
-                    className={cat.isActive ? "text-azul" : "text-gray-400"}
+                    className={cat.isActive ? "text-brand" : "text-gray-400"}
                   />
                 </div>
                 <div className="min-w-0">
@@ -314,12 +323,12 @@ export default function AdminCategoriasTab() {
               {/* Info card */}
               <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selectedCategory.isActive ? "bg-blanquito/30" : "bg-gray-100"}`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selectedCategory.isActive ? "bg-brand-light/30" : "bg-gray-100"}`}
                 >
                   <Tag
                     size={18}
                     className={
-                      selectedCategory.isActive ? "text-azul" : "text-gray-400"
+                      selectedCategory.isActive ? "text-brand" : "text-gray-400"
                     }
                   />
                 </div>
@@ -357,7 +366,7 @@ export default function AdminCategoriasTab() {
                     {!editing ? (
                       <button
                         onClick={openEdit}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-celestito transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-brand-mid transition-colors"
                       >
                         <Edit3 size={12} /> Editar
                       </button>
@@ -373,7 +382,7 @@ export default function AdminCategoriasTab() {
                         <button
                           onClick={submitEdit}
                           disabled={editLoading}
-                          className="flex items-center gap-1 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-celestito transition-colors disabled:opacity-60"
+                          className="flex items-center gap-1 text-xs font-semibold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-brand-mid transition-colors disabled:opacity-60"
                         >
                           {editLoading ? (
                             <Loader2 size={11} className="animate-spin" />
@@ -554,7 +563,7 @@ export default function AdminCategoriasTab() {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-xl bg-primary hover:bg-celestito text-white font-semibold mt-2"
+                className="w-full rounded-xl bg-primary hover:bg-brand-mid text-white font-semibold mt-2"
               >
                 {submitting && (
                   <Loader2 size={14} className="mr-1.5 animate-spin" />

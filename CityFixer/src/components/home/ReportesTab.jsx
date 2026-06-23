@@ -1,3 +1,14 @@
+// Tab "Mis Reportes" — muestra todos los incidentes del usuario en grilla.
+// Cada tarjeta es un IncidentGridCard con foto de portada y badge de estado.
+// Mientras carga, muestra skeletons animados (GridSkeleton) en lugar de las tarjetas.
+// Si no hay incidentes, muestra EmptyState con un mensaje.
+//
+// Props:
+//   incidents → array de incidentes del usuario (de useIncidents)
+//   loading   → booleano, muestra skeletons mientras carga
+//   onUpdated → función sin argumentos, recarga la lista tras cancelar un incidente
+//
+// Se usa en Home.jsx como contenido del tab "reportes".
 import { EmptyState } from "./IncidentCard";
 import IncidentGridCard from "./IncidentGridCard";
 

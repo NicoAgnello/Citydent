@@ -1,3 +1,12 @@
+// Pantalla de alerta de emergencia que reemplaza al formulario cuando el tipo
+// de incidente reportado es considerado una emergencia por el backend.
+// Muestra el mensaje de emergencia en rojo y un botón para volver al formulario.
+//
+// Props:
+//   message   → texto con el mensaje de emergencia que devuelve el servidor
+//   onDismiss → función sin argumentos, se llama al presionar "Entendido"
+//
+// Se usa dentro de IncidentForm cuando el servidor responde con tipo "emergency".
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

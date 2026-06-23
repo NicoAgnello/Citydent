@@ -1,3 +1,6 @@
+// Placeholder animado que imita la forma de un IncidentCard mientras carga.
+// No tiene props — siempre muestra el mismo esqueleto gris pulsante.
+// Se usa en InicioTab para mostrar 3 skeletons mientras se obtienen los incidentes.
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function IncidentSkeleton() {

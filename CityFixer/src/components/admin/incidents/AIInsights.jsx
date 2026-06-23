@@ -1,3 +1,14 @@
+// Sección de análisis de inteligencia artificial de un incidente.
+// Muestra: prioridad editable (PriorityEditor), categoría sugerida por la IA,
+// justificación en texto, y un badge de "¡Emergencia!" si la IA lo marcó así.
+// Solo se renderiza si el incidente tiene resultados de IA (ai_justification o
+// ai_suggested_category en su representativeId). Si no hay IA, devuelve null.
+//
+// Props:
+//   incident  → objeto de incidente (se accede a incident.representativeId para los datos de IA)
+//   onUpdated → función sin argumentos, se pasa a PriorityEditor para recargar tras editar
+//
+// Se usa en IncidentDetailSheet cuando el usuario es admin.
 import { Bot, Zap } from "lucide-react";
 import { capitalize } from "@/lib/incidents";
 import PriorityEditor from "./PriorityEditor";

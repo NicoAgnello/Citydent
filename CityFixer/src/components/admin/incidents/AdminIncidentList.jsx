@@ -1,3 +1,19 @@
+// Lista de incidentes del panel admin. Muestra la vista correcta según el tamaño de pantalla:
+//   - Desktop (md+): tabla con AdminIncidentRow
+//   - Mobile:        tarjetas con AdminIncidentCard
+//
+// También maneja el foco automático: si llega un focusedIncidentId (desde una notificación),
+// busca el incidente en la lista y abre su detalle automáticamente.
+//
+// Props:
+//   incidents         → array de incidentes filtrados
+//   loading           → booleano, muestra skeletons mientras carga
+//   onUpdated         → función sin argumentos, recarga la lista tras cambios
+//   focusedIncidentId → id de incidente a abrir automáticamente
+//   onClearFocus      → función sin argumentos, limpia el foco tras usarlo
+//   isReadOnly        → booleano, si true oculta las acciones de cambio de estado
+//
+// Se usa en AdminIncidentesTab.jsx.
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AdminIncidentRow from "./AdminIncidentRow";

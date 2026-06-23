@@ -1,3 +1,16 @@
+// Selector desplegable accesible (shadcn/ui).
+// Para listas de opciones fijas donde no se necesita buscar.
+// Si necesitás búsqueda dentro del dropdown, usá <Combobox> en su lugar.
+//
+// Uso básico:
+//   <Select value={val} onValueChange={setVal}>
+//     <SelectTrigger><SelectValue placeholder="Elegí..." /></SelectTrigger>
+//     <SelectContent>
+//       <SelectItem value="opcion1">Opción 1</SelectItem>
+//     </SelectContent>
+//   </Select>
+//
+// Se usa en filtros de estado/prioridad en AdminIncidentesTab y en IncidentAdminActions.
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 

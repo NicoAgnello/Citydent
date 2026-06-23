@@ -1,3 +1,9 @@
+// Bloque de contacto de soporte de CityFixer (email, teléfono, WhatsApp).
+// Es estático — los datos están hardcodeados, no vienen del servidor.
+// Cada opción es un enlace (mailto:, tel:, wa.me) que el navegador maneja nativamente.
+// También muestra el horario de atención.
+//
+// No tiene props. Se usa en AppHeader (dentro del menú desplegable) y en PerfilTab.
 import { Mail, Phone, MessageCircle, Clock } from "lucide-react";
 
 const CONTACTS = [

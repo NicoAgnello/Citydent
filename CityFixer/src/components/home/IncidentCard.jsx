@@ -1,19 +1,22 @@
+// Tarjeta de incidente en formato lista (una fila por incidente).
+// Al hacer clic abre IncidentDetailSheet con el detalle completo.
+// Muestra: título, categoría, dirección, badge de estado y fecha relativa.
+//
+// También exporta EmptyState, un placeholder reutilizable que se usa en InicioTab
+// y ReportesTab cuando no hay incidentes para mostrar.
+//
+// Props:
+//   incident  → objeto de incidente (id, title, status, location, photos, etc.)
+//   onUpdated → función sin argumentos, se pasa a IncidentDetailSheet para recargar tras cancelar
+//
+// Se usa en InicioTab (lista de los últimos 5 reportes).
 import { useState } from "react";
 import { MapPin, AlertTriangle } from "lucide-react";
-import { STATUS_LABELS, capitalize } from "@/lib/incidents";
+import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
+import { formatDate } from "@/lib/dates";
 import IncidentDetailSheet from "./IncidentDetailSheet";
 
-export function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  if (isNaN(date)) return "—";
-  const now        = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dateStart  = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays   = Math.round((todayStart - dateStart) / 86400000);
-  if (diffDays === 0) return "Hoy";
-  if (diffDays === 1) return "Ayer";
-  return date.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
-}
+export { formatDate };
 
 export function EmptyState({ message = "No tenés reportes todavía.\n¡Reportá tu primer incidente!" }) {
   return (
@@ -23,16 +26,6 @@ export function EmptyState({ message = "No tenés reportes todavía.\n¡Reportá
     </div>
   );
 }
-
-const STATUS_BADGE = {
-  pendiente:  "bg-amber-50 text-amber-700 border border-amber-200",
-  dudoso:     "bg-orange-50 text-orange-700 border border-orange-200",
-  aceptado:   "bg-teal-50 text-teal-700 border border-teal-200",
-  en_proceso: "bg-blanquito/20 text-azul-oscuro border border-blanquito/50",
-  resuelto:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  rechazado:  "bg-rose-50 text-rose-700 border border-rose-200",
-  cancelado:  "bg-gray-50 text-gray-500 border border-gray-200",
-};
 
 export default function IncidentCard({ incident, onUpdated }) {
   const [open, setOpen] = useState(false);

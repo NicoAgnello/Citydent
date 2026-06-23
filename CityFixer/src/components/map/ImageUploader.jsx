@@ -1,3 +1,12 @@
+// Componente para adjuntar fotos o videos a un reporte de incidente.
+// Límites: máximo 3 archivos, videos no pueden superar 20 segundos.
+// Muestra previsualizaciones de las imágenes y permite eliminar cada una.
+// La validación de duración del video se hace localmente antes de enviarlo.
+//
+// Props:
+//   onChange → función que recibe el array actualizado de archivos seleccionados
+//
+// Se usa dentro de IncidentForm como campo opcional de adjuntos.
 import { useState } from "react";
 import { Camera, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,8 +74,8 @@ export default function ImageUploader({ imagenes, onChange, onRemove }) {
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-3">
         {!limite && (
-          <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-blanquito/30 border-2 border-dashed border-celestito/30 cursor-pointer">
-            <Camera className="text-celestito" size={20} />
+          <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-brand-light/30 border-2 border-dashed border-brand-mid/30 cursor-pointer">
+            <Camera className="text-brand-mid" size={20} />
             <input
               type="file"
               multiple

@@ -1,3 +1,14 @@
+// Editor inline de prioridad de un incidente (escala 1-10).
+// En modo normal muestra un badge con el nivel y el label (Muy baja / Baja / Media / Alta / Crítica).
+// Al hacer clic en el lápiz, muestra 10 puntos de colores para seleccionar el nuevo valor.
+// Al confirmar, hace PATCH al backend con la nueva prioridad.
+//
+// Props:
+//   incidentId → id del incidente a actualizar
+//   priority   → valor actual de prioridad (número 1-10)
+//   onUpdated  → función sin argumentos, recarga el incidente tras guardar
+//
+// Se usa dentro de AIInsights.jsx en la sección de análisis IA del detalle de incidente.
 import { useState } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { updateIncidentPriority } from "@/services/api";

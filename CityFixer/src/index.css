@@ -3,18 +3,39 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
+/* ==========================================================================
+   PALETA DE MARCA — CityFixer
+   ==========================================================================
+   Tokens custom disponibles como clases Tailwind:
+   bg-brand, text-brand, border-brand, ring-brand, etc.
+
+   ┌─────────────┬─────────┬──────────────────────────────────────────────┐
+   │ Token       │ Hex     │ Uso                                          │
+   ├─────────────┼─────────┼──────────────────────────────────────────────┤
+   │ brand       │ #5C3F99 │ Color primario / botones / marca principal   │
+   │ brand-dark  │ #50387E │ Hover oscuro / sidebar / encabezados         │
+   │ brand-mid   │ #6B4FA8 │ Variante media / hover claro / acentos       │
+   │ brand-light │ #D3D6FF │ Fondo tenue / badges / acentos suaves        │
+   └─────────────┴─────────┴──────────────────────────────────────────────┘
+
+   Opacidades frecuentes (Tailwind slash syntax):
+     bg-brand-light/20  →  fondo muy sutil (ej: badge "En proceso")
+     bg-brand-light/30  →  fondo suave (ej: íconos activos)
+     bg-brand-light/50  →  borde semitransparente
+   ========================================================================== */
+
 :root {
-  --color-blanquito: #D3D6FF;
-  --color-celestito: #6B4FA8;
-  --color-azul: #5C3F99;
-  --color-azul-oscuro: #50387E;
+  --color-brand:       #5C3F99;
+  --color-brand-dark:  #50387E;
+  --color-brand-mid:   #6B4FA8;
+  --color-brand-light: #D3D6FF;
 }
 
 @theme {
-  --color-blanquito: #D3D6FF;
-  --color-celestito: #6B4FA8;
-  --color-azul: #5C3F99;
-  --color-azul-oscuro: #50387E;
+  --color-brand:       #5C3F99;
+  --color-brand-dark:  #50387E;
+  --color-brand-mid:   #6B4FA8;
+  --color-brand-light: #D3D6FF;
 }
 
 @custom-variant dark (&:is(.dark *));

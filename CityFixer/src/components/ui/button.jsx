@@ -1,3 +1,17 @@
+// Componente de botón reutilizable (shadcn/ui).
+// Soporta variantes visuales y tamaños mediante props.
+//
+// Variantes (variant=):
+//   default     → fondo primario (morado), texto blanco — botón principal de acción
+//   outline     → borde visible, fondo transparente — acción secundaria
+//   ghost       → sin borde ni fondo, solo hover — acciones terciarias o íconos
+//   destructive → rojo suave — acciones de eliminar o peligrosas
+//   link        → texto subrayado — para links dentro de formularios
+//
+// Tamaños (size=): xs | sm | default | lg | icon | icon-sm | icon-lg
+//
+// Uso: <Button variant="outline" size="sm">Cancelar</Button>
+// Se usa en prácticamente todos los formularios y acciones de la app.
 import * as React from "react"
 import { cva } from "class-variance-authority";
 import { Slot } from "radix-ui"

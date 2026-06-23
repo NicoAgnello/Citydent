@@ -1,22 +1,21 @@
+// Timeline del historial de cambios de estado de un incidente (o grupo de duplicados).
+// Cada entrada muestra: quién hizo el cambio (IA / Admin / Usuario), el estado al que
+// cambió, y la fecha y hora exacta del cambio.
+// Los datos se cargan desde el endpoint getGroupHistory(groupId) al montar el componente.
+//
+// Props:
+//   groupId → id del grupo de incidentes (los duplicados comparten el mismo historial)
+//
+// Se usa en IncidentDetailSheet (tanto en vista usuario como en vista admin).
 import { useState, useEffect } from "react";
 import { Bot, UserCog, User } from "lucide-react";
 import { getGroupHistory } from "@/services/api";
 import { STATUS_LABELS, capitalize, getStatusStyle } from "@/lib/incidents";
-
-function formatDateTime(dateStr) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("es-AR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatDateTime } from "@/lib/dates";
 
 const SOURCE_CONFIG = {
   ai:    { label: "IA",      icon: Bot,     className: "bg-violet-100 text-violet-700" },
-  admin: { label: "Admin",   icon: UserCog, className: "bg-blanquito/70 text-azul"     },
+  admin: { label: "Admin",   icon: UserCog, className: "bg-brand-light/70 text-brand"     },
   user:  { label: "Usuario", icon: User,    className: "bg-gray-100 text-gray-600"     },
 };
 

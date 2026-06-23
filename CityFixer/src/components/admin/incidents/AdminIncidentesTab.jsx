@@ -1,3 +1,24 @@
+// Tab principal de gestión de incidentes en el panel admin.
+// Permite filtrar, buscar y ordenar todos los incidentes reportados.
+//
+// Filtros disponibles:
+//   - Chips multi-select de estado (pendiente, aceptado, en proceso, etc.)
+//   - Barra de búsqueda por título
+//   - Ordenamiento (más reciente, más antiguo, prioridad)
+//   - Panel extra en un Popover (desktop) con filtros adicionales
+//
+// También tiene un botón "Sincronizar con IA" que envía incidentes sin análisis al
+// backend para que la IA los procese (muestra cuántos están pendientes).
+//
+// Props:
+//   incidents        → array de todos los incidentes (de useAllIncidents en AdminDashboard)
+//   loading          → booleano, muestra skeletons mientras carga
+//   onUpdated        → función sin argumentos, recarga la lista tras cambios
+//   focusedIncidentId → id de incidente a abrir automáticamente (viene de notificación)
+//   onClearFocus     → función sin argumentos, limpia el focusedIncidentId tras usarlo
+//   isReadOnly       → booleano, si true oculta las acciones de cambio de estado
+//
+// Se usa en AdminDashboard.jsx como contenido del tab "incidentes".
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Plus, Search, X, Archive, RefreshCw, Loader2, Sparkles, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -457,7 +478,7 @@ export default function AdminIncidentesTab({
 
               <button
                 onClick={onNuevoReporte}
-                className="flex items-center justify-center px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-primary hover:bg-celestito text-white text-sm font-semibold gap-1.5 transition-colors"
+                className="flex items-center justify-center px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-primary hover:bg-brand-mid text-white text-sm font-semibold gap-1.5 transition-colors"
               >
                 <Plus size={15} />
                 <span className="hidden sm:inline">Reportar Incidente</span>
@@ -531,7 +552,7 @@ export default function AdminIncidentesTab({
               placeholder="Título, barrio, dirección, usuario..."
               value={filters.search}
               onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))}
-              className="w-full pl-8 pr-4 py-2 text-xs text-gray-700 placeholder:text-gray-400 rounded-xl bg-white border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-azul-oscuro/30 transition-all"
+              className="w-full pl-8 pr-4 py-2 text-xs text-gray-700 placeholder:text-gray-400 rounded-xl bg-white border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-dark/30 transition-all"
             />
           </div>
 
@@ -801,7 +822,7 @@ export default function AdminIncidentesTab({
           <div className="shrink-0 px-4 py-3 border-t border-slate-100 bg-white">
             <button
               onClick={() => setMobileSheetOpen(false)}
-              className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl transition-colors hover:bg-celestito"
+              className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl transition-colors hover:bg-brand-mid"
             >
               Ver {sortedList.length} resultado{sortedList.length !== 1 ? "s" : ""}
             </button>

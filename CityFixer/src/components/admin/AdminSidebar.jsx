@@ -1,3 +1,16 @@
+// Sidebar de navegación del panel admin (visible en desktop).
+// Muestra las secciones: Incidentes, Estadísticas, Categorías y Usuarios.
+// Las dos últimas solo se muestran si el rol es "superAdmin" (se ocultan para admin común).
+// También tiene un botón de "Soporte" que abre un Dialog con los datos de contacto,
+// y un botón de "Cerrar sesión" conectado a Clerk.
+//
+// Props:
+//   activeTab   → tab actualmente seleccionado
+//   onTabChange → función que recibe el id del tab al hacer clic en una sección
+//   dbRole      → rol del usuario desde la base de datos ("admin" | "superAdmin")
+//   onClose     → función sin argumentos, cierra el sidebar en mobile (Sheet mode)
+//
+// Se usa en AdminDashboard.jsx — en desktop como sidebar fijo, en mobile dentro de un Sheet.
 import { useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { LayoutList, BarChart2, Tag, Users, LogOut, HelpCircle, Mail, Phone, MessageCircle, Clock } from "lucide-react";

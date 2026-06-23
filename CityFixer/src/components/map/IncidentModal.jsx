@@ -1,3 +1,14 @@
+// Modal que envuelve al formulario de reporte de incidente (IncidentForm).
+// Abre un Dialog centrado en pantalla con el formulario adentro.
+// El botón de cerrar (X) está deshabilitado para forzar al usuario a completar
+// o cancelar explícitamente desde dentro del formulario.
+//
+// Props:
+//   open         → booleano que controla si el modal está abierto
+//   onOpenChange → función que recibe true/false cuando el modal debe abrirse o cerrarse
+//   onCreated    → función sin argumentos, se llama cuando el incidente fue creado con éxito
+//
+// Se usa en Home.jsx al presionar el botón principal "Reportar incidente".
 import React from 'react'
 import { Dialog, DialogContent } from "../ui/dialog"
 import IncidentForm from './IncidentForm'
