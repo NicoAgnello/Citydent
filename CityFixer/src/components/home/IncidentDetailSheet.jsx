@@ -28,6 +28,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
+import { formatDateTime as formatExactDate } from "@/lib/dates";
 import PhotoGallery from "./PhotoGallery";
 import LocationPanel from "./LocationPanel";
 
