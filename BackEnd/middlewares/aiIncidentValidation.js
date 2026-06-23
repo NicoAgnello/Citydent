@@ -29,7 +29,7 @@ const aiIncidentValidation = async (req, res, next) => {
         .populate('incidents', 'title description');
 
       gruposCercanos = grupos.filter(grupo => {
-        const rep = grupo.representativeId;
+        const rep = group.representativeId;
         if (!rep?.location?.lat || !rep?.location?.lng) return false;
         return calcularDistanciaMetros(
           location.lat, location.lng,
@@ -46,24 +46,46 @@ const aiIncidentValidation = async (req, res, next) => {
       }));
     }
 
- const evaluacionIA = await analizarIncidenteIA(title, description, gruposCercanos);
-
-    req.aiData = {
-      isAI: true,
-      prioridad: evaluacionIA.prioridadSugerida ?? 0, // <-- Usamos ?? para que respete el 0
-      categoriaSugerida: evaluacionIA.categoriaSugerida,
-      justificacion: evaluacionIA.justificacion,
-      esDuplicado: evaluacionIA.esDuplicado,
-      idGrupoCandidato: evaluacionIA.idGrupoCandidato,
-      confianza: evaluacionIA.confianza || 0.0,
-      esRepresentanteMejor: evaluacionIA.esRepresentanteMejor || false,
-      isEmergency: evaluacionIA.isEmergency || false,
-      estadoSugerido: evaluacionIA.estadoSugerido
-    };
+    // Usamos let para poder mutar la evaluación en caso de falla de la API externa
+    let evaluacionIA;
+    
+    try {
+      evaluacionIA = await analizarIncidenteIA(title, description, gruposCercanos);
+      
+      req.aiData = {
+        isAI: true,
+        prioridad: evaluacionIA.prioridadSugerida ?? 0,
+        categoriaSugerida: evaluacionIA.categoriaSugerida,
+        justificacion: evaluacionIA.justificacion,
+        esDuplicado: evaluacionIA.esDuplicado,
+        idGrupoCandidato: evaluacionIA.idGrupoCandidato,
+        confianza: evaluacionIA.confianza || 0.0,
+        esRepresentanteMejor: evaluacionIA.esRepresentanteMejor || false,
+        isEmergency: evaluacionIA.isEmergency || false,
+        estadoSugerido: evaluacionIA.estadoSugerido
+      };
+    } catch (apiError) {
+      // Si la API de Gemini falla, se ejecuta este bloque para no colapsar la app
+      console.error("⚠️ Falló el análisis inmediato de la IA (Gemini Offline):", apiError);
+      
+      req.aiData = {
+        isAI: false, // Indicamos al servicio que no fue procesado por IA
+        prioridad: 0,
+        categoriaSugerida: null,
+        // Insertamos el mensaje limpio que solicitaste
+        justificacion: "La IA no resolvió este incidente, utilice el botón Sincronizar IA",
+        esDuplicado: false,
+        idGrupoCandidato: null,
+        confianza: 0.0,
+        esRepresentanteMejor: false,
+        isEmergency: false,
+        estadoSugerido: null
+      };
+    }
 
     next();
   } catch (error) {
-    console.error("Error validación IA:", error);
+    console.error("Error crítico general en validación IA:", error);
     return res.status(500).json({ error: 'Error en servidor al validar incidente.' });
   }
 };
