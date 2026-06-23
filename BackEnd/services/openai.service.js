@@ -141,7 +141,7 @@ const analizarIncidenteIA = async (title, description, gruposCercanos = []) => {
       idGrupoCandidato: null,
       confianza: 0,
       esRepresentanteMejor: false,
-      justificacion: "[SISTEMA] La IA no resolvió este incidente, utilice el botón Sincronizar IA."
+      justificacion: "La IA no resolvió este incidente, utilice el botón Sincronizar IA."
     };
   }
 };
