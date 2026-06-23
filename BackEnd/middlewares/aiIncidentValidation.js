@@ -29,7 +29,7 @@ const aiIncidentValidation = async (req, res, next) => {
         .populate('incidents', 'title description');
 
       gruposCercanos = grupos.filter(grupo => {
-        const rep = group.representativeId;
+        const rep = grupo.representativeId;
         if (!rep?.location?.lat || !rep?.location?.lng) return false;
         return calcularDistanciaMetros(
           location.lat, location.lng,
