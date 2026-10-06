@@ -68,6 +68,11 @@ export default function AdminIncidentList({
         title: g.representativeId?.title ?? "Sin título",
         status: g.status,
         location: g.representativeId?.location,
+        photos: g.representativeId?.photos,
+        category: g.category,
+        priority: g.priority,
+        reportsCount: g.incidents?.length,
+        createdAt: g.representativeId?.createdAt,
       })),
     [incidents]
   );
