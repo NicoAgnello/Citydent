@@ -23,7 +23,7 @@ const validateVideoDuration = (previewUrl) => {
   });
 };
 
-export default function ImageUploader({ imagenes, onChange, onRemove, hasError = false }) {
+export default function ImageUploader({ imagenes, onChange, onRemove, hasError = false, roomy = false }) {
   const [error, setError] = useState(null);
   const [dragging, setDragging] = useState(false);
 
@@ -86,13 +86,13 @@ export default function ImageUploader({ imagenes, onChange, onRemove, hasError =
   const limite = imagenes.length >= MAX_FOTOS;
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className={`flex flex-col gap-2.5 ${roomy ? "flex-1" : ""}`}>
       {!limite && (
         <label
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
-          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-left transition-colors ${
+          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-left transition-colors ${roomy ? "sm:min-h-44 sm:flex-1 sm:flex-col sm:justify-center sm:gap-2 sm:py-8 sm:text-center" : ""} ${
             dragging
               ? "border-primary bg-primary/10"
               : hasError
@@ -101,7 +101,7 @@ export default function ImageUploader({ imagenes, onChange, onRemove, hasError =
           }`}
         >
           <ImagePlus size={22} className="shrink-0 text-primary" />
-          <span className="flex flex-col">
+          <span className={`flex flex-col ${roomy ? "sm:items-center" : ""}`}>
             <span className="text-sm font-medium text-slate-700">
               {imagenes.length === 0 ? "Tocá para sumar fotos o arrastralas acá" : "Sumar otra foto"}
             </span>

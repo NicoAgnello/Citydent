@@ -13,7 +13,7 @@
 //   onClose       → función sin argumentos, cierra el modal
 //   onViewReports → (opcional) función sin argumentos, ofrece "Ver mis reportes" al terminar
 //
-// En mobile el formulario se divide en dos pasos (Dónde / Qué pasa); en desktop se ven juntos.
+// El formulario tiene dos pasos, igual en mobile y desktop: Dónde (mapa) y Qué pasa (datos y fotos).
 // Al enviar, hace POST a /incidentes con FormData (multipart, incluye imágenes si las hay).
 import { useState, useEffect, useRef } from "react";
 import { Send, MapPin, AlertCircle, Loader2, X, ChevronRight, ChevronLeft, Check } from "lucide-react";
@@ -152,12 +152,12 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
-        active ? "text-slate-900" : "text-slate-400 sm:text-slate-600"
-      } sm:cursor-default`}
+        active ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
+      }`}
     >
       <span
         className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-          done ? "bg-emerald-500 text-white" : active ? "bg-primary text-white sm:bg-slate-200 sm:text-slate-600" : "bg-slate-200 text-slate-500"
+          done ? "bg-emerald-500 text-white" : active ? "bg-primary text-white" : "bg-slate-200 text-slate-500"
         }`}
       >
         {done ? <Check size={13} strokeWidth={3} /> : n}
@@ -191,22 +191,17 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
       </div>
 
       {/* ── Cuerpo ── */}
-      <div className="flex-1 min-h-0 overflow-y-auto sm:overflow-hidden [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col sm:flex-row h-full">
+      <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
 
-          {/* ── Columna 1: Mapa ── */}
-          {/* Mobile: visible solo en paso 1 | Desktop: siempre visible */}
-          <div className={`
-            flex-col gap-3 px-6 py-5
-            sm:flex sm:w-1/2 sm:border-r sm:border-slate-100
-            ${step === 1 ? "flex" : "hidden"}
-          `}>
+        {/* ── Paso 1: Dónde ── */}
+        {step === 1 && (
+          <div className="flex h-full min-h-[24rem] flex-col gap-3 px-6 py-5">
             <p className="text-sm text-slate-500">
               Tocá el mapa para marcar dónde está el problema. El pin azul es tu posición y el rojo, el incidente.
             </p>
 
             {/* Mapa con la dirección flotando encima */}
-            <div className="relative h-[52dvh] min-h-72 w-full overflow-hidden rounded-xl border border-slate-200 sm:h-auto sm:min-h-0 sm:flex-1">
+            <div className="relative min-h-72 w-full flex-1 overflow-hidden rounded-xl border border-slate-200">
               <MapPicker onChange={setUbicacion} className="h-full w-full z-0" />
               <div className="pointer-events-none absolute inset-x-3 bottom-3">
                 {fieldErrors.ubicacion ? (
@@ -228,75 +223,94 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
               </div>
             </div>
           </div>
+        )}
 
-          {/* ── Columna 2: Detalles ── */}
-          {/* Mobile: visible solo en paso 2 | Desktop: siempre visible */}
-          <div className={`
-            flex-col gap-4 px-6 py-5
-            sm:flex sm:w-1/2 sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
-            ${step === 2 ? "flex" : "hidden"}
-          `}>
-            <div className="space-y-1.5">
-              <Label className={labelCls}>¿Qué está pasando?</Label>
-              <Input
-                name="title"
-                placeholder="Ej: Bache profundo, luminaria rota..."
-                className={inputCls(fieldErrors.title)}
-                value={formData.title}
-                onChange={handleInputChange}
-              />
-              {fieldErrors.title && (
-                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.title}</p>
-              )}
+        {/* ── Paso 2: Qué pasa ── */}
+        {step === 2 && (
+          <div className="flex flex-col gap-5 px-6 py-5">
+
+            {/* Resumen de la ubicación elegida, con acceso para cambiarla */}
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
+              <MapPin size={14} className="shrink-0 text-red-500" />
+              <span className="min-w-0 flex-1 truncate font-medium text-slate-800">{direccionDisplay}</span>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+              >
+                Cambiar
+              </button>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className={labelCls}>Categoría</Label>
-              <CategorySelect
-                value={formData.category}
-                hasError={!!fieldErrors.category}
-                onValueChange={(value) => {
-                  setFormData((prev) => ({ ...prev, category: value }));
-                  clearError("category");
-                }}
-              />
-              {fieldErrors.category && (
-                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.category}</p>
-              )}
-            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-x-8">
 
-            <div className="space-y-1.5">
-              <Label className={labelCls}>Fotos o videos</Label>
-              <ImageUploader
-                imagenes={imagenes}
-                hasError={!!fieldErrors.imagenes}
-                onChange={(nuevas) => {
-                  setImagenes(nuevas);
-                  if (nuevas.length > imagenes.length) clearError("imagenes");
-                }}
-                onRemove={(index) => setImagenes((prev) => prev.filter((_, i) => i !== index))}
-              />
-              {fieldErrors.imagenes && (
-                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.imagenes}</p>
-              )}
-            </div>
+              {/* Columna izquierda: qué, categoría, detalles */}
+              <div className="flex flex-col gap-4">
+                <div className="space-y-1.5">
+                  <Label className={labelCls}>¿Qué está pasando?</Label>
+                  <Input
+                    name="title"
+                    placeholder="Ej: Bache profundo, luminaria rota..."
+                    className={inputCls(fieldErrors.title)}
+                    value={formData.title}
+                    onChange={handleInputChange}
+                  />
+                  {fieldErrors.title && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.title}</p>
+                  )}
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className={labelCls}>Detalles</Label>
-              <Textarea
-                name="description"
-                placeholder="Contanos qué viste, desde cuándo y qué tan grave es."
-                className={`rounded-xl bg-white min-h-[76px] focus-visible:ring-primary resize-none ${
-                  fieldErrors.description
-                    ? "border-red-400 focus-visible:ring-red-400"
-                    : "border-slate-200"
-                }`}
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-              {fieldErrors.description && (
-                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.description}</p>
-              )}
+                <div className="space-y-1.5">
+                  <Label className={labelCls}>Categoría</Label>
+                  <CategorySelect
+                    value={formData.category}
+                    hasError={!!fieldErrors.category}
+                    onValueChange={(value) => {
+                      setFormData((prev) => ({ ...prev, category: value }));
+                      clearError("category");
+                    }}
+                  />
+                  {fieldErrors.category && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.category}</p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className={labelCls}>Detalles</Label>
+                  <Textarea
+                    name="description"
+                    placeholder="Contanos qué viste, desde cuándo y qué tan grave es."
+                    className={`rounded-xl bg-white min-h-[96px] focus-visible:ring-primary resize-none ${
+                      fieldErrors.description
+                        ? "border-red-400 focus-visible:ring-red-400"
+                        : "border-slate-200"
+                    }`}
+                    value={formData.description}
+                    onChange={handleInputChange}
+                  />
+                  {fieldErrors.description && (
+                    <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.description}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Columna derecha: fotos y videos */}
+              <div className="flex flex-col gap-1.5">
+                <Label className={labelCls}>Fotos o videos</Label>
+                <ImageUploader
+                  roomy
+                  imagenes={imagenes}
+                  hasError={!!fieldErrors.imagenes}
+                  onChange={(nuevas) => {
+                    setImagenes(nuevas);
+                    if (nuevas.length > imagenes.length) clearError("imagenes");
+                  }}
+                  onRemove={(index) => setImagenes((prev) => prev.filter((_, i) => i !== index))}
+                />
+                {fieldErrors.imagenes && (
+                  <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.imagenes}</p>
+                )}
+              </div>
             </div>
 
             {errorSubmit && (
@@ -306,52 +320,44 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
               </div>
             )}
           </div>
-
-        </div>
+        )}
       </div>
 
-      {/* ── Footer con navegación ── */}
-      <div className="shrink-0 px-6 py-3 sm:py-3.5 border-t border-slate-100 bg-white flex flex-col gap-3">
-
-        {/* Botones de paso (solo mobile) */}
-        <div className="sm:hidden">
-          {step === 1 ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white font-medium hover:bg-brand-mid transition-colors"
-            >
-              Siguiente: qué pasa
-              <ChevronRight size={16} />
-            </button>
-          ) : (
+      {/* ── Footer ── */}
+      <div className="shrink-0 px-6 py-3.5 border-t border-slate-100 bg-white">
+        {step === 1 ? (
+          <button
+            type="button"
+            onClick={handleNext}
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-primary text-white font-bold hover:bg-brand-mid transition-colors"
+          >
+            Siguiente: qué pasa
+            <ChevronRight size={16} />
+          </button>
+        ) : (
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors"
+              className="h-11 shrink-0 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <ChevronLeft size={15} />
-              Volver al mapa
+              Volver
             </button>
-          )}
-        </div>
-
-        {/* Botón enviar: visible en paso 2 (mobile) o siempre (desktop) */}
-        <Button
-          type="submit"
-          disabled={submitting}
-          className={`w-full h-11 rounded-xl bg-primary hover:bg-brand-mid text-white font-bold disabled:opacity-60 transition-colors ${
-            step === 1 ? "hidden sm:flex" : "flex"
-          }`}
-        >
-          {submitting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4 mr-2" />
-          )}
-          {submitting ? "Enviando..." : "Cargar incidente"}
-        </Button>
-
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="h-11 flex-1 rounded-xl bg-primary hover:bg-brand-mid text-white font-bold disabled:opacity-60 transition-colors"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {submitting ? "Enviando..." : "Cargar incidente"}
+            </Button>
+          </div>
+        )}
       </div>
     </form>
   );
