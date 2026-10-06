@@ -30,7 +30,11 @@ function readPref() {
 
 let pref = readPref();
 
-const resolveDark = () => pref === "dark" || (pref === "system" && !!media?.matches);
+// Solo hay tema oscuro mientras Home lo tiene aplicado. Sin esto, el login y el admin
+// (siempre claros) mostrarían mapas oscuros si la preferencia guardada es "dark".
+let applied = false;
+
+const resolveDark = () => applied && (pref === "dark" || (pref === "system" && !!media?.matches));
 
 function subscribe(listener) {
   listeners.add(listener);
@@ -61,9 +65,19 @@ export function useDark() {
 }
 
 export function useApplyTheme() {
+  // Se marca durante el render (no en un efecto) para que los hijos, que se
+  // renderizan después, ya lean el tema correcto en su primer render.
+  applied = true;
   const dark = useDark();
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
-    return () => document.documentElement.classList.remove("dark");
   }, [dark]);
+  useLayoutEffect(
+    () => () => {
+      applied = false;
+      document.documentElement.classList.remove("dark");
+      listeners.forEach((l) => l());
+    },
+    []
+  );
 }

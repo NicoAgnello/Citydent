@@ -9,6 +9,8 @@
 //   incidents → array de incidentes del usuario (usa location.lat / location.lng)
 //   onSelect  → función que recibe el incidente tocado
 //   children  → contenido que se superpone al mapa (saludo, botón de reporte)
+//   plain     → si es true no dibuja degradados ni capa de contenido (mapa solo)
+//   className → alto del contenedor (por defecto h-72 md:h-80)
 import { useMemo } from "react";
 import Map, { Marker } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
@@ -58,7 +60,7 @@ function getInitialView(points) {
   };
 }
 
-export default function IncidentsMap({ incidents, onSelect, children }) {
+export default function IncidentsMap({ incidents, onSelect, children, plain = false, className = "h-72 md:h-80" }) {
   const dark = useDark();
   const dotColors = dark ? DOT_COLORS_DARK : DOT_COLORS_LIGHT;
   const points = useMemo(
@@ -70,7 +72,7 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
   );
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-100 h-72 md:h-80">
+    <div className={`relative overflow-hidden rounded-2xl bg-slate-100 ${className}`}>
       {WEBGL_OK ? (
         <Map
           initialViewState={getInitialView(points)}
@@ -103,6 +105,8 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
         </>
       )}
 
+      {!plain && (
+        <>
       {/* Degradados para que el texto superpuesto se lea. Usan slate-50, que en
           claro es casi blanco y en oscuro el violeta de fondo. El tinte de marca
           solo va en oscuro. */}
@@ -114,6 +118,8 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-5 md:p-6">
         {children}
       </div>
+        </>
+      )}
     </div>
   );
 }
