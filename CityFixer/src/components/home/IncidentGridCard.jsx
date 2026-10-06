@@ -1,7 +1,8 @@
 // Tarjeta de incidente en formato grilla (con foto de portada).
 // Al hacer clic abre IncidentDetailSheet con el detalle completo.
 // Si el primer archivo adjunto es un video, muestra un ícono de play superpuesto.
-// Muestra: foto/video, título, badge de estado, dirección y fecha relativa.
+// Muestra: foto/video con el badge de estado encima, título, dirección, categoría,
+// línea de progreso y fecha relativa.
 //
 // Props:
 //   incident  → objeto de incidente (id, title, status, location, photos, etc.)
@@ -13,6 +14,7 @@ import { MapPin, Play } from "lucide-react";
 import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import { formatDate } from "@/lib/dates";
 import IncidentDetailSheet from "./IncidentDetailSheet";
+import { Progress } from "./IncidentCard";
 
 export default function IncidentGridCard({ incident, onUpdated }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +31,8 @@ export default function IncidentGridCard({ incident, onUpdated }) {
         onClick={() => setOpen(true)}
         className="bg-white border border-slate-100 rounded-xl overflow-hidden cursor-pointer shadow-xs hover:shadow-md transition-shadow flex flex-col"
       >
-        {/* Miniatura superior */}
+        {/* Miniatura superior, con el badge de estado encima */}
+        <div className="relative">
         {photo ? (
           isVideo ? (
             <div className="relative h-40 w-full bg-slate-900">
@@ -61,18 +64,20 @@ export default function IncidentGridCard({ incident, onUpdated }) {
             <p className="text-[11px] text-slate-300">Sin foto</p>
           </div>
         )}
+        {/* Base opaca: algunos badges son translucidos y se perderian sobre la foto */}
+        <span className="absolute left-3 top-3 rounded-full bg-white shadow-sm">
+          <span className={`block text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${badgeCls}`}>
+            {label}
+          </span>
+        </span>
+        </div>
 
         {/* Contenido */}
         <div className="p-4 flex flex-col flex-1">
-          {/* Título + badge */}
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-semibold text-slate-900 line-clamp-1 flex-1 leading-snug">
-              {incident.title}
-            </p>
-            <span className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${badgeCls}`}>
-              {label}
-            </span>
-          </div>
+          {/* Título */}
+          <p className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
+            {incident.title}
+          </p>
 
           {/* Dirección • categoría */}
           <p className="text-xs text-slate-500 mt-1.5 line-clamp-1 flex items-center gap-1">
@@ -84,6 +89,8 @@ export default function IncidentGridCard({ incident, onUpdated }) {
               </span>
             )}
           </p>
+
+          <Progress statusKey={statusKey} />
 
           {/* Fecha al pie */}
           <p className="text-[11px] text-slate-400 mt-3 text-right">

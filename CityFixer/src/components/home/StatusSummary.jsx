@@ -12,7 +12,7 @@
 //   incidents → array de incidentes del usuario
 import { STATUS_KEYS } from "@/lib/incidents";
 
-const GROUPS = [
+export const STATUS_GROUPS = [
   { label: "Resueltos",  keys: [STATUS_KEYS.RESOLVED],   bar: "bg-emerald-500", text: "text-emerald-600" },
   { label: "En proceso", keys: [STATUS_KEYS.IN_PROCESS], bar: "bg-brand-mid",   text: "text-brand-mid"   },
   {
@@ -25,7 +25,7 @@ const GROUPS = [
 ];
 
 export default function StatusSummary({ incidents }) {
-  const counts = GROUPS.map((g) => ({
+  const counts = STATUS_GROUPS.map((g) => ({
     ...g,
     count: incidents.filter((i) => g.keys.includes(i.status?.name)).length,
   }));

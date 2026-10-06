@@ -39,7 +39,7 @@ const STEP_INDEX = {
   [STATUS_KEYS.RESOLVED]:   3,
 };
 
-function Progress({ statusKey }) {
+export function Progress({ statusKey }) {
   const current = STEP_INDEX[statusKey];
   if (current === undefined) return null;
 

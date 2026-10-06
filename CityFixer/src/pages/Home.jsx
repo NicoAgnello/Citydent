@@ -78,7 +78,7 @@ export default function Home() {
             onUpdated={refresh}
           />
         )}
-        {activeTab === "reportes" && <ReportesTab incidents={incidents} loading={loading} onUpdated={refresh} />}
+        {activeTab === "reportes" && <ReportesTab incidents={incidents} loading={loading} onUpdated={refresh} onNuevoReporte={() => setReportOpen(true)} />}
         {activeTab === "perfil"   && <PerfilTab incidents={incidents} loading={loading} />}
       </main>
 
