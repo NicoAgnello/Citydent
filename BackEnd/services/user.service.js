@@ -11,6 +11,14 @@ const CODIGO_POSTAL_REGEX = /^\d{4}([A-Z]{3})?$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
+ * Escapa caracteres especiales de regex para usar un texto libre en un `$regex` seguro.
+ *
+ * @param {string} str Texto a escapar.
+ * @returns {string} Texto seguro para construir un RegExp.
+ */
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
  * Indica si un usuario tiene el perfil completo (todos los campos obligatorios).
  *
  * @param {Object} u Usuario o conjunto de campos a evaluar.
@@ -36,6 +44,67 @@ const getUsers = async () => {
     .populate('role')
     .populate('barrio', 'name')
     .sort({ createdAt: -1 });
+};
+
+/**
+ * Versión paginada y filtrada de `getUsers`, pensada para la tabla de
+ * administración (evita mandar el listado completo al front). Excluye al
+ * usuario de sistema de la IA igual que `getUsers`.
+ *
+ * @param {Object} params
+ * @param {number} [params.page=1]    Página (1-based).
+ * @param {number} [params.limit=20]  Tamaño de página (máx. 100).
+ * @param {string} [params.search=''] Busca en nombre, apellido y email (incluye nombre completo).
+ * @param {string} [params.role='']   Nombre de rol a filtrar ('' o 'todos' = todos los roles no-ai).
+ * @returns {Promise<{users: Array<Object>, pagination: Object}>}
+ */
+const getUsersPage = async (params = {}) => {
+  const { search = '', role = '' } = params;
+  const page  = Math.max(1, parseInt(params.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(params.limit, 10) || 20));
+
+  const aiRole = await Role.findOne({ name: 'ai' });
+  const excludeIds = aiRole ? [aiRole._id] : [];
+  const query = { role: { $nin: excludeIds } };
+
+  if (role && role !== 'todos') {
+    const roleDoc = await Role.findOne({ name: role });
+    query.role = roleDoc ? roleDoc._id : null; // rol inexistente → sin resultados
+  }
+
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    const regex = new RegExp(escapeRegex(trimmedSearch), 'i');
+    query.$or = [
+      { firstName: regex },
+      { lastName: regex },
+      { email: regex },
+      {
+        $expr: {
+          $regexMatch: {
+            input: { $concat: [{ $ifNull: ['$firstName', ''] }, ' ', { $ifNull: ['$lastName', ''] }] },
+            regex: escapeRegex(trimmedSearch),
+            options: 'i',
+          },
+        },
+      },
+    ];
+  }
+
+  const [users, total] = await Promise.all([
+    User.find(query)
+      .populate('role')
+      .populate('barrio', 'name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    User.countDocuments(query),
+  ]);
+
+  return {
+    users,
+    pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+  };
 };
 
 /**
@@ -559,6 +628,7 @@ const banUser = async (targetUserId, isBanned, requesterId) => {
 
 module.exports = {
   getUsers,
+  getUsersPage,
   getUserById,
   getMyProfile,
   sendVerification,

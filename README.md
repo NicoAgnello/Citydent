@@ -16,7 +16,7 @@ automático de reportes mediante IA.
 | Imágenes  | Cloudinary |
 | IA        | Google Gemini |
 | Mapas     | Mapbox |
-| Email     | SMTP (Gmail) |
+| Email     | Brevo (API HTTP) |
 
 ## Estructura del repositorio
 
@@ -111,6 +111,7 @@ El frontend espera que el backend corra en el puerto configurado en
 - **[docs/autenticacion.md](docs/autenticacion.md)** — Clerk + JWT, login y onboarding (OTP).
 - **[docs/roles-permisos.md](docs/roles-permisos.md)** — qué puede hacer cada rol y reglas de protección.
 - **[docs/flujo-estados.md](docs/flujo-estados.md)** — máquina de estados de incidentes y grupos.
+- **[docs/acceso-powerbi.md](docs/acceso-powerbi.md)** — cómo conectar Power BI a los datos (OTP).
 - **[docs/adr/](docs/adr/)** — decisiones de arquitectura (ADRs).
 - **[docs/templates/](docs/templates/)** — plantillas para mantener la doc uniforme entre el equipo.
 

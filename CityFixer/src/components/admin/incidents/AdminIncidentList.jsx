@@ -2,16 +2,21 @@
 //   - Desktop (md+): tabla con AdminIncidentRow
 //   - Mobile:        tarjetas con AdminIncidentCard
 //
-// También maneja el foco automático: si llega un focusedIncidentId (desde una notificación),
-// busca el incidente en la lista y abre su detalle automáticamente.
+// También maneja el foco automático: si llega un focusedIncidentId (desde una notificación
+// o el buscador del Topbar), busca el incidente y abre su detalle automáticamente. Como
+// `incidents` ahora es solo la página actual, primero busca ahí y si no está lo busca en
+// `fallbackIncidents` (el listado completo que ya tiene AdminDashboard para Topbar/Estadísticas).
 //
 // Props:
-//   incidents         → array de incidentes filtrados
+//   incidents         → array de incidentes de la página actual
+//   fallbackIncidents → (opcional) listado completo, respaldo para resolver focusedIncidentId
 //   loading           → booleano, muestra skeletons mientras carga
 //   onUpdated         → función sin argumentos, recarga la lista tras cambios
 //   focusedIncidentId → id de incidente a abrir automáticamente
 //   onClearFocus      → función sin argumentos, limpia el foco tras usarlo
 //   isReadOnly        → booleano, si true oculta las acciones de cambio de estado
+//   pagination        → { page, limit, total, totalPages } (opcional, muestra el paginador si viene)
+//   onPageChange      → función que recibe el nuevo número de página
 //
 // Se usa en AdminIncidentesTab.jsx.
 import { useState, useEffect } from "react";
@@ -22,20 +27,33 @@ import IncidentDetailSheet from "@/components/home/IncidentDetailSheet";
 import IncidentAdminActions from "./IncidentAdminActions";
 import IncidentSkeleton from "@/components/home/IncidentSkeleton";
 import { EmptyState } from "@/components/home/IncidentCard";
+import Pagination from "@/components/ui/pagination";
 
-export default function AdminIncidentList({ incidents, loading, onUpdated, focusedIncidentId, onClearFocus, isReadOnly = false }) {
+export default function AdminIncidentList({
+  incidents,
+  fallbackIncidents = [],
+  loading,
+  onUpdated,
+  focusedIncidentId,
+  onClearFocus,
+  isReadOnly = false,
+  pagination,
+  onPageChange,
+}) {
   const [focusedIncident, setFocusedIncident] = useState(null);
   const [focusedOpen,     setFocusedOpen]     = useState(false);
 
   useEffect(() => {
     if (!focusedIncidentId || focusedOpen) return;
-    const found = incidents.find((i) => i._id === focusedIncidentId);
+    const found =
+      incidents.find((i) => i._id === focusedIncidentId) ??
+      fallbackIncidents.find((i) => i._id === focusedIncidentId);
     if (found) {
       setFocusedIncident(found);
       setFocusedOpen(true);
       onClearFocus?.();
     }
-  }, [focusedIncidentId, incidents]);
+  }, [focusedIncidentId, incidents, fallbackIncidents]);
 
   const handleFocusedOpenChange = (v) => {
     setFocusedOpen(v);
@@ -93,6 +111,15 @@ export default function AdminIncidentList({ incidents, loading, onUpdated, focus
           <AdminIncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} isReadOnly={isReadOnly} />
         ))}
       </div>
+
+      {pagination && onPageChange && (
+        <Pagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          total={pagination.total}
+          onPageChange={onPageChange}
+        />
+      )}
 
       {/* ── Sheet único para el incidente buscado (desktop y mobile) ── */}
       {focusedIncident && (

@@ -71,8 +71,10 @@ export const cancelIncident = (id) => api.patch(`/api/incidents/${id}/cancel`);
 // ─── Admin — Incidentes ───────────────────────────────────────────────────────
 
 // Trae todos los incidentes del sistema, agrupados. Solo admin/superAdmin.
-// Se usa en useAllIncidents → AdminIncidentesTab.
-export const getAllIncidents = () => api.get("/api/incidents");
+// Sin `params` trae el listado completo (useAllIncidents, para Topbar/Estadísticas).
+// Con `params.page` el backend pagina y filtra en el servidor: devuelve
+// { groups, pagination, counts } en vez de { groups } (useIncidentsPage, para la tabla del panel).
+export const getAllIncidents = (params) => api.get("/api/incidents", { params });
 
 // Cambia el estado de un incidente (ej: de "pendiente" a "en proceso").
 // Se usa en IncidentAdminActions.
@@ -181,8 +183,10 @@ export const getStatuses = () => api.get("/api/statuses");
 // Todas estas funciones son exclusivas del panel admin y se usan a través
 // del hook useUsers → AdminUsuariosTab.
 
-// Trae la lista completa de usuarios del sistema.
-export const getUsers = () => api.get("/api/users");
+// Trae la lista de usuarios del sistema.
+// Con `params.page` el backend pagina y filtra en el servidor: devuelve
+// { users, pagination } en vez de { users } (useUsers, para la tabla del panel).
+export const getUsers = (params) => api.get("/api/users", { params });
 
 // Trae los roles disponibles (user, admin, superAdmin).
 export const getRoles = () => api.get("/api/users/roles");

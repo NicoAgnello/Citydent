@@ -2,12 +2,21 @@ const Incident = require('../models/incident');
 const IncidentGroup = require('../models/incidentGroup');
 const Status = require('../models/status');
 const User = require('../models/user');
-const Neighborhood = require('../models/neighborhood'); 
+const Category = require('../models/category');
+const Neighborhood = require('../models/neighborhood');
 const mongoose = require('mongoose');
 const { analizarIncidenteIA } = require('./openai.service');
 const { createNotifications } = require('./notification.service');
 
 const CONFIANZA_UMBRAL = 0.85;
+
+/**
+ * Escapa caracteres especiales de regex para usar un texto libre en un `$regex` seguro.
+ *
+ * @param {string} str Texto a escapar.
+ * @returns {string} Texto seguro para construir un RegExp.
+ */
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ==========================================
 // VALIDACIONES
@@ -288,6 +297,166 @@ const getAllGroups = async () => {
     .populate('statusHistory.status', 'name description')
     .populate('statusHistory.changedBy', 'firstName lastName email')
     .sort({ updatedAt: 1, createdAt: -1 });
+};
+
+const GROUP_SORT_MAP = {
+  priority_asc:  { priority: 1 },
+  priority_desc: { priority: -1 },
+  date_desc:     { 'rep.createdAt': -1 },
+  date_asc:      { 'rep.createdAt': 1 },
+  reports_desc:  { reportsCount: -1 },
+};
+
+/**
+ * Versión paginada y filtrada de `getAllGroups`, pensada para la tabla de
+ * administración (evita mandar el listado completo al front). Resuelve en dos
+ * pasos: 1) un aggregate liviano solo para encontrar los ids que matchean, el
+ * total y los contadores de tabs; 2) un `find().populate(...)` idéntico al de
+ * `getAllGroups` sobre esos ids, reordenado según el resultado del aggregate.
+ *
+ * @param {Object} params
+ * @param {number} [params.page=1]        Página (1-based).
+ * @param {number} [params.limit=20]      Tamaño de página (máx. 100).
+ * @param {string} [params.search='']     Busca en título, dirección y datos del usuario del representante.
+ * @param {string[]} [params.statuses]    Nombres de estado a incluir.
+ * @param {string[]} [params.categories]  Nombres de categoría a incluir.
+ * @param {number[]} [params.priorities]  Prioridades exactas a incluir.
+ * @param {boolean} [params.isDubious]    Si es true, solo grupos con representante dudoso.
+ * @param {string} [params.dateFrom]      Fecha mínima (creación del representante), formato ISO.
+ * @param {string} [params.dateTo]        Fecha máxima (creación del representante), formato ISO.
+ * @param {boolean} [params.archived]     Filtra por `isArchived`.
+ * @param {string} [params.sortBy]        Uno de `priority_desc|priority_asc|date_desc|date_asc|reports_desc`.
+ * @returns {Promise<{groups: Array<Object>, pagination: Object, counts: Object}>}
+ */
+const getGroupsPage = async (params = {}) => {
+  const {
+    search = '',
+    statuses = [],
+    categories = [],
+    priorities = [],
+    isDubious = false,
+    dateFrom,
+    dateTo,
+    archived = false,
+    sortBy = 'priority_desc',
+  } = params;
+
+  const page  = Math.max(1, parseInt(params.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(params.limit, 10) || 20));
+
+  const matchStage = { isArchived: !!archived };
+
+  if (statuses.length) {
+    const statusDocs = await Status.find({ name: { $in: statuses } }).select('_id');
+    matchStage.status = { $in: statusDocs.map((s) => s._id) };
+  }
+  if (categories.length) {
+    const categoryDocs = await Category.find({ name: { $in: categories } }).select('_id');
+    matchStage.category = { $in: categoryDocs.map((c) => c._id) };
+  }
+  if (priorities.length) {
+    matchStage.priority = { $in: priorities.map(Number) };
+  }
+
+  const trimmedSearch = search.trim();
+  const needsUserLookup = trimmedSearch.length >= 2;
+
+  const pipeline = [
+    { $match: matchStage },
+    { $lookup: { from: 'incidents', localField: 'representativeId', foreignField: '_id', as: 'rep' } },
+    { $unwind: '$rep' },
+  ];
+
+  if (needsUserLookup) {
+    pipeline.push(
+      { $lookup: { from: 'users', localField: 'rep.user', foreignField: '_id', as: 'repUser' } },
+      { $unwind: { path: '$repUser', preserveNullAndEmptyArrays: true } },
+    );
+  }
+
+  const postMatch = {};
+  if (isDubious) postMatch['rep.is_dubious'] = true;
+
+  if (dateFrom || dateTo) {
+    postMatch['rep.createdAt'] = {};
+    if (dateFrom) postMatch['rep.createdAt'].$gte = new Date(dateFrom);
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      postMatch['rep.createdAt'].$lte = end;
+    }
+  }
+
+  if (needsUserLookup) {
+    const regex = new RegExp(escapeRegex(trimmedSearch), 'i');
+    postMatch.$or = [
+      { 'rep.title': regex },
+      { 'rep.location.address': regex },
+      { 'repUser.firstName': regex },
+      { 'repUser.lastName': regex },
+      { 'repUser.email': regex },
+      {
+        $expr: {
+          $regexMatch: {
+            input: { $concat: [{ $ifNull: ['$repUser.firstName', ''] }, ' ', { $ifNull: ['$repUser.lastName', ''] }] },
+            regex: escapeRegex(trimmedSearch),
+            options: 'i',
+          },
+        },
+      },
+    ];
+  }
+
+  if (Object.keys(postMatch).length) pipeline.push({ $match: postMatch });
+
+  pipeline.push({ $addFields: { reportsCount: { $size: '$incidents' } } });
+
+  const sortStage = GROUP_SORT_MAP[sortBy] || GROUP_SORT_MAP.priority_desc;
+
+  pipeline.push({
+    $facet: {
+      ids: [
+        { $sort: sortStage },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        { $project: { _id: 1 } },
+      ],
+      totalCount: [{ $count: 'count' }],
+    },
+  });
+
+  const [result] = await IncidentGroup.aggregate(pipeline);
+  const orderedIds = (result?.ids || []).map((d) => d._id);
+  const total = result?.totalCount?.[0]?.count || 0;
+
+  const docs = await IncidentGroup.find({ _id: { $in: orderedIds } })
+    .populate({
+      path: 'representativeId',
+      populate: [
+        { path: 'user', select: 'firstName lastName email' },
+        { path: 'status', select: 'name description' },
+        { path: 'category', select: 'name description' }
+      ]
+    })
+    .populate('status', 'name description')
+    .populate('category', 'name description')
+    .populate('neighborhood', 'name')
+    .populate('statusHistory.status', 'name description')
+    .populate('statusHistory.changedBy', 'firstName lastName email');
+
+  const byId = new Map(docs.map((d) => [d._id.toString(), d]));
+  const groups = orderedIds.map((id) => byId.get(id.toString())).filter(Boolean);
+
+  const [activeCount, archivedCount] = await Promise.all([
+    IncidentGroup.countDocuments({ isArchived: false }),
+    IncidentGroup.countDocuments({ isArchived: true }),
+  ]);
+
+  return {
+    groups,
+    pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    counts: { active: activeCount, archived: archivedCount },
+  };
 };
 
 // ==========================================
@@ -889,6 +1058,7 @@ module.exports = {
   createIncident,
   getIncidentsByUser,
   getAllGroups,
+  getGroupsPage,
   getIncidentHistory,
   getGroupHistory,
   getGroupIncidents,

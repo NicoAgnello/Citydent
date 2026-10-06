@@ -10,13 +10,17 @@
 // También tiene un botón "Sincronizar con IA" que envía incidentes sin análisis al
 // backend para que la IA los procese (muestra cuántos están pendientes).
 //
+// La tabla en sí se pagina y filtra en el servidor (useIncidentsPage), no sobre
+// `incidents`. Ese prop se sigue recibiendo solo como respaldo: si hay que abrir
+// un incidente puntual (focusedIncidentId, viene de la campana o el buscador del
+// Topbar) que no está en la página cargada, se busca ahí — ver AdminIncidentList.
+//
 // Props:
-//   incidents        → array de todos los incidentes (de useAllIncidents en AdminDashboard)
-//   loading          → booleano, muestra skeletons mientras carga
-//   onUpdated        → función sin argumentos, recarga la lista tras cambios
+//   incidents        → array completo de incidentes (de useAllIncidents en AdminDashboard), solo como respaldo
+//   onUpdated        → función sin argumentos, refresca el listado completo (Topbar/Estadísticas)
+//   onNuevoReporte   → función sin argumentos, abre el modal de nuevo incidente
 //   focusedIncidentId → id de incidente a abrir automáticamente (viene de notificación)
 //   onClearFocus     → función sin argumentos, limpia el focusedIncidentId tras usarlo
-//   isReadOnly       → booleano, si true oculta las acciones de cambio de estado
 //
 // Se usa en AdminDashboard.jsx como contenido del tab "incidentes".
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -24,11 +28,13 @@ import { Plus, Search, X, Archive, RefreshCw, Loader2, Sparkles, SlidersHorizont
 import { toast } from "sonner";
 import AdminIncidentList from "./AdminIncidentList";
 import { useStatuses } from "@/hooks/useStatuses";
+import { useIncidentsPage } from "@/hooks/useIncidentsPage";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { capitalize, STATUS_LABELS } from "@/lib/incidents";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { syncIncidentsWithAI, countIncidentsPendingAI } from "@/services/api";
+import { syncIncidentsWithAI, countIncidentsPendingAI, getCategorias } from "@/services/api";
 
 // ── Color palettes ──────────────────────────────────────────────────────────
 
@@ -73,17 +79,7 @@ const SORT_OPTIONS = [
   { value: "reports_desc",  label: "Más reportes" },
 ];
 
-function sortIncidents(list, sortBy) {
-  return [...list].sort((a, b) => {
-    switch (sortBy) {
-      case "priority_asc":  return (a.priority ?? 0) - (b.priority ?? 0);
-      case "date_desc":     return new Date(b.representativeId?.createdAt) - new Date(a.representativeId?.createdAt);
-      case "date_asc":      return new Date(a.representativeId?.createdAt) - new Date(b.representativeId?.createdAt);
-      case "reports_desc":  return (b.incidents?.length ?? 0) - (a.incidents?.length ?? 0);
-      default:              return (b.priority ?? 0) - (a.priority ?? 0);
-    }
-  });
-}
+// El orden (SORT_OPTIONS) ahora lo aplica el backend — ver GROUP_SORT_MAP en incident.service.js.
 
 // ── Priority label ───────────────────────────────────────────────────────────
 
@@ -285,7 +281,6 @@ function FilterPanelContent({ filters, setFilters, statuses, categories, sortBy,
 
 export default function AdminIncidentesTab({
   incidents,
-  loading,
   onUpdated,
   onNuevoReporte,
   focusedIncidentId,
@@ -296,8 +291,51 @@ export default function AdminIncidentesTab({
   const [pendingAI,        setPendingAI]        = useState(null);
   const [filters,         setFilters]         = useState(DEFAULTS);
   const [sortBy,          setSortBy]          = useState("priority_desc");
+  const [page,            setPage]            = useState(1);
+  const [categories,      setCategories]      = useState([]);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
   const { statuses } = useStatuses();
+
+  const isReadOnly = activeTab === "archivados";
+
+  // Búsqueda debounceada: recién dispara consulta al backend 300ms después de
+  // que el usuario deja de tipear, y solo con 2+ caracteres (mismo umbral de antes).
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
+  const effectiveSearch = debouncedSearch.trim().length >= 2 ? debouncedSearch.trim() : "";
+
+  // Datos de ESTA tabla: paginados y filtrados en el servidor.
+  const {
+    groups,
+    pagination,
+    counts,
+    loading: pageLoading,
+    refresh: pagedRefresh,
+  } = useIncidentsPage({
+    page,
+    limit: 20,
+    archived: activeTab === "archivados",
+    search: effectiveSearch,
+    statuses: filters.statuses.join(","),
+    categories: filters.categories.join(","),
+    priorities: filters.priorities.join(","),
+    isDubious: filters.isDubious,
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo,
+    sortBy,
+  });
+
+  // Refresca tanto el listado completo (para Topbar/Estadísticas) como la página actual de esta tabla.
+  const handleUpdated = useCallback(() => {
+    onUpdated?.();
+    pagedRefresh();
+  }, [onUpdated, pagedRefresh]);
+
+  // Categorías para el filtro: se piden una sola vez, no dependen de lo que esté cargado en pantalla.
+  useEffect(() => {
+    getCategorias()
+      .then(({ data }) => setCategories(data.categories ?? []))
+      .catch(() => {});
+  }, []);
 
   // AI sync
   const fetchPendingAI = async () => {
@@ -323,7 +361,7 @@ export default function AdminIncidentesTab({
           `${nuevosAgregados} incidente${nuevosAgregados !== 1 ? "s" : ""} en cola (${totalEnCola} total) — procesando en segundo plano.`,
         );
       }
-      onUpdated?.();
+      handleUpdated();
       fetchPendingAI();
     } catch {
       toast.error("No se pudo sincronizar con la IA.");
@@ -334,28 +372,20 @@ export default function AdminIncidentesTab({
 
   const clearFilters = useCallback(() => setFilters(DEFAULTS), []);
 
-  // Tab split
-  const activeIncidents   = useMemo(() => incidents.filter((g) => !g.isArchived), [incidents]);
-  const archivedIncidents = useMemo(() => incidents.filter((g) =>  g.isArchived), [incidents]);
-  const sourceList  = activeTab === "activos" ? activeIncidents : archivedIncidents;
-  const isReadOnly  = activeTab === "archivados";
-
   useEffect(() => { clearFilters(); }, [activeTab]);
+
+  // Vuelve a la página 1 cada vez que cambia algo que redefine la consulta al backend.
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, sortBy, effectiveSearch, filters.statuses, filters.categories, filters.priorities, filters.isDubious, filters.dateFrom, filters.dateTo]);
 
   useEffect(() => {
     if (focusedIncidentId) {
       setActiveTab("activos");
       clearFilters();
+      setPage(1);
     }
   }, [focusedIncidentId]);
-
-  // Dynamic categories from visible tab
-  const categories = useMemo(() => {
-    const seen = new Set();
-    return sourceList
-      .filter((inc) => inc.category?.name && !seen.has(inc.category.name) && seen.add(inc.category.name))
-      .map((inc) => ({ _id: inc.category._id, name: inc.category.name }));
-  }, [sourceList]);
 
   // Active filter count (badge)
   const activeFilterCount = useMemo(() => {
@@ -368,52 +398,6 @@ export default function AdminIncidentesTab({
     if (filters.dateFrom || filters.dateTo) n++;
     return n;
   }, [filters]);
-
-  // Filter logic (cross-filtering, OR within each dimension, AND between)
-  const filtered = useMemo(() => {
-    let result = sourceList;
-
-    if (filters.search.trim().length >= 2) {
-      const q = filters.search.trim().toLowerCase();
-      result = result.filter((inc) => {
-        const rep = inc.representativeId;
-        const u   = rep?.user;
-        return (
-          (rep?.title ?? "").toLowerCase().includes(q) ||
-          (rep?.location?.address ?? "").toLowerCase().includes(q) ||
-          [u?.firstName, u?.lastName].filter(Boolean).join(" ").toLowerCase().includes(q) ||
-          (u?.email ?? "").toLowerCase().includes(q)
-        );
-      });
-    }
-
-    if (filters.statuses.length > 0)
-      result = result.filter((inc) => filters.statuses.includes(inc.status?.name));
-
-    if (filters.categories.length > 0)
-      result = result.filter((inc) => filters.categories.includes(inc.category?.name));
-
-    if (filters.priorities.length > 0)
-      result = result.filter((inc) => filters.priorities.includes(inc.priority));
-
-    if (filters.isDubious)
-      result = result.filter((inc) => inc.representativeId?.is_dubious === true);
-
-    if (filters.dateFrom)
-      result = result.filter(
-        (inc) => new Date(inc.representativeId?.createdAt) >= new Date(filters.dateFrom),
-      );
-
-    if (filters.dateTo) {
-      const end = new Date(filters.dateTo);
-      end.setHours(23, 59, 59, 999);
-      result = result.filter((inc) => new Date(inc.representativeId?.createdAt) <= end);
-    }
-
-    return result;
-  }, [sourceList, filters]);
-
-  const sortedList = useMemo(() => sortIncidents(filtered, sortBy), [filtered, sortBy]);
 
   // Individual pill removal helpers
   const removeStatus   = (s) => setFilters((p) => ({ ...p, statuses:   p.statuses.filter((x) => x !== s) }));
@@ -430,28 +414,28 @@ export default function AdminIncidentesTab({
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
-            {!loading && (
+            {pagination && (
               <span className="sm:hidden text-sm text-slate-400 font-normal shrink-0">
-                ({sortedList.length})
+                ({pagination.total})
               </span>
             )}
           </div>
-          {!loading && (
+          {pagination && (
             <p className="hidden sm:block text-xs text-gray-400 mt-0.5">
-              {`${sortedList.length} ${isReadOnly ? "archivado" : "incidente"}${sortedList.length !== 1 ? "s" : ""}`}
+              {`${pagination.total} ${isReadOnly ? "archivado" : "incidente"}${pagination.total !== 1 ? "s" : ""}`}
             </p>
           )}
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
           <button
-            onClick={onUpdated}
-            disabled={loading}
+            onClick={handleUpdated}
+            disabled={pageLoading}
             aria-label="Actualizar lista de incidentes"
             title="Actualizar lista de incidentes"
             className="flex items-center justify-center gap-1.5 px-2.5 py-2 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 text-sm font-semibold transition-colors disabled:opacity-50"
           >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={15} className={pageLoading ? "animate-spin" : ""} />
             <span className="hidden sm:inline">Actualizar</span>
           </button>
 
@@ -516,11 +500,11 @@ export default function AdminIncidentesTab({
               }`}
             >
               Activos
-              {!loading && (
+              {counts && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                   activeTab === "activos" ? "bg-primary/10 text-primary" : "bg-slate-200 text-slate-500"
                 }`}>
-                  {activeIncidents.length}
+                  {counts.active}
                 </span>
               )}
             </button>
@@ -534,11 +518,11 @@ export default function AdminIncidentesTab({
             >
               <Archive size={11} />
               Archivados
-              {!loading && archivedIncidents.length > 0 && (
+              {counts && counts.archived > 0 && (
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
                   activeTab === "archivados" ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-500"
                 }`}>
-                  {archivedIncidents.length}
+                  {counts.archived}
                 </span>
               )}
             </button>
@@ -824,19 +808,22 @@ export default function AdminIncidentesTab({
               onClick={() => setMobileSheetOpen(false)}
               className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl transition-colors hover:bg-brand-mid"
             >
-              Ver {sortedList.length} resultado{sortedList.length !== 1 ? "s" : ""}
+              Ver {pagination?.total ?? 0} resultado{(pagination?.total ?? 0) !== 1 ? "s" : ""}
             </button>
           </div>
         </SheetContent>
       </Sheet>
 
       <AdminIncidentList
-        incidents={sortedList}
-        loading={loading}
-        onUpdated={onUpdated}
+        incidents={groups}
+        fallbackIncidents={incidents}
+        loading={pageLoading}
+        onUpdated={handleUpdated}
         focusedIncidentId={focusedIncidentId}
         onClearFocus={onClearFocus}
         isReadOnly={isReadOnly}
+        pagination={pagination}
+        onPageChange={setPage}
       />
     </div>
   );

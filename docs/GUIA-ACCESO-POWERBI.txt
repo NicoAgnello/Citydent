@@ -1,0 +1,229 @@
+================================================================================
+ CITYFIXER — CÓMO CONECTAR POWER BI A LOS DATOS
+================================================================================
+Esta guía es para cualquier persona que necesite traer los datos de CityFixer
+a Power BI, aunque no conozca el proyecto. Seguí los pasos en orden.
+
+
+================================================================================
+ PASO 1 — CONSEGUIR EL CÓDIGO DE ACCESO (OTP)
+================================================================================
+El acceso a los datos está protegido por un código de 6 dígitos que cambia
+cada vez que se pide uno nuevo. Solo lo puede generar alguien con usuario
+Admin o SuperAdmin dentro de la aplicación de CityFixer.
+
+1. Pedile a un Admin o SuperAdmin que entre a la aplicación de CityFixer.
+2. Que vaya al Panel de Administración → pestaña "Estadísticas".
+3. Ahí abajo va a ver una tarjeta que dice "Acceso externo — Power BI".
+4. Que haga clic en el botón "Generar acceso".
+5. Le va a llegar un código de 6 dígitos al email de esa persona (Admin o
+   SuperAdmin). Ese código es el que se usa en Power BI (ver Paso 3).
+
+IMPORTANTE:
+- El código es válido por 24 horas desde que se genera.
+- Si se pide un código nuevo, el anterior deja de funcionar.
+- Si pasan las 24 horas y Power BI deja de traer datos, hay que repetir este
+  paso para conseguir un código nuevo.
+
+
+================================================================================
+ PASO 2 — LA DIRECCIÓN (URL) DEL SERVIDOR
+================================================================================
+Esta es la dirección base del servidor de CityFixer. La vas a necesitar en el
+paso siguiente:
+
+    https://cityfixer-ngbl.onrender.com
+
+Cada "tabla" de datos tiene su propia dirección completa, agregando al final
+"/api/external/data/" y el nombre de la tabla. Las 7 direcciones son:
+
+    Grupos de reportes (resumen):
+    https://cityfixer-ngbl.onrender.com/api/external/data/groups
+
+    Reportes individuales (detalle):
+    https://cityfixer-ngbl.onrender.com/api/external/data/incidents
+
+    Historial de cambios de estado (uno por cambio):
+    https://cityfixer-ngbl.onrender.com/api/external/data/statusHistory
+
+    Estados posibles de un reporte:
+    https://cityfixer-ngbl.onrender.com/api/external/data/statuses
+
+    Categorías de problemas:
+    https://cityfixer-ngbl.onrender.com/api/external/data/categories
+
+    Barrios del municipio:
+    https://cityfixer-ngbl.onrender.com/api/external/data/neighborhoods
+
+    Usuarios de la aplicación:
+    https://cityfixer-ngbl.onrender.com/api/external/data/users
+
+Cada dirección trae UNA sola tabla. Para tener varias tablas en el mismo
+reporte de Power BI, hay que repetir el Paso 3 una vez por cada dirección.
+
+
+================================================================================
+ PASO 3 — CONECTAR EN POWER BI DESKTOP
+================================================================================
+Repetir estos pasos por cada tabla que se quiera traer (Paso 2).
+
+1. Abrir Power BI Desktop.
+2. En la cinta de arriba, ir a "Inicio" → botón "Obtener datos".
+3. Elegir la opción "Web".
+4. Se abre una ventana chica. Hacer clic en "Avanzado" (no usar la opción
+   "Básica", ahí no se puede agregar el código de acceso).
+5. En el primer campo, el que dice algo como "Partes de la URL", pegar la
+   dirección completa de la tabla que se quiera (una de las 5 del Paso 2).
+   Por ejemplo, para traer los usuarios:
+       https://cityfixer-ngbl.onrender.com/api/external/data/users
+6. Más abajo en esa misma ventana hay una sección de "Encabezados de solicitud
+   HTTP" (o "HTTP request header parameters"). Ahí hay que agregar una fila:
+       Nombre del encabezado:   x-otp-code
+       Valor:                   el código de 6 dígitos que llegó por mail
+7. Hacer clic en "Aceptar".
+8. Puede aparecer un cartel pidiendo el "Nivel de privacidad" de la conexión:
+   elegir "Organizacional" o "Público" (cualquiera de las dos funciona,
+   NO elegir "Privado" si van a combinar esta tabla con otras).
+9. Power BI va a mostrar los datos en el "Editor de Power Query". Hacer clic
+   en "Cerrar y aplicar" para traerlos al reporte.
+
+Repetir del punto 2 al 9 para cada una de las otras tablas que se necesiten.
+
+
+================================================================================
+ PASO 4 — QUÉ TRAE CADA TABLA Y CÓMO SE RELACIONAN
+================================================================================
+
+GROUPS (grupos de reportes)
+----------------------------
+Es la tabla principal para armar la mayoría de los gráficos. Cada fila es un
+"grupo" de reportes de vecinos sobre el mismo problema (CityFixer agrupa
+reportes parecidos automáticamente).
+    id             → identificador único del grupo
+    status         → estado actual (pendiente, en proceso, resuelto, etc.)
+    category       → categoría del problema (bache, alumbrado, basura, etc.)
+    priority       → prioridad de 1 a 10 (más alto = más urgente)
+    incidentCount  → cuántos reportes de vecinos se agruparon en este ítem
+    isEmergency    → si fue marcado como emergencia
+    isArchived     → si ya se archivó / cerró
+    lat / lng      → coordenadas geográficas (para mapas)
+    finalizedAt    → fecha en que se resolvió/cerró (si aplica)
+    createdAt      → fecha de creación del grupo
+
+INCIDENTS (reportes individuales)
+----------------------------------
+El detalle: cada fila es UN reporte hecho por UN vecino (varios reportes
+pueden pertenecer al mismo grupo de la tabla GROUPS).
+    id                    → identificador único del reporte
+    groupId                → a qué grupo pertenece (se relaciona con
+                              GROUPS.id, ver más abajo)
+    status / category      → igual que en GROUPS pero de este reporte puntual
+    aiSuggestedCategory     → categoría que sugirió la inteligencia artificial
+    isDubious               → si la IA lo marcó como dudoso
+    isCancelled             → si el vecino lo canceló
+    isEmergency             → si es una emergencia
+    lat / lng               → coordenadas del reporte
+    userName / userEmail / userDni → datos de quién lo reportó
+    createdAt               → fecha del reporte
+
+STATUS HISTORY (historial de cambios de estado)
+-------------------------------------------------
+Cada fila es UN cambio de estado de un grupo (ej: pasó de "pendiente" a
+"aceptado"). Sirve para medir cuánto tardó cada etapa de gestión.
+    id              → identificador único del cambio
+    groupId         → a qué grupo pertenece (se relaciona con GROUPS.id)
+    status          → estado al que pasó en ese cambio
+    changedAt       → fecha y hora del cambio
+    changedById     → quién lo hizo (se relaciona con USERS.id; incluye al
+                      usuario de sistema de la IA cuando el cambio lo generó
+                      la IA automáticamente)
+    source          → quién originó el cambio: user / admin / ai / system
+    orden           → posición del cambio dentro del historial del grupo
+                      (1 = primer cambio, 2 = segundo, etc.)
+
+STATUSES (estados posibles)
+-----------------------------
+Lista simple de los estados que puede tener un reporte o grupo (pendiente,
+aceptado, en proceso, resuelto, rechazado, cancelado). Sirve como referencia,
+no hace falta cruzarla con las otras tablas porque GROUPS e INCIDENTS ya
+traen el nombre del estado en texto.
+    id, name, description
+
+CATEGORIES (categorías)
+-------------------------
+Lista simple de las categorías de problemas (bache, alumbrado, basura,
+vandalismo, otro). Igual que STATUSES, es de referencia; GROUPS e INCIDENTS
+ya traen el nombre en texto.
+    id, name, description
+
+NEIGHBORHOODS (barrios)
+-------------------------
+Lista de los barrios del municipio, con un punto central aproximado (para
+ubicar una burbuja por barrio en un mapa).
+    id            → identificador único del barrio
+    name          → nombre del barrio
+    centroidLat / centroidLng → coordenadas centrales aproximadas del barrio
+
+USERS (usuarios)
+-------------------
+Vecinos y personal registrado en la aplicación.
+    id, firstName, lastName, email, dni, telefono
+    role            → user / admin / superAdmin
+    ciudad, barrio, provincia
+    profileComplete → si completó su perfil
+    isBanned        → si está suspendido
+    createdAt
+
+CÓMO SE RELACIONAN (para armar el modelo en Power BI)
+--------------------------------------------------------
+Las relaciones importantes son:
+
+    INCIDENTS.groupId        ➜  GROUPS.id   (varios reportes por cada grupo)
+    STATUS HISTORY.groupId   ➜  GROUPS.id   (varios cambios por cada grupo)
+    STATUS HISTORY.changedById ➜ USERS.id   (quién hizo cada cambio)
+
+Con esas relaciones ya se pueden cruzar todos los datos: por ejemplo, contar
+cuántos reportes individuales (INCIDENTS) tiene cada grupo (GROUPS), medir
+cuánto tardó cada etapa usando STATUS HISTORY, o filtrar reportes por barrio
+usando el email/usuario de INCIDENTS contra USERS.email si hiciera falta.
+No hace falta relacionar STATUSES, CATEGORIES ni NEIGHBORHOODS con nada,
+porque el nombre del estado, la categoría y el barrio ya vienen escritos
+directamente en GROUPS e INCIDENTS.
+
+
+================================================================================
+ CUIDADO CON LOS DATOS PERSONALES
+================================================================================
+Las tablas INCIDENTS y USERS traen datos personales de vecinos (email, DNI,
+teléfono). Tratar el archivo de Power BI (.pbix) y cualquier reporte que se
+publique con el mismo cuidado que cualquier información sensible: no
+compartirlo fuera del equipo autorizado a verlos.
+
+
+================================================================================
+ SI ALGO FALLA
+================================================================================
+"No es posible conectar con el servidor remoto"
+    → Revisar que la URL esté bien escrita (empieza con https://, sin
+      espacios ni caracteres de más). Si el servidor estuvo sin uso por un
+      rato largo, la primera conexión puede tardar hasta un minuto en
+      responder — probar de nuevo pasado ese tiempo.
+
+Error 401 "Se requiere el código OTP en el header x-otp-code"
+    → Falta agregar el encabezado x-otp-code en el paso 6, o se escribió mal
+      el nombre (tiene que ser exactamente "x-otp-code", con guiones).
+
+Error 401 "Código inválido o expirado"
+    → El código venció (pasaron más de 24 horas) o un Admin/SuperAdmin pidió
+      uno nuevo, lo que invalida el anterior. Repetir el Paso 1 para
+      conseguir un código nuevo y volver a pegarlo en Power BI.
+
+Error 400 "Tabla inválida"
+    → El final de la URL está mal escrito. Tiene que ser exactamente uno de
+      estos: groups / incidents / statusHistory / statuses / categories /
+      neighborhoods / users.
+
+No aparece el botón "Generar acceso" en la aplicación
+    → La persona que entró no tiene rol Admin ni SuperAdmin. Pedirle a un
+      SuperAdmin que le asigne el rol Admin desde la sección Usuarios.
+================================================================================

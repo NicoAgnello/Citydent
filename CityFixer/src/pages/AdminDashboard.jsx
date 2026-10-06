@@ -34,6 +34,7 @@ import AdminEstadisticasTab from "@/components/admin/stats/AdminEstadisticasTab"
 import AdminCategoriasTab from "@/components/admin/categories/AdminCategoriasTab";
 import IncidentModal from "@/components/map/IncidentModal";
 import AdminUsuariosTab from "@/components/admin/usuarios/AdminUsuariosTab";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export default function AdminDashboard({ dbRole }) {
@@ -87,35 +88,43 @@ export default function AdminDashboard({ dbRole }) {
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "incidentes" && (
-              <AdminIncidentesTab
-                incidents={groups}
-                loading={loading}
-                onUpdated={refresh}
-                onNuevoReporte={() => setReportOpen(true)}
-                focusedIncidentId={focusedIncidentId}
-                onClearFocus={() => setFocusedIncidentId(null)}
-              />
+              <ErrorBoundary label="Incidentes">
+                <AdminIncidentesTab
+                  incidents={groups}
+                  loading={loading}
+                  onUpdated={refresh}
+                  onNuevoReporte={() => setReportOpen(true)}
+                  focusedIncidentId={focusedIncidentId}
+                  onClearFocus={() => setFocusedIncidentId(null)}
+                />
+              </ErrorBoundary>
             )}
 
             {/* Visible para admin y superAdmin */}
             {activeTab === "estadisticas" && (
-              <AdminEstadisticasTab
-                incidents={groups}
-                loading={loading}
-                dbRole={dbRole}
-                onTabChange={setActiveTab}
-                onFocusIncident={setFocusedIncidentId}
-              />
+              <ErrorBoundary label="Estadísticas">
+                <AdminEstadisticasTab
+                  incidents={groups}
+                  loading={loading}
+                  dbRole={dbRole}
+                  onTabChange={setActiveTab}
+                  onFocusIncident={setFocusedIncidentId}
+                />
+              </ErrorBoundary>
             )}
 
             {/* EXCLUSIVO SUPERADMIN */}
             {activeTab === "categorias" && dbRole === "superAdmin" && (
-              <AdminCategoriasTab dbRole={dbRole} />
+              <ErrorBoundary label="Categorías">
+                <AdminCategoriasTab dbRole={dbRole} />
+              </ErrorBoundary>
             )}
 
             {/* EXCLUSIVO SUPERADMIN */}
             {activeTab === "usuarios" && dbRole === "superAdmin" && (
-              <AdminUsuariosTab />
+              <ErrorBoundary label="Usuarios">
+                <AdminUsuariosTab />
+              </ErrorBoundary>
             )}
 
           </div>

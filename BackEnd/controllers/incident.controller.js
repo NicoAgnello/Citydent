@@ -2,6 +2,7 @@ const {
   createIncident,
   getIncidentsByUser,
   getAllGroups,
+  getGroupsPage,
   getIncidentHistory,
   getGroupHistory: getGroupHistoryService,
   getGroupIncidents: getGroupIncidentsService,
@@ -47,8 +48,28 @@ const getMyIncidents = async (req, res) => {
   }
 };
 
+const splitCsv = (value) => (value ? String(value).split(',').map((v) => v.trim()).filter(Boolean) : []);
+
 const getAll = async (req, res) => {
   try {
+    if (req.query.page) {
+      const q = req.query;
+      const result = await getGroupsPage({
+        page: q.page,
+        limit: q.limit,
+        search: q.search || '',
+        statuses: splitCsv(q.statuses),
+        categories: splitCsv(q.categories),
+        priorities: splitCsv(q.priorities).map(Number),
+        isDubious: q.isDubious === 'true',
+        dateFrom: q.dateFrom || undefined,
+        dateTo: q.dateTo || undefined,
+        archived: q.archived === 'true',
+        sortBy: q.sortBy,
+      });
+      return res.status(200).json({ success: true, ...result });
+    }
+
     const groups = await getAllGroups();
     res.status(200).json({ success: true, groups });
   } catch (error) {

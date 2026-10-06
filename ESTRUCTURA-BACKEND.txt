@@ -1,0 +1,533 @@
+================================================================================
+ CARCAZA / ESTRUCTURA DEL BACKEND — CityFixer (proyecto de referencia)
+================================================================================
+Este documento describe CÓMO está construido el backend de este proyecto para
+poder replicar el mismo estilo, estructura y convenciones en otro proyecto.
+Está pensado para que otra IA (o persona) reproduzca la "forma de trabajar":
+el lenguaje, la estructura de carpetas, cómo se definen las funciones, cómo se
+comenta, cómo se manejan errores y respuestas.
+
+NO copiar la lógica de negocio de este proyecto (incidentes, IA, etc.), SÍ
+copiar el ESQUELETO, las CONVENCIONES y los PATRONES.
+
+
+================================================================================
+ 1. STACK Y LENGUAJE
+================================================================================
+- Lenguaje: JavaScript (Node.js), NO TypeScript.
+- Módulos: CommonJS (require / module.exports). NO se usa import/export ESM.
+- Framework HTTP: Express 5.
+- Base de datos: MongoDB con Mongoose (ODM).
+- Tiempo real: Socket.IO.
+- Autenticación: JWT propio (jsonwebtoken) guardado en cookie httpOnly.
+  (En este proyecto además se integra Clerk como proveedor de identidad, pero
+  el patrón base es: cookie -> verificar JWT -> cargar usuario de la DB.)
+- Documentación de API: swagger-jsdoc + swagger-ui-express (comentarios @openapi
+  sobre cada ruta).
+- Subida de imágenes: Multer + Cloudinary (opcional según el proyecto).
+- Email: nodemailer / proveedor externo (opcional).
+- Dev server: nodemon.
+
+package.json (forma esperada):
+  {
+    "name": "<proyecto>-backend",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js",
+      "dev": "nodemon index.js"
+    },
+    "dependencies": { ... },
+    "devDependencies": { "nodemon": "^3.x" }
+  }
+
+
+================================================================================
+ 2. ESTRUCTURA DE CARPETAS
+================================================================================
+Arquitectura por CAPAS. Cada recurso (entidad) se reparte en el mismo conjunto
+de archivos, siempre con el mismo sufijo. El flujo de una request es:
+
+   routes  ->  middlewares  ->  controllers  ->  services  ->  models
+   (define)   (protegen/       (traducen         (lógica de     (esquema
+    endpoint)   validan)         HTTP<->lógica)    negocio)       Mongoose)
+
+BackEnd/
+├── index.js                  Punto de entrada. Crea el server Express, conecta
+│                             la DB, monta middlewares globales y las rutas.
+├── package.json
+├── .gitignore
+│
+├── config/                   Configuración e infraestructura.
+│   ├── .env                  Variables reales (NUNCA se sube al repo).
+│   ├── .env.example          Plantilla de variables documentada.
+│   ├── mongoConnet.js        Función de conexión a MongoDB.
+│   └── swagger.js            Definición base de OpenAPI (info, schemas, security).
+│
+├── models/                   Esquemas de Mongoose. Uno por entidad.
+│   ├── user.js
+│   ├── incident.js           (ej.: entidad principal)
+│   └── ...                   (category.js, status.js, role.js, notification.js…)
+│
+├── routes/                   Definición de endpoints. Un archivo por recurso.
+│   ├── auth.routes.js
+│   ├── incident.routes.js
+│   └── ...                   Sufijo SIEMPRE: <recurso>.routes.js
+│
+├── controllers/              Capa HTTP. Un archivo por recurso.
+│   ├── auth.controller.js
+│   ├── incident.controller.js
+│   └── ...                   Sufijo SIEMPRE: <recurso>.controller.js
+│
+├── services/                 Lógica de negocio. Un archivo por recurso/dominio.
+│   ├── incident.service.js
+│   ├── mail.service.js
+│   ├── socket.service.js
+│   └── ...                   Sufijo SIEMPRE: <recurso>.service.js
+│
+├── middlewares/              Funciones que corren antes del controller.
+│   ├── authMiddleware.js     (verifica el JWT de la cookie)
+│   ├── verifyRole.js         (verifica rol/permisos)
+│   ├── upload.js             (multer, etc.)
+│   └── ...                   Sin sufijo fijo; nombre descriptivo en camelCase.
+│
+└── utils/                    Helpers transversales, no atados a un recurso.
+    ├── logger.js             Logging y respuesta de errores centralizados.
+    ├── seed.js               Carga inicial de datos (roles, estados, etc.).
+    └── ...
+
+Regla de oro: para agregar una entidad nueva "X" se crean CINCO archivos con el
+mismo nombre base: models/x.js, routes/x.routes.js, controllers/x.controller.js,
+services/x.service.js, y (si hace falta) su registro en index.js.
+
+
+================================================================================
+ 3. CONVENCIONES DE NOMBRES
+================================================================================
+- Archivos de capa: <recurso>.<capa>.js  (incident.controller.js).
+- Archivos de modelo: singular, en minúscula (incident.js, user.js).
+- Modelo Mongoose: PascalCase singular  ->  mongoose.model('Incident', schema).
+- Funciones y variables: camelCase (createIncident, getAllGroups, dbUser).
+- Constantes de módulo / config: UPPER_SNAKE_CASE
+  (CONFIANZA_UMBRAL, FINAL_STATUSES, VALID_TRANSITIONS).
+- Rutas base montadas bajo /api/<recurso> en plural (/api/incidents,
+  /api/categories). Autenticación suele ir en /auth.
+- Idioma: TODO en español — nombres de variables de dominio, mensajes de error,
+  comentarios y logs están en español. El código técnico (métodos de librerías)
+  queda en inglés por obligación. Mantener este bilingüismo: identificadores de
+  dominio y textos al usuario en español.
+
+
+================================================================================
+ 4. CÓMO SE DEFINEN LAS FUNCIONES (estilo)
+================================================================================
+- SIEMPRE arrow functions asignadas a const. NO se usa `function` declarativa.
+      const createIncident = async (data, userId) => { ... };
+- Las funciones asíncronas usan async/await, NO .then() encadenados
+  (salvo Promise.all para paralelizar).
+- Exportación agrupada AL FINAL del archivo con un objeto:
+      module.exports = { createIncident, getIncidentsByUser, ... };
+  (Los modelos exportan directamente: module.exports = mongoose.model(...).)
+- Importaciones agrupadas ARRIBA del archivo, con require, ordenadas de más
+  general (librerías) a más específico (módulos propios).
+- Indentación: 2 espacios. Comillas simples. Punto y coma al final.
+- Objetos de respuesta y payloads con shorthand de propiedades cuando aplica.
+
+
+================================================================================
+ 5. ESTILO DE COMENTARIOS
+================================================================================
+Hay TRES tipos de comentarios, usados de forma consistente:
+
+5.1. SEPARADORES DE SECCIÓN (dentro de services y archivos largos):
+     Bloques en mayúscula para agrupar funciones por responsabilidad.
+
+     // ==========================================
+     // CREACIÓN
+     // ==========================================
+
+     // ==========================================
+     // LECTURA - ADMIN
+     // ==========================================
+
+5.2. JSDOC sobre CADA función pública de los services (y utils importantes).
+     Describe qué hace, sus @param (con tipo y explicación en español), el
+     @returns y los @throws con los códigos de estado.
+
+     /**
+      * Crea un incidente validando los datos y asignándolo a un grupo.
+      *
+      * @param {Object} incidentData  Datos validables del reporte.
+      * @param {string} userId        ObjectId del usuario que reporta.
+      * @returns {Promise<Object>} El incidente creado.
+      * @throws {Error} 400 si los datos no son válidos; 500 si faltan estados base.
+      */
+     const createIncident = async (incidentData, userId) => { ... };
+
+5.3. COMENTARIOS INLINE en español, explicando el PORQUÉ (decisiones de
+     negocio, gotchas, no lo obvio):
+
+     // Un grupo con un dudoso sin revisar debe quedar AISLADO hasta que un admin
+     // lo resuelva; si no, los reportes quedarían huérfanos al aceptarlo.
+
+Regla: los controllers y middlewares casi no llevan JSDoc (son finos y
+repetitivos); el JSDoc pesado vive en los SERVICES, que es donde está la lógica.
+Los logs usan emojis como prefijo visual (🔴 error, ✅ ok, ⏳ espera, 🚀 inicio).
+
+
+================================================================================
+ 6. PATRÓN POR CAPA (plantillas para copiar)
+================================================================================
+
+--------------------------------------------------------------------------------
+ 6.1. MODEL  (models/x.js)
+--------------------------------------------------------------------------------
+- Esquema Mongoose. Validaciones declarativas con mensajes en español dentro del
+  propio schema (required: [true, 'El título es obligatorio']).
+- `timestamps: true` para createdAt/updatedAt automáticos.
+- Referencias con ObjectId + ref al modelo relacionado.
+- Exporta directamente el modelo.
+
+    const mongoose = require('mongoose');
+
+    const xSchema = new mongoose.Schema({
+      title: {
+        type: String,
+        required: [true, 'El título es obligatorio'],
+        trim: true,
+        maxlength: [100, 'El título no puede exceder los 100 caracteres']
+      },
+      status: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Status',
+        required: true
+      },
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      is_active: { type: Boolean, default: true }
+    }, {
+      timestamps: true
+    });
+
+    module.exports = mongoose.model('X', xSchema);
+
+--------------------------------------------------------------------------------
+ 6.2. SERVICE  (services/x.service.js)  <-- AQUÍ VIVE LA LÓGICA
+--------------------------------------------------------------------------------
+- Importa los modelos que necesita.
+- Constantes de negocio arriba en UPPER_SNAKE_CASE.
+- Cada función valida, opera y DEVUELVE datos (nunca toca req/res).
+- MANEJO DE ERRORES: se crea un Error, se le adjunta `.status` (código HTTP) y
+  opcionalmente `.details` (array de mensajes), y se hace throw. El controller
+  lo captura. Este es el patrón central de todo el proyecto:
+
+        const error = new Error('La categoría enviada no es válida.');
+        error.status = 400;
+        error.details = ['...'];   // opcional
+        throw error;
+
+- Se usa Promise.all para operaciones independientes en paralelo.
+- JSDoc en cada función.
+
+    const X = require('../models/x');
+    const mongoose = require('mongoose');
+
+    const LIMITE_DESCRIPCION = 100;
+
+    // ==========================================
+    // LECTURA
+    // ==========================================
+
+    /**
+     * Lista los X ordenados por nombre.
+     * @param {Object} [filter={}] Filtro Mongoose.
+     * @returns {Promise<Array>} Documentos encontrados.
+     */
+    const getAllX = async (filter = {}) => {
+      return await X.find(filter).sort({ name: 1 });
+    };
+
+    // ==========================================
+    // CREACIÓN
+    // ==========================================
+
+    /**
+     * Crea un X validando unicidad de nombre.
+     * @param {Object} data
+     * @returns {Promise<Object>} X creado.
+     * @throws {Error} 400 si el nombre ya existe.
+     */
+    const createX = async ({ name, description }) => {
+      const existing = await X.findOne({ name: name.trim() });
+      if (existing) {
+        const error = new Error('Ya existe un X con ese nombre.');
+        error.status = 400;
+        throw error;
+      }
+      const x = new X({ name: name.trim(), description: description?.trim() || '' });
+      return await x.save();
+    };
+
+    module.exports = { getAllX, createX };
+
+--------------------------------------------------------------------------------
+ 6.3. CONTROLLER  (controllers/x.controller.js)  <-- CAPA FINA HTTP
+--------------------------------------------------------------------------------
+- Importa funciones del service (destructuring).
+- Cada handler: arrow async (req, res) con try/catch.
+- Extrae datos de req (body, params, req.dbUser inyectado por middleware),
+  llama al service, y responde JSON.
+- RESPUESTA EXITOSA: SIEMPRE con forma { success: true, <recurso>: ... }.
+- RESPUESTA DE ERROR: delega en respondError(res, error, { context, inputs })
+  del logger — no arma el error a mano.
+- El `context` es "<recurso>.<accion>" (ej. 'incidents.create') para trazar.
+- Exporta todos los handlers al final.
+
+    const { getAllX, createX } = require('../services/x.service');
+    const { respondError } = require('../utils/logger');
+
+    const getAll = async (req, res) => {
+      try {
+        const items = await getAllX();
+        res.status(200).json({ success: true, items });
+      } catch (error) {
+        respondError(res, error, { context: 'x.getAll' });
+      }
+    };
+
+    const create = async (req, res) => {
+      try {
+        const item = await createX(req.body);
+        res.status(201).json({ success: true, item });
+      } catch (error) {
+        respondError(res, error, { context: 'x.create', inputs: { body: req.body } });
+      }
+    };
+
+    module.exports = { getAll, create };
+
+--------------------------------------------------------------------------------
+ 6.4. ROUTE  (routes/x.routes.js)
+--------------------------------------------------------------------------------
+- Crea un express.Router().
+- Importa middlewares y los handlers del controller.
+- Encadena middlewares en orden ANTES del handler final:
+      router.<verbo>('/ruta', authMiddleware, verifyRole('admin'), handler);
+- Sobre cada ruta va un bloque de comentario @openapi para Swagger.
+- Verbos REST: GET (leer), POST (crear), PATCH (actualizar parcial),
+  DELETE (borrar). Parámetros de path como /:id.
+- Exporta el router.
+
+    const express = require('express');
+    const router = express.Router();
+    const authMiddleware = require('../middlewares/authMiddleware');
+    const { verifyRole } = require('../middlewares/verifyRole');
+    const { getAll, create } = require('../controllers/x.controller');
+
+    /**
+     * @openapi
+     * /api/x:
+     *   get:
+     *     summary: Listar X
+     *     tags: [X]
+     *     security: [{ bearerAuth: [] }]
+     *     responses:
+     *       200: { description: Lista de X }
+     */
+    router.get('/', authMiddleware, verifyRole('admin', 'superAdmin'), getAll);
+
+    /**
+     * @openapi
+     * /api/x:
+     *   post:
+     *     summary: Crear X
+     *     tags: [X]
+     *     security: [{ bearerAuth: [] }]
+     *     responses:
+     *       201: { description: X creado }
+     */
+    router.post('/', authMiddleware, verifyRole('admin', 'superAdmin'), create);
+
+    module.exports = router;
+
+--------------------------------------------------------------------------------
+ 6.5. MIDDLEWARE  (middlewares/nombreDescriptivo.js)
+--------------------------------------------------------------------------------
+Dos formas:
+
+A) Middleware simple: exporta directamente la función (req, res, next).
+
+    const jwt = require('jsonwebtoken');
+
+    const authMiddleware = (req, res, next) => {
+      const token = req.cookies.auth_token;
+      if (!token) {
+        return res.status(401).json({ error: 'No autorizado, sesión no encontrada.' });
+      }
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.auth = { sub: decoded.sub };
+        next();
+      } catch (error) {
+        return res.status(401).json({ error: 'Sesión inválida o expirada.' });
+      }
+    };
+
+    module.exports = authMiddleware;
+
+B) Middleware con parámetros (factory): función que recibe args y DEVUELVE el
+   middleware. Se exporta como objeto nombrado.
+
+    const User = require('../models/user');
+
+    const verifyRole = (...roles) => {
+      return async (req, res, next) => {
+        try {
+          const dbUser = await User.findOne({ clerkId: req.auth.sub }).populate('role');
+          if (!dbUser) return res.status(404).json({ error: 'Usuario no encontrado.' });
+          if (!roles.includes(dbUser.role?.name)) {
+            return res.status(403).json({ error: 'No tenés permisos para realizar esta acción.' });
+          }
+          req.dbUser = dbUser;   // se inyecta para el siguiente middleware/controller
+          next();
+        } catch (error) {
+          console.error('Error en verifyRole:', error);
+          res.status(500).json({ error: 'Error interno del servidor.' });
+        }
+      };
+    };
+
+    module.exports = { verifyRole };
+
+Convención clave: los middlewares INYECTAN datos en `req` (req.auth, req.dbUser,
+req.aiData…) para que los de más abajo y el controller los consuman sin volver a
+consultar la DB.
+
+
+================================================================================
+ 7. MANEJO DE ERRORES Y RESPUESTAS (patrón central)
+================================================================================
+Contrato uniforme en toda la app:
+
+- ÉXITO:   res.status(2xx).json({ success: true, <datos> })
+- ERROR:   { error: '<mensaje>' }  y opcionalmente  { details: [...] }
+
+Los SERVICES lanzan errores con `.status` (y `.details`). Los CONTROLLERS los
+capturan y delegan en el helper del logger (utils/logger.js), que:
+  - Loguea el error con timestamp, context y datos de entrada REDACTADOS
+    (enmascara email, dni, token, password, etc. — nunca se filtran secretos).
+  - Responde al cliente de forma consistente:
+      * 4xx -> devuelve error.message (+ details si hay): útil para el usuario.
+      * 5xx -> devuelve un mensaje genérico; el detalle real solo va a consola.
+
+Firma del helper:
+    respondError(res, error, { context: 'recurso.accion', inputs: {...} });
+
+index.js además define, al final de la cadena:
+  - Un middleware 404 (ninguna ruta coincidió).
+  - Un manejador de errores global (err, req, res, next) como última red.
+
+Códigos de estado usados con criterio:
+  200 ok · 201 creado · 400 datos inválidos · 401 no autenticado ·
+  403 sin permisos · 404 no encontrado · 409 conflicto de estado · 500 interno.
+
+
+================================================================================
+ 8. index.js  (ORQUESTADOR — orden importa)
+================================================================================
+Secuencia típica del arranque:
+  1. Cargar variables de entorno: require('dotenv').config({ path: './config/.env' }).
+  2. Importar librerías y luego rutas/servicios propios.
+  3. Crear app Express y http.Server (necesario para Socket.IO).
+  4. Conectar la DB (mongoConnect()).
+  5. Configurar Socket.IO (setupSocket(io)) si aplica.
+  6. Middlewares globales EN ORDEN: cors -> express.json -> cookieParser -> auth.
+  7. Ruta raíz de healthcheck y /api-docs (Swagger UI).
+  8. Montar routers: app.use('/api/<recurso>', xRoutes).
+  9. Middleware 404 y manejador de errores global (SIEMPRE al final).
+ 10. server.listen(PORT).
+
+Esqueleto:
+    require('dotenv').config({ path: './config/.env' });
+    const express = require('express');
+    const http = require('http');
+    const cors = require('cors');
+    const cookieParser = require('cookie-parser');
+    const mongoConnect = require('./config/mongoConnet');
+    const xRoutes = require('./routes/x.routes');
+
+    const app = express();
+    const server = http.createServer(app);
+    const PORT = process.env.PORT || 3000;
+
+    mongoConnect();
+
+    app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+    app.use(express.json());
+    app.use(cookieParser());
+
+    app.get('/', (req, res) => res.json({ message: 'API corriendo' }));
+    app.use('/api/x', xRoutes);
+
+    app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada.' }));
+    // eslint-disable-next-line no-unused-vars
+    app.use((err, req, res, next) => {
+      console.error('🔴 Error no manejado:', err);
+      const status = err.status || 500;
+      res.status(status).json({ error: status === 500 ? 'Error interno del servidor.' : err.message });
+    });
+
+    server.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+
+
+================================================================================
+ 9. CONFIGURACIÓN (config/)
+================================================================================
+- mongoConnet.js: función async connectDB que hace mongoose.connect(MONGO_URI),
+  loguea éxito/fallo y hace process.exit(1) si la conexión falla (fail-fast).
+- swagger.js: objeto `definition` OpenAPI 3.0.3 con info, servers, tags,
+  components (securitySchemes bearerAuth/apiKey y schemas reutilizables), y
+  security por defecto. Se arma con swaggerJSDoc leyendo apis: ['./routes/*.js'].
+- .env cargado desde ./config/.env. SIEMPRE mantener un .env.example paralelo,
+  documentado por secciones y con placeholders, versionado en el repo.
+
+
+================================================================================
+ 10. VARIABLES DE ENTORNO (.env.example — plantilla)
+================================================================================
+Se agrupan por secciones con encabezados en comentario. Ejemplo de forma:
+
+    # --- Servidor ---
+    PORT=3000
+    FRONTEND_URL=http://localhost:5173
+
+    # --- Base de datos ---
+    MONGO_URI=mongodb+srv://<usuario>:<password>@<cluster>.mongodb.net/
+
+    # --- Autenticación: JWT propio ---
+    JWT_SECRET=<cadena_aleatoria_larga>
+
+    # --- (otros servicios: Cloudinary, email, IA, etc.) ---
+
+Reglas: valores reales solo en .env (ignorado por git); .env.example con
+placeholders y comentarios explicando de dónde sale cada valor.
+
+
+================================================================================
+ 11. CHECKLIST PARA REPLICAR EL ESTILO EN UN PROYECTO NUEVO
+================================================================================
+[ ] Node + Express + Mongoose, CommonJS (require/module.exports).
+[ ] Carpetas: config, models, routes, controllers, services, middlewares, utils.
+[ ] Una entidad = 5 archivos con el mismo nombre base y sufijo de capa.
+[ ] Arrow functions const async/await; exports agrupados al final.
+[ ] Services = lógica + JSDoc + errores con `.status`/`.details` lanzados.
+[ ] Controllers = finos, try/catch, respuesta { success: true, ... },
+    errores vía respondError(res, error, { context, inputs }).
+[ ] Routes = Router + middlewares encadenados + bloque @openapi por endpoint.
+[ ] Middlewares que inyectan datos en req (req.auth, req.dbUser, ...).
+[ ] Separadores // ===== SECCIÓN ===== en archivos largos.
+[ ] Todo el dominio, mensajes y comentarios en español; logs con emojis.
+[ ] utils/logger.js con redacción de datos sensibles y respuesta consistente.
+[ ] index.js con orden: env -> libs -> app -> db -> middlewares -> rutas ->
+    404 -> handler global -> listen.
+[ ] .env cargado desde config/.env + .env.example documentado y versionado.
+================================================================================

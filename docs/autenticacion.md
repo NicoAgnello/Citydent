@@ -87,6 +87,7 @@ Reglas (`services/user.service.js`):
 
 ## Acceso externo (Power BI)
 
-No usa Clerk ni JWT. El middleware `externalAuth` exige **dos headers**:
-`x-api-key` (debe coincidir con `SCOPE_API_KEY`) y `x-otp-code` (un OTP de 24 h
-que el superAdmin genera desde la app). Ver `services/external.service.js`.
+No usa Clerk ni JWT. El middleware `externalAuth` exige un header `x-otp-code`
+(un OTP de 24 h que un `admin` o `superAdmin` genera desde la app, pestaña
+Estadísticas). Ver `services/external.service.js` y la guía de conexión en
+[acceso-powerbi.md](acceso-powerbi.md).

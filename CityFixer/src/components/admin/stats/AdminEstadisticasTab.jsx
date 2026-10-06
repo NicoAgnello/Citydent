@@ -24,10 +24,11 @@ import {
 } from "recharts";
 import AdminHeatmapView from "./AdminHeatmapView";
 import { requestPowerBiOtp } from "@/services/api";
-import { Zap, Loader2, CheckCircle2, Clock, FileText, AlertTriangle, Activity } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Clock, FileText, AlertTriangle, Activity, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 
 const FINAL = new Set([STATUS_KEYS.RESOLVED, STATUS_KEYS.REJECTED, STATUS_KEYS.CANCELLED]);
 const COOLDOWN_MS  = 5 * 60 * 1000;
+const TREND_WINDOW_DAYS = 8; // cantidad de días que muestra el gráfico de actividad reciente
 
 // ── Tooltips ──────────────────────────────────────────────────────────────────
 function BarTooltip({ active, payload, label }) {
@@ -149,11 +150,37 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
     [incidents],
   );
 
-  // ── Tendencia: reportes ciudadanos por día (últimos 8 días) ───────────────
+  // ── Tendencia: reportes ciudadanos por día (ventana de 8 días navegable) ──
+  // Por defecto la ventana termina en la fecha del incidente más reciente
+  // (no necesariamente "hoy"), para no mostrar un gráfico vacío cuando los
+  // datos no llegan hasta la fecha actual. `trendEndOverride` !== null cuando
+  // el usuario navegó manualmente con las flechas o el botón "Hoy".
+  const [trendEndOverride, setTrendEndOverride] = useState(null);
+
+  const trendLatestDataDate = useMemo(() => {
+    if (!incidents.length) return new Date();
+    const maxTs = incidents.reduce((max, g) => {
+      const t = new Date(g.createdAt).getTime();
+      return Number.isFinite(t) && t > max ? t : max;
+    }, 0);
+    return maxTs > 0 ? new Date(maxTs) : new Date();
+  }, [incidents]);
+
+  const trendEnd   = trendEndOverride ?? trendLatestDataDate;
+  const isAutoTrendWindow = trendEndOverride === null;
+
+  const shiftTrendWindow = (deltaWindows) => {
+    setTrendEndOverride(prev => {
+      const base = new Date(prev ?? trendLatestDataDate);
+      base.setDate(base.getDate() + deltaWindows * TREND_WINDOW_DAYS);
+      return base;
+    });
+  };
+
   const trendData = useMemo(() => {
     const days = [];
-    for (let i = 7; i >= 0; i--) {
-      const d = new Date();
+    for (let i = TREND_WINDOW_DAYS - 1; i >= 0; i--) {
+      const d = new Date(trendEnd);
       d.setDate(d.getDate() - i);
       const dateStr = d.toDateString();
       const label   = d.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
@@ -162,7 +189,21 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
       days.push({ dia: label, reportes });
     }
     return days;
-  }, [incidents]);
+  }, [incidents, trendEnd]);
+
+  const trendStart = useMemo(() => {
+    const d = new Date(trendEnd);
+    d.setDate(d.getDate() - (TREND_WINDOW_DAYS - 1));
+    return d;
+  }, [trendEnd]);
+
+  const trendRangeLabel = useMemo(() => {
+    const opts = { day: "numeric", month: "short" };
+    const sameYear = trendStart.getFullYear() === trendEnd.getFullYear();
+    const startLabel = trendStart.toLocaleDateString("es-AR", sameYear ? opts : { ...opts, year: "numeric" });
+    const endLabel   = trendEnd.toLocaleDateString("es-AR", { ...opts, year: "numeric" });
+    return `${startLabel} – ${endLabel}`;
+  }, [trendStart, trendEnd]);
 
   // ── Distribución por prioridad (grupos activos, barras horizontales) ──────
   const priorityBuckets = useMemo(() => [
@@ -278,9 +319,42 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
 
             <Card className="border-slate-200/80 shadow-sm py-0 ">
               <CardContent className="p-5 ">
-                <div className="mb-4">
-                  <p className="text-sm font-semibold text-slate-900">Actividad ciudadana reciente</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Reportes individuales ingresados por día</p>
+                <div className="mb-4 flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Actividad ciudadana reciente</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Reportes individuales por día · <span className="font-semibold text-slate-500">{trendRangeLabel}</span>
+                      {isAutoTrendWindow && <span className="text-slate-300"> (últimos con datos)</span>}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {!isAutoTrendWindow && (
+                      <button
+                        type="button"
+                        onClick={() => setTrendEndOverride(null)}
+                        title="Volver a los últimos días con datos"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 transition-colors"
+                      >
+                        <RotateCcw size={13} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => shiftTrendWindow(-1)}
+                      title="Período anterior"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => shiftTrendWindow(1)}
+                      title="Período siguiente"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="h-52">
                   {loading ? (
@@ -345,9 +419,9 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                 ) : barrioData.length === 0 ? (
                   <p className="text-xs text-slate-400 py-6 text-center">No hay grupos activos</p>
                 ) : (
-                  <div className="flex flex-col gap-3.5 mt-1">
+                  <div className="flex flex-col gap-3.5 mt-1 max-h-44 overflow-y-auto pr-1">
                     {barrioData.map(([name, count], i) => (
-                      <div key={name} className="flex items-center gap-3">
+                      <div key={name} className="flex items-center gap-3 shrink-0">
                         <span className="text-[11px] font-bold text-slate-400 w-4 shrink-0">#{i + 1}</span>
                         <span className="text-[11px] font-semibold text-slate-700 w-28 shrink-0 truncate">{name}</span>
                         <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">

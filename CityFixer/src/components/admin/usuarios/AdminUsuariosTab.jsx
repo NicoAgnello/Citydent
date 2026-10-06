@@ -15,6 +15,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Search, Loader2, Settings2, Shield, ShieldOff, X, User, Plus, Edit3, Check, RefreshCw } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getNeighborhoods } from "@/services/api";
 import { Combobox } from "@/components/ui/combobox";
 import { Card } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Pagination from "@/components/ui/pagination";
 
 const ROLE_LABELS = { user: "Ciudadano", admin: "Admin", superAdmin: "Super Admin" };
 
@@ -77,21 +79,28 @@ const PROFILE_EMPTY = { firstName: "", lastName: "", dni: "", telefono: "", dire
 const INPUT_CLS = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
 export default function AdminUsuariosTab() {
+  // ── Filtros ──
+  const [searchTerm, setSearchTerm]       = useState("");
+  const [activeRoleTab, setActiveRoleTab] = useState("todos");
+  const [page, setPage]                   = useState(1);
+
+  // Búsqueda debounceada: recién dispara consulta al backend 300ms después de que el usuario deja de tipear.
+  const debouncedSearch = useDebouncedValue(searchTerm, 300);
+
   const {
-    users, roles, loading, loadError, refresh,
+    users, pagination, roles, loading, loadError, refresh,
     actionLoading, actionError, handleRoleChange, handleBanToggle,
     handleCreate, createLoading, createError, handleProfileEdit,
-  } = useUsers();
+  } = useUsers({ page, limit: 20, search: debouncedSearch, role: activeRoleTab });
+
+  // Vuelve a la página 1 cada vez que cambia la búsqueda o el filtro de rol.
+  useEffect(() => { setPage(1); }, [debouncedSearch, activeRoleTab]);
 
   // ── Barrios ──
   const [neighborhoods, setNeighborhoods] = useState([]);
   useEffect(() => {
     getNeighborhoods().then(({ data }) => setNeighborhoods(data.neighborhoods ?? [])).catch(() => {});
   }, []);
-
-  // ── Filtros ──
-  const [searchTerm, setSearchTerm]       = useState("");
-  const [activeRoleTab, setActiveRoleTab] = useState("todos");
 
   // ── Sheet de edición ──
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -117,16 +126,6 @@ export default function AdminUsuariosTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm]             = useState(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState({});
-
-  const filteredUsers = useMemo(() => (
-    users.filter((u) => {
-      const name  = `${u.firstName ?? ""} ${u.lastName ?? ""}`.toLowerCase();
-      const email = (u.email ?? "").toLowerCase();
-      const q     = searchTerm.toLowerCase();
-      return (name.includes(q) || email.includes(q)) &&
-             (activeRoleTab === "todos" || u.role?.name === activeRoleTab);
-    })
-  ), [users, searchTerm, activeRoleTab]);
 
   const isSuperAdmin = (u) => u.role?.name === "superAdmin";
 
@@ -207,7 +206,9 @@ export default function AdminUsuariosTab() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Gestión de Usuarios</h1>
           <p className="text-sm text-slate-400 mt-0.5">
-            {loading ? "Cargando..." : `${users.length} usuario${users.length !== 1 ? "s" : ""} registrados`}
+            {loading || !pagination
+              ? "Cargando..."
+              : `${pagination.total} usuario${pagination.total !== 1 ? "s" : ""} registrados`}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -260,7 +261,7 @@ export default function AdminUsuariosTab() {
         <div className="py-16 text-center">
           <p className="text-sm text-red-500">{loadError}</p>
         </div>
-      ) : !loading && filteredUsers.length === 0 ? (
+      ) : !loading && users.length === 0 ? (
         <div className="py-16 text-center">
           <p className="text-sm text-slate-400">No se encontraron usuarios.</p>
         </div>
@@ -306,7 +307,7 @@ export default function AdminUsuariosTab() {
                     </TableRow>
                   ))
                 ) : (
-                  filteredUsers.map((user) => {
+                  users.map((user) => {
                     const roleName = user.role?.name ?? "user";
                     return (
                       <TableRow key={user._id} className="hover:bg-slate-50/80">
@@ -397,7 +398,7 @@ export default function AdminUsuariosTab() {
                 </div>
               ))
             ) : (
-              filteredUsers.map((user) => {
+              users.map((user) => {
                 const roleName = user.role?.name ?? "user";
                 return (
                   <div
@@ -435,6 +436,15 @@ export default function AdminUsuariosTab() {
               })
             )}
           </div>
+
+          {pagination && (
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              total={pagination.total}
+              onPageChange={setPage}
+            />
+          )}
         </>
       )}
 

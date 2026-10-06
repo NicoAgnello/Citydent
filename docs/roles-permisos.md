@@ -29,7 +29,7 @@ El rol por defecto al registrarse es **`user`**.
 | Reprocesar IA (botón manual) | — | ✅ | ✅ |
 | Listar / crear / editar usuarios | — | — | ✅ |
 | Cambiar rol / banear usuarios | — | — | ✅ |
-| Solicitar OTP de acceso externo (Power BI) | — | — | ✅ |
+| Solicitar OTP de acceso externo (Power BI) | — | ✅ | ✅ |
 
 > Reportar y cancelar requieren además **perfil completo**
 > (`requireProfileComplete`, ver [autenticacion.md](autenticacion.md)).

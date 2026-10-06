@@ -2,21 +2,27 @@ import { useState, useEffect, useCallback } from "react";
 import { getUsers, getRoles, createUser, updateUserRole, updateUserBan, updateUserProfile } from "@/services/api";
 
 // Maneja toda la lógica de usuarios para el panel de administración.
-// Carga la lista de usuarios y roles, y expone funciones para modificarlos.
+// Carga UNA página de usuarios (filtrada y ordenada en el servidor) y la lista
+// de roles, y expone funciones para modificarlos.
 // Se usa exclusivamente en AdminUsuariosTab.
 //
+// Params: { page, limit, search, role } — mismo criterio que manda AdminUsuariosTab
+// (search debounceado, role = 'todos'|'user'|'admin'|'superAdmin').
+//
 // Estados que devuelve:
-//   users          → lista de usuarios
+//   users          → usuarios de la página actual
+//   pagination     → { page, limit, total, totalPages }
 //   roles          → lista de roles disponibles (user, admin, superAdmin)
-//   loading        → true mientras carga la lista inicial
+//   loading        → true mientras carga la página actual
 //   loadError      → mensaje de error si falla la carga
 //   actionLoading  → objeto { [userId]: "role"|"ban"|"profile"|null }
 //                    indica qué operación está en curso para cada usuario
 //   actionError    → objeto { [userId]: mensaje } para errores por usuario
 //   createLoading  → true mientras se está creando un usuario nuevo
 //   createError    → mensaje de error si falla la creación
-export function useUsers() {
+export function useUsers({ page = 1, limit = 20, search = "", role = "todos" } = {}) {
   const [users, setUsers]             = useState([]);
+  const [pagination, setPagination]   = useState(null);
   const [roles, setRoles]             = useState([]);
   const [loading, setLoading]         = useState(true);
   const [loadError, setLoadError]     = useState(null);
@@ -29,15 +35,20 @@ export function useUsers() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [usersRes, rolesRes] = await Promise.all([getUsers(), getRoles()]);
+      const [usersRes, rolesRes] = await Promise.all([
+        getUsers({ page, limit, search, role }),
+        getRoles(),
+      ]);
       setUsers(usersRes.data.users);
+      setPagination(usersRes.data.pagination ?? null);
       setRoles(rolesRes.data.roles);
     } catch {
       setLoadError("No se pudieron cargar los usuarios. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, search, role]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -66,8 +77,7 @@ export function useUsers() {
     setCreateError(null);
     try {
       await createUser({ firstName, lastName, email, ...(roleId && { roleId }) });
-      const res = await getUsers();
-      setUsers(res.data.users);
+      await refresh();
       return true;
     } catch (e) {
       setCreateError(e.response?.data?.error ?? "No se pudo crear el usuario.");
@@ -108,7 +118,7 @@ export function useUsers() {
   };
 
   return {
-    users, roles, loading, loadError, refresh,
+    users, pagination, roles, loading, loadError, refresh,
     actionLoading, actionError, handleRoleChange, handleBanToggle,
     handleCreate, createLoading, createError,
     handleProfileEdit,

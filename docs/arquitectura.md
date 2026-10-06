@@ -42,8 +42,9 @@ tenerlo presente al leer las rutas:
 - **Clerk** — `clerkMiddleware()` está montado globalmente en `index.js`.
 - **JWT propio** — `authMiddleware` / `verifyToken` validan un token firmado con
   `JWT_SECRET` y cargan el usuario de la base en `req.dbUser`.
-- **Externo** — `externalAuth` valida `SCOPE_API_KEY` para las integraciones por
-  scope externo.
+- **Externo** — `externalAuth` valida un `x-otp-code` (OTP de 24 h, generado por
+  un `admin`/`superAdmin` desde la app) para las integraciones por scope externo.
+  Ver [acceso-powerbi.md](acceso-powerbi.md).
 
 Los roles se verifican con `verifyRole('user', 'admin', 'superAdmin')` después de
 autenticar.

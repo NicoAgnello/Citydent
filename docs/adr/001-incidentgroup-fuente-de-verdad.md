@@ -33,7 +33,7 @@ vecino.
 
 - **Mantener incidentes planos + flag `is_duplicate`** — descartado: obligaba a
   duplicar las operaciones del admin y el modelo `original_incident` se volvía
-  frágil. (El modelo `DuplicateIncident` quedó muerto en disco como vestigio).
+  frágil. (El modelo `DuplicateIncident` de ese enfoque ya se eliminó del repo).
 - **Agrupar solo en la vista (sin modelo)** — descartado: la lógica de
   propagación de estado y prioridad necesita persistencia real.
 

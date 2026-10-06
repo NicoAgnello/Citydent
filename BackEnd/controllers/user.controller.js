@@ -1,8 +1,19 @@
-const { getUsers, getUserById, getMyProfile, sendVerification, updateProfile, createUserByAdmin, updateUserProfileByAdmin, getRoles, changeUserRole, banUser } = require('../services/user.service');
+const { getUsers, getUsersPage, getUserById, getMyProfile, sendVerification, updateProfile, createUserByAdmin, updateUserProfileByAdmin, getRoles, changeUserRole, banUser } = require('../services/user.service');
 const { respondError } = require('../utils/logger');
 
 const fetchUsers = async (req, res) => {
   try {
+    if (req.query.page) {
+      const q = req.query;
+      const result = await getUsersPage({
+        page: q.page,
+        limit: q.limit,
+        search: q.search || '',
+        role: q.role || '',
+      });
+      return res.status(200).json({ success: true, ...result });
+    }
+
     const users = await getUsers();
     res.status(200).json({ success: true, users });
   } catch (error) {
