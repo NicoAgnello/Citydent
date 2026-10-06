@@ -13,12 +13,14 @@ import { useMemo } from "react";
 import Map, { Marker } from "react-map-gl";
 import mapboxgl from "mapbox-gl";
 import { STATUS_LABELS, capitalize } from "@/lib/incidents";
+import { useDark } from "@/lib/theme";
 
 const WEBGL_OK = mapboxgl.supported();
 const CITY_VIEW = { longitude: -63.2435, latitude: -32.4097, zoom: 13.5 };
 
 // Color del punto según estado. Hex porque va en un style inline del marcador.
-const DOT_COLORS = {
+// Sobre el mapa claro se usan tonos más oscuros para que no se pierdan.
+const DOT_COLORS_DARK = {
   pendiente:  "#F59E0B",
   dudoso:     "#F59E0B",
   aceptado:   "#2DD4BF",
@@ -26,6 +28,15 @@ const DOT_COLORS = {
   resuelto:   "#34D399",
   rechazado:  "#FB7185",
   cancelado:  "#94A3B8",
+};
+const DOT_COLORS_LIGHT = {
+  pendiente:  "#D97706",
+  dudoso:     "#D97706",
+  aceptado:   "#0D9488",
+  en_proceso: "#6B4FA8",
+  resuelto:   "#059669",
+  rechazado:  "#E11D48",
+  cancelado:  "#64748B",
 };
 
 function getInitialView(points) {
@@ -48,6 +59,8 @@ function getInitialView(points) {
 }
 
 export default function IncidentsMap({ incidents, onSelect, children }) {
+  const dark = useDark();
+  const dotColors = dark ? DOT_COLORS_DARK : DOT_COLORS_LIGHT;
   const points = useMemo(
     () =>
       incidents
@@ -57,18 +70,18 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
   );
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#1a0f2e] h-72 md:h-80">
+    <div className="relative overflow-hidden rounded-2xl bg-slate-100 h-72 md:h-80">
       {WEBGL_OK ? (
         <Map
           initialViewState={getInitialView(points)}
-          mapStyle="mapbox://styles/mapbox/dark-v11"
+          mapStyle={dark ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/streets-v12"}
           style={{ width: "100%", height: "100%" }}
           dragRotate={false}
           attributionControl={false}
         >
           {points.map(({ incident, lat, lng }) => {
             const key = incident.status?.name;
-            const color = DOT_COLORS[key] ?? "#94A3B8";
+            const color = dotColors[key] ?? "#94A3B8";
             return (
               <Marker key={incident._id} longitude={lng} latitude={lat} anchor="center">
                 <button
@@ -90,10 +103,12 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
         </>
       )}
 
-      {/* Tinte de marca + degradados para que el texto superpuesto se lea */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-brand/20 mix-blend-color" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#1a0f2e]/90 to-transparent" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#1a0f2e]/90 to-transparent" />
+      {/* Degradados para que el texto superpuesto se lea. Usan slate-50, que en
+          claro es casi blanco y en oscuro el violeta de fondo. El tinte de marca
+          solo va en oscuro. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-brand/20 mix-blend-color dark:block" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-50/95 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50/95 to-transparent" />
 
       {/* El contenedor no captura clics; solo lo hacen los hijos interactivos */}
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-5 md:p-6">

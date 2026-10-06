@@ -36,14 +36,14 @@ export default function InicioTab({ user, incidents, loading, onVerTodos, onNuev
       ) : (
         <IncidentsMap incidents={incidents} onSelect={setSelected}>
           <div>
-            <p className="text-sm text-white/70">{greeting},</p>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
+            <p className="text-sm text-slate-500">{greeting},</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
               {user?.firstName ?? "Ciudadano"}
             </h2>
           </div>
 
           <div className="flex items-end justify-between gap-4">
-            <p className="hidden sm:block max-w-xs text-sm text-white/70">
+            <p className="hidden sm:block max-w-xs text-sm text-slate-600">
               {incidents.length === 0
                 ? "Todavía no reportaste nada. Si ves algo roto en tu barrio, cargalo."
                 : "Tocá un punto del mapa para ver el detalle de ese reporte."}
