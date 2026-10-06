@@ -58,7 +58,6 @@ function extractStatus(message) {
 
 // ── Panel de notificaciones ───────────────────────────────────────────────────
 function NotificationPanel({ onNavigate }) {
-  const dark = useDark();
   const ctx = useNotificationContext();
   if (!ctx) return null;
 
@@ -143,6 +142,7 @@ export default function AppHeader({ user, isBanned, activeTab, onTabChange }) {
   const [helpOpen, setHelpOpen]           = useState(false);
   const [notiOpen, setNotiOpen]           = useState(false);
 
+  const dark = useDark();
   const ctx = useNotificationContext();
   const unreadCount = ctx?.unreadCount ?? 0;
 
