@@ -417,10 +417,10 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                   ) : (
                     <ResponsiveContainer width="100%" height="100%" debounce={50}>
                       <BarChart data={trendData} barSize={24} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                        <XAxis dataKey="dia" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                        <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<BarTooltip />} cursor={{ fill: "#f8fafc" }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-slate-100)" vertical={false} />
+                        <XAxis dataKey="dia" tick={{ fontSize: 11, fill: "var(--color-slate-400)" }} axisLine={false} tickLine={false} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--color-slate-400)" }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<BarTooltip />} cursor={{ fill: "var(--color-slate-50)" }} />
                         <Bar dataKey="reportes" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -558,11 +558,11 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                       barSize={16}
                       margin={{ top: 2, right: 16, left: 4, bottom: 2 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-slate-100)" horizontal={false} />
                       <XAxis
                         type="number"
                         allowDecimals={false}
-                        tick={{ fontSize: 11, fill: "#94a3b8" }}
+                        tick={{ fontSize: 11, fill: "var(--color-slate-400)" }}
                         axisLine={false}
                         tickLine={false}
                       />
@@ -570,15 +570,15 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                         type="category"
                         dataKey="name"
                         width={130}
-                        tick={{ fontSize: 11, fill: "#64748b" }}
+                        tick={{ fontSize: 11, fill: "var(--color-slate-500)" }}
                         axisLine={false}
                         tickLine={false}
                       />
-                      <Tooltip content={<CategoryTooltip />} cursor={{ fill: "#f8fafc" }} />
+                      <Tooltip content={<CategoryTooltip />} cursor={{ fill: "var(--color-slate-50)" }} />
                       <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                         {/* La categoría más frecuente resalta con el violeta de marca; el resto va más suave */}
                         {categoryData.map((c, i) => (
-                          <Cell key={c.name} fill={i === 0 ? "var(--color-brand)" : "#A895DD"} />
+                          <Cell key={c.name} fill={i === 0 ? "var(--color-brand)" : "var(--color-brand-soft)"} />
                         ))}
                       </Bar>
                     </BarChart>

@@ -36,8 +36,10 @@ import IncidentModal from "@/components/map/IncidentModal";
 import AdminUsuariosTab from "@/components/admin/usuarios/AdminUsuariosTab";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useApplyTheme } from "@/lib/theme";
 
 export default function AdminDashboard({ dbRole }) {
+  useApplyTheme();
   const [activeTab, setActiveTab]               = useState("incidentes");
   const [reportOpen, setReportOpen]             = useState(false);
   const [mobileOpen, setMobileOpen]             = useState(false);
@@ -48,7 +50,7 @@ export default function AdminDashboard({ dbRole }) {
   const notifications = useNotifications(groups);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-50">
 
       {/* Sidebar fijo, visible solo en pantallas grandes (lg+) */}
       <div className="hidden lg:flex h-full w-64 shrink-0">

@@ -425,7 +425,7 @@ export default function AdminIncidentesTab({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#292D60] dark:text-slate-900">Gestión de Incidentes</h2>
             {pagination && (
               <span className="sm:hidden text-sm text-slate-400 font-normal shrink-0">
                 ({pagination.total})
