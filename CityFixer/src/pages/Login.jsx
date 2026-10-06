@@ -4,8 +4,8 @@
 // activa (PublicRoute en AppRouter la protege). Se monta en la ruta /login.
 //
 // Layout en dos mitades:
-//   - Izquierda (solo desktop): panel de marca con un mapa de calles abstracto
-//     y marcadores de incidentes, que cuenta de qué trata la app.
+//   - Izquierda (solo desktop): panel de marca con un mapa real de Mapbox
+//     (sin interacción) y marcadores de incidentes de ejemplo, que cuenta de qué trata la app.
 //   - Derecha: el formulario de Clerk, sin tarjeta, sobre fondo claro.
 //   En mobile el panel de marca se reduce a una franja superior con el logo.
 //
@@ -14,87 +14,66 @@
 // de sincronizar el usuario con la base de datos antes de mostrar la app.
 
 import { SignIn } from "@clerk/clerk-react";
+import Map, { Marker } from "react-map-gl";
 import { MapPin, CheckCircle2 } from "lucide-react";
 
-// Marcadores del mapa decorativo: posición en % dentro del panel y estado.
+// Marcadores sobre el mapa real (mismo centro que el resto de la app).
 // "resolved" usa el verde de la app; "open" usa el lila de marca.
+const MAP_VIEW = { longitude: -63.2435, latitude: -32.4097, zoom: 14.6 };
 const PINS = [
-  { x: 22, y: 30, kind: "open", label: "Bache en Av. Mitre" },
-  { x: 68, y: 22, kind: "resolved", label: "Luminaria reparada" },
-  { x: 48, y: 58, kind: "open", label: "Pérdida de agua" },
-  { x: 80, y: 70, kind: "resolved", label: "Árbol retirado" },
+  { lng: -63.2475, lat: -32.4037, kind: "open", label: "Bache en Av. Mitre" },
+  { lng: -63.2445, lat: -32.4062, kind: "resolved", label: "Luminaria reparada" },
+  { lng: -63.2485, lat: -32.4092, kind: "open", label: "Pérdida de agua" },
+  { lng: -63.2455, lat: -32.4115, kind: "resolved", label: "Árbol retirado" },
 ];
 
-function CityMap() {
+function IncidentPin({ kind, label }) {
+  const open = kind === "open";
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 400 400"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 h-full w-full"
-    >
-      <g fill="none" stroke="#D3D6FF" strokeLinecap="round">
-        {/* Avenidas principales */}
-        <g strokeOpacity="0.22" strokeWidth="5">
-          <path d="M-20 120 L180 150 L420 90" />
-          <path d="M90 -20 L130 200 L100 420" />
-          <path d="M-20 300 L220 260 L420 330" />
-          <path d="M300 -20 L270 180 L320 420" />
-        </g>
-        {/* Calles secundarias */}
-        <g strokeOpacity="0.1" strokeWidth="2">
-          <path d="M-20 40 L420 20" />
-          <path d="M-20 210 L420 200" />
-          <path d="M-20 370 L420 390" />
-          <path d="M20 -20 L10 420" />
-          <path d="M200 -20 L190 420" />
-          <path d="M380 -20 L390 420" />
-          <path d="M130 200 L220 260" />
-          <path d="M180 150 L270 180" />
-        </g>
-      </g>
-    </svg>
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-3.5 w-3.5">
+        {open && (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-light opacity-60 motion-reduce:animate-none" />
+        )}
+        <span
+          className={`relative inline-flex h-3.5 w-3.5 rounded-full ring-4 ${
+            open
+              ? "bg-brand-light ring-brand-light/30"
+              : "bg-emerald-400 ring-emerald-400/30"
+          }`}
+        />
+      </span>
+      <span className="whitespace-nowrap rounded-full border border-white/15 bg-[#1a0f2e]/80 px-3 py-1 text-xs font-medium text-white shadow-lg backdrop-blur">
+        {label}
+      </span>
+    </div>
   );
 }
 
 function BrandPanel() {
   return (
     <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#1a0f2e] p-12 text-white">
-      {/* Resplandor de marca detrás del mapa */}
-      <div
-        aria-hidden="true"
-        className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-brand/50 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -bottom-48 -right-24 h-[26rem] w-[26rem] rounded-full bg-brand-mid/30 blur-3xl"
-      />
-      <CityMap />
-
-      {/* Marcadores */}
-      {PINS.map((pin) => (
-        <div
-          key={pin.label}
-          className="absolute flex items-center gap-2"
-          style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+      {/* Mapa real, solo de fondo: sin interacción ni controles */}
+      <div className="absolute inset-0">
+        <Map
+          initialViewState={MAP_VIEW}
+          mapStyle="mapbox://styles/mapbox/dark-v11"
+          style={{ width: "100%", height: "100%" }}
+          interactive={false}
+          attributionControl={false}
         >
-          <span className="relative flex h-3 w-3">
-            {pin.kind === "open" && (
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-light opacity-60 motion-reduce:animate-none" />
-            )}
-            <span
-              className={`relative inline-flex h-3 w-3 rounded-full ring-4 ${
-                pin.kind === "open"
-                  ? "bg-brand-light ring-brand-light/20"
-                  : "bg-emerald-400 ring-emerald-400/20"
-              }`}
-            />
-          </span>
-          <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80 backdrop-blur">
-            {pin.label}
-          </span>
-        </div>
-      ))}
+          {PINS.map((pin) => (
+            <Marker key={pin.label} longitude={pin.lng} latitude={pin.lat} anchor="left">
+              <IncidentPin kind={pin.kind} label={pin.label} />
+            </Marker>
+          ))}
+        </Map>
+      </div>
+
+      {/* Tinte de marca y degradados para que el texto se lea sobre el mapa */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-brand/25 mix-blend-color" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#1a0f2e] to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#1a0f2e] via-[#1a0f2e]/80 to-transparent" />
 
       <div className="relative z-10 flex items-center gap-3">
         <img src="/logoCityFixer.svg" alt="" className="h-10 w-auto" />
