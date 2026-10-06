@@ -92,7 +92,7 @@ export default function ImageUploader({ imagenes, onChange, onRemove, hasError =
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
-          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-left transition-colors ${roomy ? "sm:min-h-44 sm:flex-1 sm:flex-col sm:justify-center sm:gap-2 sm:py-8 sm:text-center" : ""} ${
+          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-left transition-colors ${roomy ? "sm:min-h-44 sm:max-h-72 sm:flex-1 sm:flex-col sm:justify-center sm:gap-2 sm:py-8 sm:text-center" : ""} ${
             dragging
               ? "border-primary bg-primary/10"
               : hasError
