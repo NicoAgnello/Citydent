@@ -4,7 +4,14 @@
 // Las ediciones se hacen en un Sheet lateral.
 // Las categorías desactivadas no aparecen en el formulario de reporte del usuario.
 //
-// No recibe props — carga las categorías directamente desde la API al montar.
+// Se muestran como tarjetas, cada una con su descripción, cuántos incidentes activos
+// tiene y un interruptor para activarla o desactivarla.
+//
+// Props:
+//   incidents → (opcional) array completo de grupos de incidentes, solo para contar los
+//               activos de cada categoría. Sin él, la tarjeta no muestra el conteo.
+//
+// Las categorías se cargan directamente desde la API al montar.
 //
 // Se usa en AdminDashboard.jsx como contenido del tab "categorias".
 import { useState, useEffect, useCallback } from "react";
@@ -26,7 +33,6 @@ import {
   toggleCategory,
   updateCategory,
 } from "@/services/api";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +43,7 @@ import { capitalize } from "@/lib/incidents";
 const INPUT_CLS =
   "w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all";
 
+// Interruptor de activa/inactiva. Una categoría inactiva no aparece en el formulario de reporte.
 function ToggleCell({ category, onUpdated }) {
   const [loading, setLoading] = useState(false);
   const isActive = category.isActive ?? true;
@@ -53,27 +60,29 @@ function ToggleCell({ category, onUpdated }) {
 
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={isActive}
+      aria-label={`${isActive ? "Desactivar" : "Activar"} ${capitalize(category.name)}`}
       onClick={handleToggle}
       disabled={loading}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors disabled:opacity-50 ${
-        isActive
-          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-          : "bg-gray-50 text-gray-400 border border-gray-200"
-      }`}
+      className="group inline-flex items-center gap-2 disabled:opacity-50"
     >
-      {loading ? (
-        <Loader2 size={11} className="animate-spin" />
-      ) : isActive ? (
-        <ToggleRight size={13} />
-      ) : (
-        <ToggleLeft size={13} />
-      )}
-      {isActive ? "Activa" : "Inactiva"}
+      <span
+        className={`relative h-5 w-9 rounded-full transition-colors ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${isActive ? "left-[18px]" : "left-0.5"}`}
+        />
+      </span>
+      <span className={`text-xs font-semibold ${isActive ? "text-emerald-600" : "text-slate-400"}`}>
+        {loading ? "..." : isActive ? "Activa" : "Inactiva"}
+      </span>
     </button>
   );
 }
 
-export default function AdminCategoriasTab() {
+export default function AdminCategoriasTab({ incidents = [] }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -201,7 +210,7 @@ export default function AdminCategoriasTab() {
           <p className="text-sm text-slate-400 mt-0.5">
             {loading
               ? "Cargando..."
-              : `${categories.length} categorías en total`}
+              : `${categories.length} categorías · ${categories.filter((c) => c.isActive ?? true).length} activas`}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -225,76 +234,69 @@ export default function AdminCategoriasTab() {
         </div>
       </div>
 
-      {/* ── Lista ── */}
-      <Card className="border-slate-100 shadow-none overflow-hidden py-0 gap-0">
-        {/* Header — solo desktop */}
-        <div className="hidden sm:grid sm:grid-cols-[44px_1fr_1fr_128px_40px] px-5 py-2.5 bg-slate-50/60 border-b border-slate-100">
-          <span />
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Categoría
-          </span>
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Descripción
-          </span>
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Estado
-          </span>
-          <span />
+      {/* ── Tarjetas ── */}
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={20} className="animate-spin text-slate-300" />
         </div>
-
-        <div className="divide-y divide-slate-100">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-slate-300" />
-            </div>
-          ) : categories.length === 0 ? (
-            <div className="py-12 text-center">
-              <Tag size={24} className="text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">Sin categorías aún</p>
-            </div>
-          ) : (
-            categories.map((cat) => (
+      ) : categories.length === 0 ? (
+        <div className="py-16 text-center">
+          <Tag size={24} className="text-slate-200 mx-auto mb-2" />
+          <p className="text-sm text-slate-400">Sin categorías aún</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {categories.map((cat) => {
+            const isActive = cat.isActive ?? true;
+            const activeCount = incidents.filter(
+              (g) => !g.isArchived && g.category?.name === cat.name,
+            ).length;
+            return (
               <div
                 key={cat._id}
-                className="w-full grid grid-cols-[36px_1fr_auto_36px] sm:grid-cols-[44px_1fr_1fr_128px_40px] items-center gap-2 sm:gap-0 px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50/80 transition-colors"
+                className={`flex flex-col rounded-2xl border bg-white p-5 shadow-xs transition-colors ${
+                  isActive ? "border-slate-100" : "border-dashed border-slate-200 bg-slate-50/50"
+                }`}
               >
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${cat.isActive ? "bg-brand-light/30" : "bg-gray-100"}`}
-                >
-                  <Tag
-                    size={14}
-                    className={cat.isActive ? "text-brand" : "text-gray-400"}
-                  />
+                <div className="flex items-start justify-between gap-3">
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                      isActive ? "bg-brand-light/30 text-brand" : "bg-slate-100 text-slate-400"
+                    }`}
+                  >
+                    <Tag size={20} />
+                  </div>
+                  <button
+                    onClick={() => setSelectedId(cat._id)}
+                    aria-label={`Editar ${capitalize(cat.name)}`}
+                    title="Editar"
+                    className="group -mr-1.5 -mt-1.5 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                  >
+                    <Settings2 size={16} className="transition-transform duration-200 group-hover:rotate-45" />
+                  </button>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">
-                    {capitalize(cat.name)}
-                  </p>
-                </div>
-                <div className="hidden sm:block min-w-0 sm:pr-3">
-                  <p className="text-xs text-slate-500 line-clamp-1">
-                    {cat.description || (
-                      <span className="text-slate-300 italic">—</span>
-                    )}
-                  </p>
-                </div>
-                <div className="justify-self-end sm:justify-self-auto">
+
+                <p className={`mt-4 text-lg font-semibold tracking-tight ${isActive ? "text-slate-900" : "text-slate-500"}`}>
+                  {capitalize(cat.name)}
+                </p>
+                <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-sm text-slate-500">
+                  {cat.description || <span className="italic text-slate-300">Sin descripción</span>}
+                </p>
+
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
                   <ToggleCell category={cat} onUpdated={fetchCategories} />
+                  {incidents.length > 0 && (
+                    <span className="text-xs text-slate-400">
+                      <span className="font-semibold text-slate-700">{activeCount}</span>{" "}
+                      incidente{activeCount !== 1 ? "s" : ""} activo{activeCount !== 1 ? "s" : ""}
+                    </span>
+                  )}
                 </div>
-                <button
-                  onClick={() => setSelectedId(cat._id)}
-                  className="group justify-self-end p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                >
-                  <Settings2
-                    size={15}
-                    className="transition-transform duration-200 group-hover:rotate-45"
-                  />
-                </button>
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
-      </Card>
+      )}
 
       {/* ── Sheet edición ── */}
       <Sheet

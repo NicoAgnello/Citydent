@@ -13,7 +13,8 @@
 // Se usa en AdminDashboard.jsx en la parte superior de la pantalla.
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { Siren, Menu, Search, User, X, AlertTriangle } from "lucide-react";
+import { Siren, Menu, Search, User, X, AlertTriangle, Moon, Sun } from "lucide-react";
+import { useDark, setThemePref } from "@/lib/theme";
 import { STATUS_LABELS, STATUS_BADGE, capitalize } from "@/lib/incidents";
 import {
   DropdownMenu,
@@ -114,6 +115,7 @@ export default function AdminTopbar({
     onFocusIncident?.(incident._id);
   };
 
+  const dark = useDark();
   const { total } = notifications;
 
   return (
@@ -249,6 +251,16 @@ export default function AdminTopbar({
           aria-label="Buscar"
         >
           <Search size={20} />
+        </button>
+
+        {/* Cambio rápido de tema claro/oscuro */}
+        <button
+          onClick={() => setThemePref(dark ? "light" : "dark")}
+          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors focus:outline-none"
+          aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+          title={dark ? "Modo claro" : "Modo oscuro"}
+        >
+          {dark ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
         {/* Campana con dropdown de notificaciones */}

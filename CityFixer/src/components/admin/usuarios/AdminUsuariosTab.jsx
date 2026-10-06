@@ -1,7 +1,7 @@
 // Tab de gestión de usuarios (solo accesible para superAdmin).
 // Muestra una tabla con todos los usuarios registrados. Permite:
 //   - Buscar por nombre o email
-//   - Filtrar por rol (ciudadano / admin / superAdmin)
+//   - Filtrar por rol (ciudadano / admin / superAdmin) con pestañas
 //   - Cambiar el rol de un usuario
 //   - Banear o desbanear una cuenta
 //   - Ver y editar el perfil completo de un usuario en un Sheet lateral
@@ -34,6 +34,13 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Pagination from "@/components/ui/pagination";
+
+const ROLE_TABS = [
+  { value: "todos",      label: "Todos"        },
+  { value: "user",       label: "Ciudadanos"   },
+  { value: "admin",      label: "Admins"       },
+  { value: "superAdmin", label: "Super Admins" },
+];
 
 const ROLE_LABELS = { user: "Ciudadano", admin: "Admin", superAdmin: "Super Admin" };
 
@@ -231,29 +238,37 @@ export default function AdminUsuariosTab() {
         </div>
       </div>
 
-      {/* ── Filtros ── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-between">
-        <div className="relative flex-1 min-w-0 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Buscar nombre o correo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-          />
-        </div>
-        <Select value={activeRoleTab} onValueChange={setActiveRoleTab}>
-          <SelectTrigger className="shrink-0 w-full sm:w-44 rounded-xl border-slate-200 text-sm focus:ring-primary/20">
-            <SelectValue placeholder="Todos los roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos los roles</SelectItem>
-            <SelectItem value="user">Ciudadano</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="superAdmin">Super Admin</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* ── Filtro por rol (pestañas) ── */}
+      <div role="tablist" aria-label="Filtrar por rol" className="mb-4 flex items-center gap-5 overflow-x-auto border-b border-slate-200 [&::-webkit-scrollbar]:hidden">
+        {ROLE_TABS.map(({ value, label }) => {
+          const active = activeRoleTab === value;
+          return (
+            <button
+              key={value}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveRoleTab(value)}
+              className={`relative shrink-0 pb-3 text-sm font-semibold transition-colors ${
+                active ? "text-primary" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {label}
+              {active && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Búsqueda ── */}
+      <div className="relative mb-5">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Buscar nombre o correo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-11 pl-10 pr-4 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+        />
       </div>
 
       {/* ── Cuerpo ── */}
@@ -279,6 +294,9 @@ export default function AdminUsuariosTab() {
                     Rol
                   </TableHead>
                   <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Estado
+                  </TableHead>
+                  <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                     Registro
                   </TableHead>
                   <TableHead className="w-10" />
@@ -301,6 +319,9 @@ export default function AdminUsuariosTab() {
                         <div className="h-5 w-20 bg-slate-100 rounded-full animate-pulse" />
                       </TableCell>
                       <TableCell className="py-3">
+                        <div className="h-5 w-16 bg-slate-100 rounded-full animate-pulse" />
+                      </TableCell>
+                      <TableCell className="py-3">
                         <div className="h-3 w-24 bg-slate-100 rounded-full animate-pulse" />
                       </TableCell>
                       <TableCell />
@@ -310,7 +331,11 @@ export default function AdminUsuariosTab() {
                   users.map((user) => {
                     const roleName = user.role?.name ?? "user";
                     return (
-                      <TableRow key={user._id} className="hover:bg-slate-50/80">
+                      <TableRow
+                        key={user._id}
+                        onClick={!isSuperAdmin(user) ? () => setSelectedUserId(user._id) : undefined}
+                        className={`hover:bg-slate-50/80 ${!isSuperAdmin(user) ? "cursor-pointer" : ""}`}
+                      >
                         {/* Usuario */}
                         <TableCell className="pl-5 py-2.5">
                           <div className="flex items-center gap-3">
@@ -320,11 +345,6 @@ export default function AdminUsuariosTab() {
                                 <p className="text-sm font-medium text-slate-900 truncate">
                                   {user.firstName} {user.lastName}
                                 </p>
-                                {user.isBanned && (
-                                  <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                    Suspendido
-                                  </span>
-                                )}
                               </div>
                               <p className="text-xs text-slate-500 truncate">{user.email}</p>
                             </div>
@@ -338,13 +358,21 @@ export default function AdminUsuariosTab() {
                           </span>
                         </TableCell>
 
+                        {/* Estado de la cuenta */}
+                        <TableCell className="py-2.5">
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${user.isBanned ? "text-rose-600" : "text-slate-500"}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${user.isBanned ? "bg-rose-500" : "bg-emerald-500"}`} />
+                            {user.isBanned ? "Suspendido" : "Activo"}
+                          </span>
+                        </TableCell>
+
                         {/* Fecha registro */}
                         <TableCell className="py-2.5 text-xs text-slate-500">
                           {formatRegDate(user.createdAt)}
                         </TableCell>
 
                         {/* Acciones */}
-                        <TableCell className="py-2.5 pr-4">
+                        <TableCell className="py-2.5 pr-4" onClick={(e) => e.stopPropagation()}>
                           {!isSuperAdmin(user) && (
                             <DropdownMenu>
                               <DropdownMenuTrigger className="group p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">

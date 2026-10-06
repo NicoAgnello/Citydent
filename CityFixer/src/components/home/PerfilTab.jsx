@@ -14,6 +14,7 @@ import {
   LogOut, MapPin, Building2, Hash, Edit3, Check, X, Loader2, Lock, IdCard,
 } from "lucide-react";
 import SupportInfo from "./SupportInfo";
+import ThemeSelector from "./ThemeSelector";
 import { STATUS_KEYS } from "@/lib/incidents";
 import { getMyProfile, patchProfile, getNeighborhoods } from "@/services/api";
 import { Combobox } from "@/components/ui/combobox";
@@ -393,6 +394,16 @@ export default function PerfilTab({ incidents, loading }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── Apariencia ────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Apariencia</p>
+        </div>
+        <div className="p-4">
+          <ThemeSelector />
+        </div>
       </div>
 
       {/* ── Ayuda y soporte ───────────────────────────────────────────── */}

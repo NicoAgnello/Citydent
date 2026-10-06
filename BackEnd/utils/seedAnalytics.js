@@ -119,6 +119,15 @@ const DIST_REPORTES = [
 /** Estacionalidad por mes (0=enero). Hemisferio sur: más reportes en otoño/invierno. */
 const PESO_MES = [0.70, 0.70, 0.90, 1.10, 1.30, 1.50, 1.50, 1.30, 1.00, 0.90, 0.80, 0.80];
 
+/**
+ * Peso de cada hora LOCAL del día (0-23) para el momento del reporte.
+ * Pico de media mañana y de tarde, caída en la siesta y muy poco de madrugada.
+ */
+const PESO_HORA_LOCAL = [1, 0.6, 0.4, 0.3, 0.3, 0.5, 1.5, 3, 7, 9, 10, 9, 7, 5, 5, 7, 9, 10, 9, 8, 6, 4, 3, 2];
+
+/** Villa María está en UTC-3. */
+const OFFSET_UTC = -3;
+
 // ==========================================
 // ALEATORIEDAD DETERMINISTA
 // ==========================================
@@ -155,6 +164,27 @@ const gauss = (mu, sigma, min = -Infinity, max = Infinity) => {
   const v = rand();
   const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   return Math.min(max, Math.max(min, mu + z * sigma));
+};
+
+/**
+ * Fija una hora del día realista sobre una fecha, conservando el día.
+ *
+ * Sin esto todos los registros heredan la hora en la que corrió el script (los
+ * cálculos restan días enteros), y cualquier análisis por franja horaria queda
+ * con un pico artificial imposible de explicar.
+ *
+ * @param {Date} fecha Fecha cuyo día se conserva.
+ * @returns {Date} Misma fecha con hora, minutos y segundos verosímiles.
+ */
+const conHoraRealista = (fecha) => {
+  const pesos = {};
+  PESO_HORA_LOCAL.forEach((p, h) => { pesos[h] = p; });
+  const horaLocal = Number(pickWeighted(pesos));
+  const horaUtc = (horaLocal - OFFSET_UTC + 24) % 24;
+
+  const d = new Date(fecha);
+  d.setUTCHours(horaUtc, randInt(0, 59), randInt(0, 59), randInt(0, 999));
+  return d;
 };
 
 // ==========================================
@@ -359,7 +389,7 @@ const generarUsuarios = (rolUserId, barrios) => {
     const idx = String(i + 1).padStart(4, '0');
 
     // Los usuarios se dieron de alta a lo largo del año, antes de reportar.
-    const createdAt = new Date(ahora - randInt(1, DIAS_HISTORIA + 30) * DIA_MS);
+    const createdAt = conHoraRealista(new Date(ahora - randInt(1, DIAS_HISTORIA + 30) * DIA_MS));
 
     let email = `seed+${idx}@cityfixer.local`;
     if (chance(SUCIEDAD.userEmailMayusculas)) {
@@ -440,9 +470,9 @@ const fechaPonderada = () => {
     const pesoMes = PESO_MES[fecha.getMonth()];
     // Adopción: cuanto más reciente, más probable (de 0.55 a 1.0).
     const pesoAdopcion = 0.55 + 0.45 * (1 - diasAtras / DIAS_HISTORIA);
-    if (rand() < (pesoMes / 1.5) * pesoAdopcion) return fecha;
+    if (rand() < (pesoMes / 1.5) * pesoAdopcion) return conHoraRealista(fecha);
   }
-  return new Date(Date.now() - randInt(0, DIAS_HISTORIA - 1) * DIA_MS);
+  return conHoraRealista(new Date(Date.now() - randInt(0, DIAS_HISTORIA - 1) * DIA_MS));
 };
 
 /** Cantidad de reportes de un grupo, según la distribución de cola larga. */
@@ -510,7 +540,7 @@ const generarIncidentes = (refs) => {
 
     if (esTormenta) {
       const t = pick(tormentas);
-      createdAt = new Date(t.getTime() + randInt(0, 3) * DIA_MS + randInt(0, 23) * 3600000);
+      createdAt = conHoraRealista(new Date(t.getTime() + randInt(0, 3) * DIA_MS));
       categoriaNombre = pickWeighted({ 'Inundacion': 0.45, 'bache': 0.25, 'otro': 0.20, 'basura': 0.10 });
     } else {
       createdAt = fechaPonderada();

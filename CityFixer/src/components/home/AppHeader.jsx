@@ -25,6 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import UrgenciasModal from "./UrgenciasModal";
+import { Moon, Sun } from "lucide-react";
+import { useDark, setThemePref } from "@/lib/theme";
 import { useNotificationContext } from "@/context/NotificationContext";
 
 const DESKTOP_TABS = [
@@ -140,6 +142,7 @@ export default function AppHeader({ user, isBanned, activeTab, onTabChange }) {
   const [helpOpen, setHelpOpen]           = useState(false);
   const [notiOpen, setNotiOpen]           = useState(false);
 
+  const dark = useDark();
   const ctx = useNotificationContext();
   const unreadCount = ctx?.unreadCount ?? 0;
 
@@ -224,6 +227,16 @@ export default function AppHeader({ user, isBanned, activeTab, onTabChange }) {
             <span className="hidden sm:inline">Urgencias</span>
           </button>
 
+          {/* Cambio rápido de tema: visible también en mobile, donde no hay menú de avatar */}
+          <button
+            onClick={() => setThemePref(dark ? "light" : "dark")}
+            aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            title={dark ? "Modo claro" : "Modo oscuro"}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors focus:outline-none"
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {/* Campana de notificaciones */}
           <DropdownMenu open={notiOpen} onOpenChange={setNotiOpen}>
             <DropdownMenuTrigger asChild>
@@ -263,6 +276,9 @@ export default function AppHeader({ user, isBanned, activeTab, onTabChange }) {
               </div>
               <DropdownMenuItem onClick={() => onTabChange?.("perfil")} className="gap-2 cursor-pointer text-sm mt-1">
                 <User size={14} /> Mi Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setThemePref(dark ? "light" : "dark")} className="gap-2 cursor-pointer text-sm">
+                {dark ? <Sun size={14} /> : <Moon size={14} />} {dark ? "Modo claro" : "Modo oscuro"}
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setHelpOpen(true)} className="gap-2 cursor-pointer text-sm">
                 <HelpCircle size={14} /> Ayuda y soporte

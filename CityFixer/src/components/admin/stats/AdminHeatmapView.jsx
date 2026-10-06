@@ -9,8 +9,9 @@
 //   incidents       → array de incidentes con coordenadas (lat/lng en location)
 //   onTabChange     → función que recibe un tab id, para navegar al tab de incidentes
 //   onFocusIncident → función que recibe un id de incidente, para abrirlo desde la lista
+//   heightClass     → clase de Tailwind con el alto del mapa (por defecto h-[500px])
 //
-// Se usa en AdminEstadisticasTab.jsx dentro de la pestaña "Mapa de Calor".
+// Se usa en AdminEstadisticasTab.jsx como panel grande debajo de las tarjetas KPI.
 import { useMemo, useState, useCallback } from "react";
 import Map from "react-map-gl";
 import HeatmapLayer from "./HeatmapLayer";
@@ -111,7 +112,7 @@ function GroupDetailPanel({ group, onClose, onTabChange, onFocusIncident }) {
   );
 }
 
-export default function AdminHeatmapView({ incidents, loading, onTabChange, onFocusIncident }) {
+export default function AdminHeatmapView({ incidents, loading, onTabChange, onFocusIncident, heightClass = "h-[500px]" }) {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [cursor, setCursor] = useState("grab");
 
@@ -151,7 +152,7 @@ export default function AdminHeatmapView({ incidents, loading, onTabChange, onFo
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4">
-        <div className="h-[500px] bg-slate-50 rounded-xl animate-pulse flex items-center justify-center">
+        <div className={`${heightClass} bg-slate-50 rounded-xl animate-pulse flex items-center justify-center`}>
           <p className="text-xs text-slate-400">Cargando mapa de calor...</p>
         </div>
       </div>
@@ -169,7 +170,7 @@ export default function AdminHeatmapView({ incidents, loading, onTabChange, onFo
       </div>
 
       <div className="relative">
-        <div className="h-[500px] rounded-xl overflow-hidden">
+        <div className={`${heightClass} rounded-xl overflow-hidden`}>
           <Map
             initialViewState={DEFAULT_VIEW}
             mapStyle="mapbox://styles/mapbox/dark-v11"

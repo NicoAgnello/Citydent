@@ -3,117 +3,180 @@
 // Pantalla de inicio de sesión. Solo accesible si el usuario NO tiene sesión
 // activa (PublicRoute en AppRouter la protege). Se monta en la ruta /login.
 //
-// Qué muestra:
-//   - Fondo oscuro con animación de partículas (tsparticles)
-//   - Logo y nombre de la app
-//   - Formulario de login de Clerk (maneja email, contraseña, OAuth, etc.)
+// Layout en dos mitades:
+//   - Izquierda (solo desktop): panel de marca con un mapa real de Mapbox
+//     (sin interacción) y marcadores de incidentes de ejemplo, que cuenta de qué trata la app.
+//   - Derecha: el formulario de Clerk, sin tarjeta, sobre fondo claro.
+//   En mobile el panel de marca se reduce a una franja superior con el logo.
 //
 // Clerk maneja todo el flujo de autenticación: validación, errores, sesión.
 // Una vez que el usuario se loguea, Clerk redirige a "/" y App.jsx se encarga
 // de sincronizar el usuario con la base de datos antes de mostrar la app.
-//
-// Por qué <SignIn> está fuera de <ParticlesProvider>:
-//   ParticlesProvider inicializa el motor de partículas de forma asíncrona.
-//   Si Clerk estuviera dentro de ese árbol, su propio proceso de init podría
-//   interferir. Tenerlos como hermanos los mantiene independientes.
 
 import { SignIn } from "@clerk/clerk-react";
-import Particles, { ParticlesProvider } from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
+import Map, { Marker } from "react-map-gl";
+import mapboxgl from "mapbox-gl";
+import { MapPin, CheckCircle2 } from "lucide-react";
 
-// Configuración de las partículas del fondo animado.
-// Los colores usan hex directamente porque tsparticles no puede leer
-// variables CSS de Tailwind (brand-light, brand-mid) en tiempo de ejecución.
-const PARTICLE_OPTIONS = {
-  fullScreen: false,
-  background: { color: { value: "transparent" } },
-  fpsLimit: 60,
-  particles: {
-    number: { value: 60, density: { enable: true } },
-    color: { value: ["#D3D6FF", "#6B4FA8", "#ffffff"] },
-    opacity: { value: { min: 0.1, max: 0.4 } },
-    size: { value: { min: 1, max: 3 } },
-    move: {
-      enable: true,
-      speed: 0.5,
-      random: true,
-      outModes: { default: "bounce" },
-    },
-    links: {
-      enable: true,
-      distance: 130,
-      color: "#6B4FA8",
-      opacity: 0.2,
-      width: 1,
-    },
-  },
-  detectRetina: true,
-};
+// Marcadores sobre el mapa real (mismo centro que el resto de la app).
+// "resolved" usa el verde de la app; "open" usa el lila de marca.
+const MAP_VIEW = { longitude: -63.2435, latitude: -32.4097, zoom: 14.6 };
+const PINS = [
+  { lng: -63.2475, lat: -32.4037, kind: "open", label: "Bache en Av. Mitre" },
+  { lng: -63.2445, lat: -32.4062, kind: "resolved", label: "Luminaria reparada" },
+  { lng: -63.2485, lat: -32.4092, kind: "open", label: "Pérdida de agua" },
+  { lng: -63.2455, lat: -32.4115, kind: "resolved", label: "Árbol retirado" },
+];
 
-// Definido fuera del componente para que la referencia sea estable.
-// ParticlesProvider v4 exige que la función init no cambie entre renders,
-// de lo contrario reinicializa el motor innecesariamente.
-async function initEngine(engine) {
-  await loadSlim(engine);
+const WEBGL_OK = mapboxgl.supported();
+
+function IncidentPin({ kind, label }) {
+  const open = kind === "open";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-3.5 w-3.5">
+        {open && (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-light opacity-60 motion-reduce:animate-none" />
+        )}
+        <span
+          className={`relative inline-flex h-3.5 w-3.5 rounded-full ring-4 ${
+            open
+              ? "bg-brand-light ring-brand-light/30"
+              : "bg-emerald-400 ring-emerald-400/30"
+          }`}
+        />
+      </span>
+      <span className="whitespace-nowrap rounded-full border border-white/15 bg-[#1a0f2e]/80 px-3 py-1 text-xs font-medium text-white shadow-lg backdrop-blur">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function BrandPanel() {
+  return (
+    <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#1a0f2e] p-12 text-white">
+      {/* Mapa real, solo de fondo: sin interacción ni controles.
+          Mapbox necesita WebGL; si el navegador no lo soporta (por ejemplo
+          con la aceleración por hardware desactivada) se muestra un fondo
+          de marca en su lugar en vez de un panel roto. */}
+      {WEBGL_OK ? (
+        <div className="absolute inset-0">
+          <Map
+            initialViewState={MAP_VIEW}
+            mapStyle="mapbox://styles/mapbox/dark-v11"
+            style={{ width: "100%", height: "100%" }}
+            interactive={false}
+            attributionControl={false}
+          >
+            {PINS.map((pin) => (
+              <Marker key={pin.label} longitude={pin.lng} latitude={pin.lat} anchor="left">
+                <IncidentPin kind={pin.kind} label={pin.label} />
+              </Marker>
+            ))}
+          </Map>
+        </div>
+      ) : (
+        <>
+          <div aria-hidden="true" className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-brand/50 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-48 -right-24 h-[26rem] w-[26rem] rounded-full bg-brand-mid/30 blur-3xl" />
+        </>
+      )}
+
+      {/* Tinte de marca y degradados para que el texto se lea sobre el mapa */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-brand/25 mix-blend-color" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#1a0f2e] to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#1a0f2e] via-[#1a0f2e]/80 to-transparent" />
+
+      <div className="relative z-10 flex items-center gap-3">
+        <img src="/logoCityFixer.svg" alt="" className="h-10 w-auto" />
+        <span className="text-xl font-semibold tracking-tight">CityFixer</span>
+      </div>
+
+      <div className="relative z-10 max-w-md">
+        <h2 className="text-4xl font-semibold leading-[1.1] tracking-tight text-balance">
+          Si lo ves en tu barrio, reportalo.
+        </h2>
+        <p className="mt-4 text-base leading-relaxed text-brand-light/70">
+          Sacá una foto, marcá el lugar y seguí el reclamo hasta que se resuelva.
+        </p>
+        <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-brand-light/80">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          Recibís una notificación en cada cambio de estado
+        </div>
+      </div>
+    </aside>
+  );
 }
 
 function Login() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-5 bg-[#1a0f2e] overflow-hidden">
+    <div className="min-h-screen bg-white lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <BrandPanel />
 
-      {/* Partículas aisladas — su ciclo de init no afecta a SignIn */}
-      <ParticlesProvider init={initEngine}>
-        <Particles
-          id="tsparticles"
-          className="absolute inset-0 w-full h-full"
-          options={PARTICLE_OPTIONS}
-        />
-      </ParticlesProvider>
-
-      {/* SignIn fuera del árbol de ParticlesProvider */}
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
-        <div className="mb-7 text-center flex flex-col items-center gap-2">
-          <img src="/logoCityFixer.svg" alt="CityFixer" className="h-20 w-auto" />
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-brand-light/60 bg-clip-text text-transparent">
+      <main className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#f5f6ff] to-white px-5 py-10 lg:min-h-0 lg:from-white">
+        {/* Logo compacto, solo mobile (en desktop vive en el panel de marca) */}
+        <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+          <img src="/logoCityFixer.svg" alt="" className="h-10 w-auto" />
+          <span className="text-2xl font-semibold tracking-tight text-brand-dark">
             CityFixer
-          </h1>
-          <p className="text-brand-light/50 text-sm tracking-wide">Ingresá a tu cuenta para continuar</p>
+          </span>
         </div>
 
-        <div className="w-full rounded-3xl overflow-hidden shadow-2xl">
-          {/* appearance personaliza los colores y tipografía del formulario de Clerk
-              para que coincida con el diseño de la app. */}
-          <SignIn
-            routing="path"
-            path="/login"
-            fallbackRedirectUrl="/"
-            appearance={{
-              variables: {
-                colorPrimary: "#292D60",
-                colorBackground: "#ffffff",
-                colorText: "#1a1a2e",
-                colorTextSecondary: "#6b7280",
-                colorInputBackground: "#f5f6ff",
-                colorInputText: "#1a1a2e",
-                borderRadius: "0px",
-                fontFamily: "Geist Variable, sans-serif",
-              },
-              elements: {
-                rootBox: "w-full",
-                card: "shadow-none border-0 w-full rounded-none",
-                header: { display: "none" },
-                socialButtonsBlockButton:
-                  "border border-gray-200 hover:bg-[#f5f6ff] transition-colors font-medium",
-                formButtonPrimary:
-                  "bg-brand-dark hover:bg-brand-mid transition-colors shadow-md",
-                footerActionLink:
-                  "text-brand-dark font-semibold hover:text-brand-mid",
-                footerPages: { display: "none" },
-              },
-            }}
-          />
+        <div className="w-full max-w-sm">
+          <div className="mb-6 flex items-center gap-2 text-brand">
+            <MapPin className="h-5 w-5" />
+            <span className="text-sm font-medium">Reclamos urbanos</span>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-[#1a0f2e]">
+            Ingresá a tu cuenta
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Para reportar y seguir los incidentes de tu ciudad.
+          </p>
+
+          <div className="mt-8">
+            {/* appearance deja a Clerk sin tarjeta propia ni encabezado: el
+                título y el texto de arriba los controla esta pantalla. */}
+            <SignIn
+              routing="path"
+              path="/login"
+              fallbackRedirectUrl="/"
+              appearance={{
+                variables: {
+                  colorPrimary: "#5C3F99",
+                  colorBackground: "transparent",
+                  colorText: "#1a0f2e",
+                  colorTextSecondary: "#6b7280",
+                  colorInputBackground: "#ffffff",
+                  colorInputText: "#1a0f2e",
+                  borderRadius: "0.75rem",
+                  fontFamily: "Geist Variable, sans-serif",
+                },
+                elements: {
+                  rootBox: "!w-full !max-w-none",
+                  cardBox: "!w-full !shadow-none !border-0 !bg-transparent !rounded-none",
+                  card: "!w-full !bg-transparent !p-0 !shadow-none !border-0 !rounded-none gap-6",
+                  header: { display: "none" },
+                  socialButtonsBlockButton:
+                    "h-11 border border-gray-200 bg-white hover:bg-[#f5f6ff] hover:border-brand-light transition-colors font-medium",
+                  dividerLine: "bg-gray-200",
+                  dividerText: "text-gray-400",
+                  formFieldInput:
+                    "h-11 border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand-light",
+                  formButtonPrimary:
+                    "h-11 bg-brand hover:bg-brand-dark transition-colors shadow-lg shadow-brand/25 normal-case text-sm font-medium",
+                  footer: "!bg-transparent !bg-none !p-0 !mt-4",
+                  footerAction: "!bg-transparent",
+                  footerActionLink:
+                    "text-brand font-semibold hover:text-brand-dark",
+                  footerPages: { display: "none" },
+                },
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

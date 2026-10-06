@@ -17,9 +17,11 @@
 //   isReadOnly        → booleano, si true oculta las acciones de cambio de estado
 //   pagination        → { page, limit, total, totalPages } (opcional, muestra el paginador si viene)
 //   onPageChange      → función que recibe el nuevo número de página
+//   view              → "table" (por defecto) o "map": en "map" muestra los incidentes como
+//                       puntos en un mapa; al tocar uno se abre su detalle con las acciones admin
 //
 // Se usa en AdminIncidentesTab.jsx.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import AdminIncidentRow from "./AdminIncidentRow";
 import AdminIncidentCard from "./AdminIncidentCard";
@@ -28,6 +30,7 @@ import IncidentAdminActions from "./IncidentAdminActions";
 import IncidentSkeleton from "@/components/home/IncidentSkeleton";
 import { EmptyState } from "@/components/home/IncidentCard";
 import Pagination from "@/components/ui/pagination";
+import IncidentsMap from "@/components/home/IncidentsMap";
 
 export default function AdminIncidentList({
   incidents,
@@ -39,6 +42,7 @@ export default function AdminIncidentList({
   isReadOnly = false,
   pagination,
   onPageChange,
+  view = "table",
 }) {
   const [focusedIncident, setFocusedIncident] = useState(null);
   const [focusedOpen,     setFocusedOpen]     = useState(false);
@@ -54,6 +58,32 @@ export default function AdminIncidentList({
       onClearFocus?.();
     }
   }, [focusedIncidentId, incidents, fallbackIncidents]);
+
+  // El mapa espera incidentes "planos" (título, estado y ubicación); los grupos
+  // guardan eso dentro de representativeId, así que se adaptan acá.
+  const mapIncidents = useMemo(
+    () =>
+      incidents.map((g) => ({
+        _id: g._id,
+        title: g.representativeId?.title ?? "Sin título",
+        status: g.status,
+        location: g.representativeId?.location,
+        photos: g.representativeId?.photos,
+        category: g.category,
+        priority: g.priority,
+        reportsCount: g.incidents?.length,
+        createdAt: g.representativeId?.createdAt,
+      })),
+    [incidents]
+  );
+
+  const handleMapSelect = (point) => {
+    const group = incidents.find((g) => g._id === point._id);
+    if (group) {
+      setFocusedIncident(group);
+      setFocusedOpen(true);
+    }
+  };
 
   const handleFocusedOpenChange = (v) => {
     setFocusedOpen(v);
@@ -74,8 +104,19 @@ export default function AdminIncidentList({
 
   return (
     <>
+      {view === "map" && (
+        <div className="flex flex-col gap-2">
+          <IncidentsMap incidents={mapIncidents} onSelect={handleMapSelect} plain className="h-[520px]" />
+          <p className="text-xs text-slate-400">
+            {pagination && pagination.total > incidents.length
+              ? `Mostrando ${incidents.length} de ${pagination.total} incidentes. Ajustá los filtros para acotar.`
+              : `${incidents.length} incidente${incidents.length !== 1 ? "s" : ""} en el mapa. Tocá un punto para abrirlo.`}
+          </p>
+        </div>
+      )}
+
       {/* ── DESKTOP: Data Table ── */}
-      <div className="hidden md:block rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm">
+      <div className={`${view === "map" ? "hidden" : "hidden md:block"} rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm`}>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent bg-slate-50/60 border-b border-gray-100">
@@ -83,13 +124,13 @@ export default function AdminIncidentList({
                 Incidente
               </TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Categoría
+                Estado
               </TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Prioridad
               </TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                Estado
+                Categoría
               </TableHead>
               <TableHead className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Fecha
@@ -106,13 +147,13 @@ export default function AdminIncidentList({
       </div>
 
       {/* ── MOBILE: Cards simplificadas ── */}
-      <div className="md:hidden flex flex-col gap-2.5">
+      <div className={`${view === "map" ? "hidden" : "md:hidden"} flex flex-col gap-2.5`}>
         {incidents.map((inc) => (
           <AdminIncidentCard key={inc._id} incident={inc} onUpdated={onUpdated} isReadOnly={isReadOnly} />
         ))}
       </div>
 
-      {pagination && onPageChange && (
+      {view !== "map" && pagination && onPageChange && (
         <Pagination
           page={pagination.page}
           totalPages={pagination.totalPages}

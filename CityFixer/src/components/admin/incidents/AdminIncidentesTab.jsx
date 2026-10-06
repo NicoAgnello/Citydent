@@ -6,6 +6,9 @@
 //   - Barra de búsqueda por título
 //   - Ordenamiento (más reciente, más antiguo, prioridad)
 //   - Panel extra en un Popover (desktop) con filtros adicionales
+//   - Tres tarjetas de resumen arriba (por revisar, en proceso, críticos abiertos) que
+//     aplican un filtro al tocarlas
+//   - Vista de tabla o de mapa (el mapa trae hasta 100 incidentes ya filtrados)
 //
 // También tiene un botón "Sincronizar con IA" que envía incidentes sin análisis al
 // backend para que la IA los procese (muestra cuántos están pendientes).
@@ -24,9 +27,10 @@
 //
 // Se usa en AdminDashboard.jsx como contenido del tab "incidentes".
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Search, X, Archive, RefreshCw, Loader2, Sparkles, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, X, Archive, RefreshCw, Loader2, Sparkles, SlidersHorizontal, Table2, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import AdminIncidentList from "./AdminIncidentList";
+import AdminSummaryCards from "./AdminSummaryCards";
 import { useStatuses } from "@/hooks/useStatuses";
 import { useIncidentsPage } from "@/hooks/useIncidentsPage";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -281,12 +285,14 @@ function FilterPanelContent({ filters, setFilters, statuses, categories, sortBy,
 
 export default function AdminIncidentesTab({
   incidents,
+  loading: allLoading,
   onUpdated,
   onNuevoReporte,
   focusedIncidentId,
   onClearFocus,
 }) {
   const [activeTab,        setActiveTab]        = useState("activos");
+  const [view,             setView]             = useState("table");
   const [syncing,          setSyncing]          = useState(false);
   const [pendingAI,        setPendingAI]        = useState(null);
   const [filters,         setFilters]         = useState(DEFAULTS);
@@ -312,7 +318,7 @@ export default function AdminIncidentesTab({
     refresh: pagedRefresh,
   } = useIncidentsPage({
     page,
-    limit: 20,
+    limit: view === "map" ? 100 : 20,
     archived: activeTab === "archivados",
     search: effectiveSearch,
     statuses: filters.statuses.join(","),
@@ -372,12 +378,18 @@ export default function AdminIncidentesTab({
 
   const clearFilters = useCallback(() => setFilters(DEFAULTS), []);
 
+  // Las tarjetas de resumen reemplazan los filtros de estado y prioridad; null los quita.
+  const applySummary = useCallback(
+    (preset) => setFilters(preset ? { ...DEFAULTS, ...preset } : DEFAULTS),
+    []
+  );
+
   useEffect(() => { clearFilters(); }, [activeTab]);
 
   // Vuelve a la página 1 cada vez que cambia algo que redefine la consulta al backend.
   useEffect(() => {
     setPage(1);
-  }, [activeTab, sortBy, effectiveSearch, filters.statuses, filters.categories, filters.priorities, filters.isDubious, filters.dateFrom, filters.dateTo]);
+  }, [activeTab, view, sortBy, effectiveSearch, filters.statuses, filters.categories, filters.priorities, filters.isDubious, filters.dateFrom, filters.dateTo]);
 
   useEffect(() => {
     if (focusedIncidentId) {
@@ -413,7 +425,7 @@ export default function AdminIncidentesTab({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-[#292D60]">Gestión de Incidentes</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#292D60] dark:text-slate-900">Gestión de Incidentes</h2>
             {pagination && (
               <span className="sm:hidden text-sm text-slate-400 font-normal shrink-0">
                 ({pagination.total})
@@ -483,50 +495,70 @@ export default function AdminIncidentesTab({
         </div>
       )}
 
+      {/* ── Resumen: lo que hay que atender primero ── */}
+      {!isReadOnly && (
+        <AdminSummaryCards incidents={incidents} loading={allLoading} filters={filters} onApply={applySummary} />
+      )}
+
       {/* ── Controles ── */}
       <div className="flex flex-col gap-2">
 
-        {/* Fila principal: tabs + búsqueda + sort + filtros */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-
-          {/* Tabs */}
-          <div className="flex items-center gap-0.5 bg-gray-100 p-0.5 rounded-xl shrink-0">
+        {/* Pestañas Activos/Archivados + selector de vista */}
+        <div className="flex items-end justify-between gap-3 border-b border-slate-200">
+          <div className="flex items-center gap-5">
             <button
               onClick={() => setActiveTab("activos")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "activos"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+              className={`relative flex items-center gap-1.5 px-1 pb-3 text-sm font-semibold transition-colors ${
+                activeTab === "activos" ? "text-primary" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Activos
-              {counts && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                  activeTab === "activos" ? "bg-primary/10 text-primary" : "bg-slate-200 text-slate-500"
-                }`}>
+              {counts && true && (
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-slate-100 text-slate-500">
                   {counts.active}
                 </span>
               )}
+              {activeTab === "activos" && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
             </button>
             <button
               onClick={() => setActiveTab("archivados")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "archivados"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+              className={`relative flex items-center gap-1.5 px-1 pb-3 text-sm font-semibold transition-colors ${
+                activeTab === "archivados" ? "text-primary" : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              <Archive size={11} />
-              Archivados
+              <Archive size={13} />Archivados
               {counts && counts.archived > 0 && (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                  activeTab === "archivados" ? "bg-slate-100 text-slate-600" : "bg-slate-200 text-slate-500"
-                }`}>
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full leading-none bg-slate-100 text-slate-500">
                   {counts.archived}
                 </span>
               )}
+              {activeTab === "archivados" && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />}
             </button>
           </div>
+
+          <div role="radiogroup" aria-label="Tipo de vista" className="mb-2 flex rounded-lg border border-slate-200 bg-white p-0.5">
+            {[
+              { id: "table", label: "Tabla", icon: Table2 },
+              { id: "map",   label: "Mapa",  icon: MapIcon },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                role="radio"
+                aria-checked={view === id}
+                onClick={() => setView(id)}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  view === id ? "bg-primary text-white" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <Icon size={13} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Fila principal: búsqueda + sort + filtros */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
 
           {/* Search */}
           <div className="relative flex-1 min-w-[140px]">
@@ -824,6 +856,7 @@ export default function AdminIncidentesTab({
         isReadOnly={isReadOnly}
         pagination={pagination}
         onPageChange={setPage}
+        view={view}
       />
     </div>
   );

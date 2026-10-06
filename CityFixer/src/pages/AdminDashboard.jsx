@@ -35,9 +35,11 @@ import AdminCategoriasTab from "@/components/admin/categories/AdminCategoriasTab
 import IncidentModal from "@/components/map/IncidentModal";
 import AdminUsuariosTab from "@/components/admin/usuarios/AdminUsuariosTab";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useApplyTheme } from "@/lib/theme";
 
 export default function AdminDashboard({ dbRole }) {
+  useApplyTheme();
   const [activeTab, setActiveTab]               = useState("incidentes");
   const [reportOpen, setReportOpen]             = useState(false);
   const [mobileOpen, setMobileOpen]             = useState(false);
@@ -48,7 +50,7 @@ export default function AdminDashboard({ dbRole }) {
   const notifications = useNotifications(groups);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-50">
 
       {/* Sidebar fijo, visible solo en pantallas grandes (lg+) */}
       <div className="hidden lg:flex h-full w-64 shrink-0">
@@ -62,6 +64,8 @@ export default function AdminDashboard({ dbRole }) {
           showCloseButton={false}
           className="p-0 !w-64 bg-sidebar border-0"
         >
+          {/* Radix exige un título para lectores de pantalla; se oculta a la vista */}
+          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
           <AdminSidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -116,7 +120,7 @@ export default function AdminDashboard({ dbRole }) {
             {/* EXCLUSIVO SUPERADMIN */}
             {activeTab === "categorias" && dbRole === "superAdmin" && (
               <ErrorBoundary label="Categorías">
-                <AdminCategoriasTab dbRole={dbRole} />
+                <AdminCategoriasTab incidents={groups} />
               </ErrorBoundary>
             )}
 
