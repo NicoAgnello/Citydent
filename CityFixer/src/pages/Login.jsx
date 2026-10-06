@@ -163,8 +163,8 @@ function Login() {
                 },
                 elements: {
                   rootBox: "w-full",
-                  cardBox: "w-full shadow-none",
-                  card: "w-full bg-transparent p-0 shadow-none border-0 gap-6",
+                  cardBox: "!w-full !shadow-none !border-0 !bg-transparent !rounded-none",
+                  card: "!w-full !bg-transparent !p-0 !shadow-none !border-0 !rounded-none gap-6",
                   header: { display: "none" },
                   socialButtonsBlockButton:
                     "h-11 border border-gray-200 bg-white hover:bg-[#f5f6ff] hover:border-brand-light transition-colors font-medium",
@@ -174,7 +174,8 @@ function Login() {
                     "h-11 border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand-light",
                   formButtonPrimary:
                     "h-11 bg-brand hover:bg-brand-dark transition-colors shadow-lg shadow-brand/25 normal-case text-sm font-medium",
-                  footer: "bg-transparent",
+                  footer: "!bg-transparent !bg-none !p-0 !mt-4",
+                  footerAction: "!bg-transparent",
                   footerActionLink:
                     "text-brand font-semibold hover:text-brand-dark",
                   footerPages: { display: "none" },
