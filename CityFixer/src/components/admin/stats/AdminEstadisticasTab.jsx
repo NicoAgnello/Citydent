@@ -1,10 +1,10 @@
 // Tab de estadísticas del panel admin.
-// Contiene:
-//   - 4 tarjetas KPI: total de reportes, activos, resueltos, tasa de resolución
-//   - Gráfico de barras de reportes por categoría (Recharts)
-//   - Gráfico de barras de reportes por estado (Recharts)
-//   - Vista de mapa de calor (AdminHeatmapView) accesible por tab
-//   - Botón "Exportar a Power BI" con flujo OTP (envía código por email, tiene cooldown de 5 min)
+// Todo en una sola pantalla, de arriba hacia abajo:
+//   - 4 tarjetas KPI: reportes recibidos y resueltos (con tendencia contra los 30 días
+//     anteriores), críticos abiertos y pendientes sin atender (estado actual)
+//   - Mapa de calor (AdminHeatmapView) en un panel grande
+//   - Actividad reciente, prioridad, barrios, pipeline de estados y categorías
+//   - Botón "Acceso externo — Power BI" con flujo OTP (envía código por email, tiene cooldown de 5 min)
 //
 // No recibe los incidentes por prop — los deriva de la lista completa que viene de AdminDashboard
 // a través de useAllIncidents, pasados como prop.
@@ -17,18 +17,19 @@
 // Se usa en AdminDashboard.jsx como contenido del tab "estadisticas".
 import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { STATUS_KEYS, capitalize } from "@/lib/incidents";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from "recharts";
 import AdminHeatmapView from "./AdminHeatmapView";
 import { requestPowerBiOtp } from "@/services/api";
-import { Zap, Loader2, CheckCircle2, Clock, FileText, AlertTriangle, Activity, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Zap, Loader2, CheckCircle2, Clock, Inbox, CheckCheck, Flame, ChevronLeft, ChevronRight, RotateCcw, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const FINAL = new Set([STATUS_KEYS.RESOLVED, STATUS_KEYS.REJECTED, STATUS_KEYS.CANCELLED]);
 const COOLDOWN_MS  = 5 * 60 * 1000;
 const TREND_WINDOW_DAYS = 8; // cantidad de días que muestra el gráfico de actividad reciente
+const KPI_PERIOD_DAYS   = 30; // período de las tarjetas con tendencia (se compara con los 30 anteriores)
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ── Tooltips ──────────────────────────────────────────────────────────────────
 function BarTooltip({ active, payload, label }) {
@@ -52,34 +53,54 @@ function CategoryTooltip({ active, payload, label }) {
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, accent = "text-slate-900", loading, icon: Icon, sub }) {
+// `delta` es opcional: { current, previous, goodWhenUp } compara dos períodos.
+// goodWhenUp = true pinta de verde la suba (ej. resueltos); false la deja neutra
+// (ej. reportes recibidos: que suban no es ni bueno ni malo por sí solo).
+function Delta({ current, previous, goodWhenUp }) {
+  if (current === 0 && previous === 0) {
+    return <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Minus size={12} /> Sin actividad</span>;
+  }
+  if (previous === 0) {
+    return <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600"><TrendingUp size={12} /> Nuevo en este período</span>;
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) {
+    return <span className="inline-flex items-center gap-1 text-xs text-slate-400"><Minus size={12} /> Igual que antes</span>;
+  }
+  const up = pct > 0;
+  const tone = up ? (goodWhenUp ? "text-emerald-600" : "text-slate-600") : (goodWhenUp ? "text-rose-500" : "text-slate-600");
+  const Arrow = up ? TrendingUp : TrendingDown;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${tone}`}>
+      <Arrow size={12} /> {up ? "+" : ""}{pct}%
+    </span>
+  );
+}
+
+function KpiCard({ label, value, loading, icon: Icon, tone, sub, delta }) {
   if (loading) {
     return (
       <Card className="border-slate-200/80 shadow-sm">
         <CardContent className="p-5 flex flex-col gap-3">
-          <div className="flex items-start justify-between">
-            <div className="h-10 w-16 bg-slate-100 rounded-lg animate-pulse" />
-            <div className="h-9 w-9 bg-slate-100 rounded-xl animate-pulse" />
-          </div>
-          <div className="h-3 w-24 bg-slate-100 rounded-full animate-pulse" />
-          <div className="h-2.5 w-32 bg-slate-50 rounded-full animate-pulse" />
+          <div className="h-9 w-9 bg-slate-100 rounded-xl animate-pulse" />
+          <div className="h-10 w-20 bg-slate-100 rounded-lg animate-pulse" />
+          <div className="h-3 w-28 bg-slate-100 rounded-full animate-pulse" />
         </CardContent>
       </Card>
     );
   }
   return (
-    <Card className="border-slate-200/80 shadow-sm">
-      <CardContent className="px-5 py-4">
-        <div className="flex items-start justify-between mb-2">
-          <p className={`text-4xl font-bold tracking-tight leading-none ${accent}`}>{value ?? "—"}</p>
-          {Icon && (
-            <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-              <Icon size={15} className="text-slate-400" />
-            </div>
-          )}
+    <Card className="border-slate-200/80 shadow-sm py-0">
+      <CardContent className="p-5">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${tone}`}>
+          <Icon size={18} />
         </div>
-        <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">{label}</p>
-        {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
+        <p className="mt-4 text-4xl font-bold tracking-tight leading-none text-slate-900">{value ?? "—"}</p>
+        <p className="mt-2 text-sm font-medium text-slate-700">{label}</p>
+        <div className="mt-1 flex items-center gap-1.5 flex-wrap text-xs text-slate-400">
+          {delta && <Delta {...delta} />}
+          <span>{sub}</span>
+        </div>
       </CardContent>
     </Card>
   );
@@ -124,13 +145,39 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
     ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`
     : null;
 
-  // ── KPI: reportes activos (suma de incidents.length en grupos no finalizados) ──
-  const reportesActivos = useMemo(
-    () => incidents
-      .filter(g => !g.isArchived && !FINAL.has(g.status?.name))
-      .reduce((s, g) => s + (g.incidents?.length ?? 1), 0),
-    [incidents],
-  );
+  // ── KPIs de período: recibidos y resueltos, 30 días contra los 30 anteriores ──
+  // El período termina en el último dato disponible (igual que el gráfico de actividad),
+  // no en "hoy", para que no queden en cero si los datos no llegan hasta la fecha actual.
+  const periodEnd = useMemo(() => {
+    const maxTs = incidents.reduce((max, g) => {
+      const t = new Date(g.createdAt).getTime();
+      return Number.isFinite(t) && t > max ? t : max;
+    }, 0);
+    return maxTs > 0 ? maxTs : Date.now();
+  }, [incidents]);
+
+  const periods = useMemo(() => {
+    const span = KPI_PERIOD_DAYS * DAY_MS;
+    const inCurrent  = (t) => t > periodEnd - span && t <= periodEnd;
+    const inPrevious = (t) => t > periodEnd - 2 * span && t <= periodEnd - span;
+    // Fecha en que se resolvió un grupo: finalizedAt, o el último cambio de estado.
+    const resolvedAt = (g) => new Date(g.finalizedAt ?? g.statusHistory?.[g.statusHistory.length - 1]?.changedAt ?? NaN).getTime();
+
+    const received = { current: 0, previous: 0 };
+    const resolved = { current: 0, previous: 0 };
+    for (const g of incidents) {
+      const created = new Date(g.createdAt).getTime();
+      const n = g.incidents?.length ?? 1;
+      if (inCurrent(created))  received.current  += n;
+      if (inPrevious(created)) received.previous += n;
+      if (g.status?.name === STATUS_KEYS.RESOLVED) {
+        const r = resolvedAt(g);
+        if (inCurrent(r))  resolved.current++;
+        if (inPrevious(r)) resolved.previous++;
+      }
+    }
+    return { received, resolved };
+  }, [incidents, periodEnd]);
 
   // ── KPI: incidentes críticos (grupos activos con prioridad 7-10) ──────────
   const incidentesCriticos = useMemo(
@@ -144,7 +191,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
     [incidents],
   );
 
-  // ── KPI: grupos activos (no archivados, no finalizados) ───────────────────
+  // ── Grupos activos (no archivados, no finalizados): va en el pie del pipeline ──
   const gruposActivos = useMemo(
     () => incidents.filter(g => !g.isArchived && !FINAL.has(g.status?.name)).length,
     [incidents],
@@ -227,7 +274,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
     return [
       { label: "Pendiente",  key: STATUS_KEYS.PENDING,    color: "text-amber-600",   bar: "bg-amber-400"   },
       { label: "Aceptado",   key: STATUS_KEYS.ACCEPTED,   color: "text-teal-600",    bar: "bg-teal-400"    },
-      { label: "En proceso", key: STATUS_KEYS.IN_PROCESS, color: "text-indigo-600",  bar: "bg-indigo-400"  },
+      { label: "En proceso", key: STATUS_KEYS.IN_PROCESS, color: "text-brand-mid",   bar: "bg-brand-mid"   },
       { label: "Resuelto",   key: STATUS_KEYS.RESOLVED,   color: "text-emerald-600", bar: "bg-emerald-400", all: true },
     ].map(s => ({
       ...s,
@@ -269,50 +316,58 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
         Panel de Estadísticas Municipales
       </h1>
 
-      <Tabs defaultValue="metricas">
-        <TabsList className="mb-6">
-          <TabsTrigger value="metricas">Métricas Generales</TabsTrigger>
-          <TabsTrigger value="mapa">Mapa de Calor Urbano</TabsTrigger>
-        </TabsList>
+      {/* ── KPIs ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <KpiCard
+          label="Reportes recibidos"
+          value={periods.received.current}
+          icon={Inbox}
+          tone="bg-brand-light/30 text-brand"
+          sub={`vs. ${KPI_PERIOD_DAYS} días previos`}
+          delta={{ ...periods.received, goodWhenUp: false }}
+          loading={loading}
+        />
+        <KpiCard
+          label="Grupos resueltos"
+          value={periods.resolved.current}
+          icon={CheckCheck}
+          tone="bg-emerald-50 text-emerald-600"
+          sub={`vs. ${KPI_PERIOD_DAYS} días previos`}
+          delta={{ ...periods.resolved, goodWhenUp: true }}
+          loading={loading}
+        />
+        <KpiCard
+          label="Críticos abiertos"
+          value={incidentesCriticos}
+          icon={Flame}
+          tone="bg-red-50 text-red-600"
+          sub="prioridad 7 o más, sin finalizar"
+          loading={loading}
+        />
+        <KpiCard
+          label="Pendientes sin atender"
+          value={pendientesSinAtender}
+          icon={Clock}
+          tone="bg-amber-50 text-amber-600"
+          sub="sin primera respuesta"
+          loading={loading}
+        />
+      </div>
+      <p className="-mt-3 mb-6 text-[11px] text-slate-400">
+        Recibidos y resueltos cuentan los {KPI_PERIOD_DAYS} días hasta el último dato disponible
+        ({new Date(periodEnd).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}).
+      </p>
 
-        {/* ══ Tab 1: Métricas Generales ══════════════════════════════════════ */}
-        <TabsContent value="metricas">
-
-          {/* ── KPIs ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-start">
-            <KpiCard
-              label="Reportes activos"
-              value={reportesActivos}
-              accent="text-slate-900"
-              icon={FileText}
-              sub="en grupos no finalizados"
-              loading={loading}
-            />
-            <KpiCard
-              label="Incidentes críticos"
-              value={incidentesCriticos}
-              accent={incidentesCriticos > 0 ? "text-orange-600" : "text-slate-900"}
-              icon={AlertTriangle}
-              sub="prioridad alta o crítica"
-              loading={loading}
-            />
-            <KpiCard
-              label="Pendientes sin atender"
-              value={pendientesSinAtender}
-              accent={pendientesSinAtender > 0 ? "text-amber-600" : "text-slate-900"}
-              icon={Clock}
-              sub="sin primera respuesta aún"
-              loading={loading}
-            />
-            <KpiCard
-              label="Grupos activos"
-              value={gruposActivos}
-              accent="text-primary"
-              icon={Activity}
-              sub="sin resolver ni archivar"
-              loading={loading}
-            />
-          </div>
+      {/* ── Mapa de calor: panel grande, siempre a la vista ── */}
+      <div className="mb-6">
+        <AdminHeatmapView
+          incidents={incidents}
+          loading={loading}
+          onTabChange={onTabChange}
+          onFocusIncident={onFocusIncident}
+          heightClass="h-[420px] lg:h-[580px]"
+        />
+      </div>
 
           {/* ── Row 1: Tendencia + Prioridad ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 ">
@@ -470,6 +525,7 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                       </div>
                     </div>
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                      <span>Activos: <span className="font-semibold text-slate-700">{gruposActivos}</span></span>
                       <span>Total: <span className="font-semibold text-slate-700">{incidents.length}</span></span>
                       <span>Archivados: <span className="font-semibold text-slate-700">{incidents.filter(g => g.isArchived).length}</span></span>
                       <span>Rechazados: <span className="font-semibold text-slate-700">{incidents.filter(g => g.status?.name === STATUS_KEYS.REJECTED).length}</span></span>
@@ -519,7 +575,12 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
                         tickLine={false}
                       />
                       <Tooltip content={<CategoryTooltip />} cursor={{ fill: "#f8fafc" }} />
-                      <Bar dataKey="value" fill="var(--color-primary)" radius={[0, 6, 6, 0]} />
+                      <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                        {/* La categoría más frecuente resalta con el violeta de marca; el resto va más suave */}
+                        {categoryData.map((c, i) => (
+                          <Cell key={c.name} fill={i === 0 ? "var(--color-brand)" : "#A895DD"} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -578,19 +639,6 @@ export default function AdminEstadisticasTab({ incidents, loading, dbRole, onTab
             </Card>
           )}
 
-        </TabsContent>
-
-        {/* ══ Tab 2: Mapa de Calor Urbano ════════════════════════════════════ */}
-        <TabsContent value="mapa">
-          <AdminHeatmapView
-            incidents={incidents}
-            loading={loading}
-            onTabChange={onTabChange}
-            onFocusIncident={onFocusIncident}
-          />
-        </TabsContent>
-
-      </Tabs>
     </div>
   );
 }
