@@ -35,7 +35,7 @@ import AdminCategoriasTab from "@/components/admin/categories/AdminCategoriasTab
 import IncidentModal from "@/components/map/IncidentModal";
 import AdminUsuariosTab from "@/components/admin/usuarios/AdminUsuariosTab";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useApplyTheme } from "@/lib/theme";
 
 export default function AdminDashboard({ dbRole }) {
@@ -64,6 +64,8 @@ export default function AdminDashboard({ dbRole }) {
           showCloseButton={false}
           className="p-0 !w-64 bg-sidebar border-0"
         >
+          {/* Radix exige un título para lectores de pantalla; se oculta a la vista */}
+          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
           <AdminSidebar
             activeTab={activeTab}
             onTabChange={setActiveTab}
