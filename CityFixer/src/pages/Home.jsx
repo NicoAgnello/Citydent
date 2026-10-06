@@ -83,7 +83,12 @@ export default function Home() {
       </main>
 
       {/* Modal para crear un nuevo reporte. Se abre desde InicioTab o BottomNav. */}
-      <IncidentModal open={reportOpen} onOpenChange={setReportOpen} onCreated={refresh} />
+      <IncidentModal
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        onCreated={refresh}
+        onViewReports={() => setActiveTab("reportes")}
+      />
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} disabled={isBanned} />
     </div>

@@ -254,3 +254,9 @@
 .cl-internal-1k7jtru, .cl-internal-pe6vm4{
   display: none;
 }
+/* Entrada del check de la pantalla de "Reporte enviado" */
+@keyframes pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}

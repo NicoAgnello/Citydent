@@ -2,18 +2,21 @@
 // Es el componente central del flujo de reporte — orquesta todos los demás componentes de /map.
 //
 // Flujo interno (pantallas que puede mostrar):
-//   1. Formulario normal  → título, categoría, descripción, ubicación (MapPicker), fotos
+//   1. Formulario normal  → "Dónde" (ubicación en MapPicker) y "Qué pasa" (título,
+//                           categoría, descripción, fotos)
 //   2. EmergencyScreen   → si el backend detecta una emergencia al procesar el texto
 //   3. SuccessScreen     → si el incidente fue creado con éxito
 //
 // Props:
-//   onSuccess → función sin argumentos, se llama después de mostrar SuccessScreen
-//   onClose   → función sin argumentos, se llama al presionar el botón de cerrar/cancelar
+//   onCreated     → función sin argumentos, se llama apenas el backend confirma el reporte
+//                   (para refrescar las listas); el modal sigue abierto mostrando el resultado
+//   onClose       → función sin argumentos, cierra el modal
+//   onViewReports → (opcional) función sin argumentos, ofrece "Ver mis reportes" al terminar
 //
-// El formulario tiene dos pasos en mobile: primero la info básica, luego la ubicación y fotos.
+// En mobile el formulario se divide en dos pasos (Dónde / Qué pasa); en desktop se ven juntos.
 // Al enviar, hace POST a /incidentes con FormData (multipart, incluye imágenes si las hay).
 import { useState, useEffect, useRef } from "react";
-import { Send, MapPin, AlertCircle, Loader2, X, ChevronRight, ChevronLeft } from "lucide-react";
+import { Send, MapPin, AlertCircle, Loader2, X, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { postIncidente } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +29,7 @@ import CategorySelect from "./CategorySelect";
 import EmergencyScreen from "./EmergencyScreen";
 import SuccessScreen from "./SuccessScreen";
 
-const IncidentForm = ({ onSuccess, onClose }) => {
+const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
   // ── Datos del formulario (sin cambios) ──
   const [ubicacion, setUbicacion]                   = useState(null);
   const [imagenes, setImagenes]                     = useState([]);
@@ -100,12 +103,12 @@ const IncidentForm = ({ onSuccess, onClose }) => {
     try {
       setSubmitting(true);
       const response = await postIncidente(data);
+      onCreated?.();
       if (response.data?.isEmergency) {
         setMensajeEmergencia(response.data.message);
         setEmergenciaReportada(true);
       } else {
         setExitoso(true);
-        setTimeout(() => onSuccess?.(), 1500);
       }
     } catch (error) {
       const msg =
@@ -129,32 +132,61 @@ const IncidentForm = ({ onSuccess, onClose }) => {
     ? `${ubicacion.calle ?? ""} ${ubicacion.numero ?? ""}, ${ubicacion.barrio ?? ""}`.trim()
     : null;
 
-  if (emergenciaReportada) return <EmergencyScreen message={mensajeEmergencia} onDismiss={() => onSuccess?.()} />;
-  if (exitoso)             return <SuccessScreen />;
+  if (emergenciaReportada) return <EmergencyScreen message={mensajeEmergencia} onDismiss={() => onClose?.()} />;
+  if (exitoso)             return <SuccessScreen onViewReports={onViewReports} onClose={() => onClose?.()} />;
+
+  // Qué pasos ya están completos (para el indicador de progreso del encabezado)
+  const dondeListo = !!(ubicacion?.lat && ubicacion?.lng);
+  const quePasaListo =
+    !!formData.title.trim() && !!formData.category && !!formData.description.trim() && imagenes.length >= 1;
+
+  const inputCls = (hasError) =>
+    `h-11 rounded-xl bg-white focus-visible:ring-primary ${
+      hasError ? "border-red-400 focus-visible:ring-red-400" : "border-slate-200"
+    }`;
+  const labelCls = "text-slate-700 font-semibold text-sm";
+
+  // Paso del indicador: botón en mobile (cambia de pantalla), solo informativo en desktop
+  const Step = ({ n, label, done, active, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 text-sm font-semibold transition-colors ${
+        active ? "text-slate-900" : "text-slate-400 sm:text-slate-600"
+      } sm:cursor-default`}
+    >
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+          done ? "bg-emerald-500 text-white" : active ? "bg-primary text-white sm:bg-slate-200 sm:text-slate-600" : "bg-slate-200 text-slate-500"
+        }`}
+      >
+        {done ? <Check size={13} strokeWidth={3} /> : n}
+      </span>
+      {label}
+    </button>
+  );
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Indicador de pasos (solo mobile) */}
-          <div className="flex gap-1.5 sm:hidden">
-            <span className={`w-6 h-1.5 rounded-full transition-colors ${step === 1 ? "bg-primary" : "bg-slate-200"}`} />
-            <span className={`w-6 h-1.5 rounded-full transition-colors ${step === 2 ? "bg-primary" : "bg-slate-200"}`} />
-          </div>
-          <DialogTitle className="text-lg font-bold text-slate-900">
-            {step === 1 ? "Ubicación" : "Detalles del reporte"}
-          </DialogTitle>
+      <div className="shrink-0 border-b border-slate-100 px-6 pb-4 pt-5">
+        <div className="flex items-center justify-between">
+          <DialogTitle className="text-lg font-bold text-slate-900">Cargar incidente</DialogTitle>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="Cerrar"
+          >
+            <X size={17} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          aria-label="Cerrar"
-        >
-          <X size={17} />
-        </button>
+        <div className="mt-3 flex items-center gap-3">
+          <Step n={1} label="Dónde" done={dondeListo} active={step === 1} onClick={() => setStep(1)} />
+          <span className="h-px w-8 bg-slate-200" />
+          <Step n={2} label="Qué pasa" done={quePasaListo} active={step === 2} onClick={() => dondeListo ? setStep(2) : handleNext()} />
+        </div>
       </div>
 
       {/* ── Cuerpo ── */}
@@ -164,55 +196,51 @@ const IncidentForm = ({ onSuccess, onClose }) => {
           {/* ── Columna 1: Mapa ── */}
           {/* Mobile: visible solo en paso 1 | Desktop: siempre visible */}
           <div className={`
-            flex-col gap-4 px-6 py-5
-            sm:flex sm:w-1/2 sm:border-r sm:border-slate-100 sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
+            flex-col gap-3 px-6 py-5
+            sm:flex sm:w-[55%] sm:border-r sm:border-slate-100
             ${step === 1 ? "flex" : "hidden"}
           `}>
-            <p className="text-xs text-slate-400 -mt-1">
-              Tu posición en azul · Tocá el mapa para marcar el incidente en rojo
+            <p className="text-sm text-slate-500">
+              Tocá el mapa para marcar dónde está el problema. El pin azul es tu posición y el rojo, el incidente.
             </p>
 
-            {/* Mapa */}
-            <div className="h-72 w-full border border-slate-200 rounded-xl overflow-hidden shrink-0">
-              <MapPicker onChange={setUbicacion} className="w-full h-72 z-0" />
+            {/* Mapa con la dirección flotando encima */}
+            <div className="relative h-[52dvh] min-h-72 w-full overflow-hidden rounded-xl border border-slate-200 sm:h-auto sm:min-h-0 sm:flex-1">
+              <MapPicker onChange={setUbicacion} className="h-full w-full z-0" />
+              <div className="pointer-events-none absolute inset-x-3 bottom-3">
+                {fieldErrors.ubicacion ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600 shadow-md">
+                    <MapPin size={14} className="shrink-0" />
+                    <span>{fieldErrors.ubicacion}</span>
+                  </div>
+                ) : direccionDisplay ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-md">
+                    <MapPin size={14} className="shrink-0 text-red-500" />
+                    <span className="truncate font-medium text-slate-800">{direccionDisplay}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-400 shadow-md">
+                    <MapPin size={14} className="shrink-0" />
+                    <span>Todavía no marcaste ninguna ubicación</span>
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Dirección capturada */}
-            {fieldErrors.ubicacion ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-500 text-sm">
-                <MapPin size={13} className="shrink-0" />
-                <span>{fieldErrors.ubicacion}</span>
-              </div>
-            ) : direccionDisplay ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-brand-light/20 text-brand-dark border border-brand-light/50 text-sm">
-                <MapPin size={13} className="shrink-0 text-brand-mid" />
-                <span className="font-medium truncate">{direccionDisplay}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm border bg-slate-50 border-slate-100 text-slate-400">
-                <MapPin size={13} className="shrink-0" />
-                <span>Tocá el mapa para marcar la ubicación</span>
-              </div>
-            )}
           </div>
 
           {/* ── Columna 2: Detalles ── */}
           {/* Mobile: visible solo en paso 2 | Desktop: siempre visible */}
           <div className={`
-            flex-col gap-4 px-6 py-5
-            sm:flex sm:w-1/2 sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
+            flex-col gap-5 px-6 py-5
+            sm:flex sm:w-[45%] sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
             ${step === 2 ? "flex" : "hidden"}
           `}>
             <div className="space-y-1.5">
-              <Label className="text-slate-700 font-semibold text-sm">¿Qué está pasando?</Label>
+              <Label className={labelCls}>¿Qué está pasando?</Label>
               <Input
                 name="title"
-                placeholder="Ej: Bache profundo, Luminaria rota..."
-                className={`rounded-xl bg-slate-50 focus-visible:ring-primary ${
-                  fieldErrors.title
-                    ? "border-red-400 focus-visible:ring-red-400"
-                    : "border-slate-200"
-                }`}
+                placeholder="Ej: Bache profundo, luminaria rota..."
+                className={inputCls(fieldErrors.title)}
                 value={formData.title}
                 onChange={handleInputChange}
               />
@@ -222,13 +250,14 @@ const IncidentForm = ({ onSuccess, onClose }) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-700 font-semibold text-sm">Categoría</Label>
+              <Label className={labelCls}>Categoría</Label>
               <CategorySelect
+                value={formData.category}
+                hasError={!!fieldErrors.category}
                 onValueChange={(value) => {
                   setFormData((prev) => ({ ...prev, category: value }));
                   clearError("category");
                 }}
-                className={fieldErrors.category ? "border-red-400" : ""}
               />
               {fieldErrors.category && (
                 <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.category}</p>
@@ -236,11 +265,11 @@ const IncidentForm = ({ onSuccess, onClose }) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-700 font-semibold text-sm">Detalles</Label>
+              <Label className={labelCls}>Detalles</Label>
               <Textarea
                 name="description"
-                placeholder="Danos más información..."
-                className={`rounded-xl bg-slate-50 min-h-[96px] focus-visible:ring-primary resize-none ${
+                placeholder="Contanos qué viste, desde cuándo y qué tan grave es."
+                className={`rounded-xl bg-white min-h-[96px] focus-visible:ring-primary resize-none ${
                   fieldErrors.description
                     ? "border-red-400 focus-visible:ring-red-400"
                     : "border-slate-200"
@@ -254,12 +283,10 @@ const IncidentForm = ({ onSuccess, onClose }) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-slate-700 font-semibold text-sm">
-                Fotos/Videos
-                <span className="text-slate-400 font-normal ml-1">(1–3)</span>
-              </Label>
+              <Label className={labelCls}>Fotos o videos</Label>
               <ImageUploader
                 imagenes={imagenes}
+                hasError={!!fieldErrors.imagenes}
                 onChange={(nuevas) => {
                   setImagenes(nuevas);
                   if (nuevas.length > imagenes.length) clearError("imagenes");
@@ -293,7 +320,7 @@ const IncidentForm = ({ onSuccess, onClose }) => {
               onClick={handleNext}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-white font-medium hover:bg-brand-mid transition-colors"
             >
-              Siguiente: Detalles
+              Siguiente: qué pasa
               <ChevronRight size={16} />
             </button>
           ) : (
@@ -321,7 +348,7 @@ const IncidentForm = ({ onSuccess, onClose }) => {
           ) : (
             <Send className="h-4 w-4 mr-2" />
           )}
-          {submitting ? "Enviando..." : "Cargar Incidente"}
+          {submitting ? "Enviando..." : "Cargar incidente"}
         </Button>
 
       </div>

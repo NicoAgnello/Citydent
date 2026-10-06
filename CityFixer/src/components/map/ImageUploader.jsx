@@ -8,8 +8,7 @@
 //
 // Se usa dentro de IncidentForm como campo opcional de adjuntos.
 import { useState } from "react";
-import { Camera, X, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ImagePlus, X, AlertCircle, Play } from "lucide-react";
 
 const MAX_FOTOS = 3;
 
@@ -24,21 +23,27 @@ const validateVideoDuration = (previewUrl) => {
   });
 };
 
-export default function ImageUploader({ imagenes, onChange, onRemove }) {
+export default function ImageUploader({ imagenes, onChange, onRemove, hasError = false }) {
   const [error, setError] = useState(null);
+  const [dragging, setDragging] = useState(false);
 
-  const handleFileChange = async (e) => {
-    if (!e.target.files) return;
+  // Valida y agrega los archivos elegidos (por el selector o arrastrados).
+  const addFiles = async (fileList) => {
+    if (!fileList?.length) return;
     setError(null);
 
     const disponibles = MAX_FOTOS - imagenes.length;
-    const files = Array.from(e.target.files).slice(0, disponibles);
+    const files = Array.from(fileList).slice(0, disponibles);
 
     const nuevas = [];
     const errors = [];
     for (const file of files) {
       if (file.size > 10485760) {
         errors.push("Un archivo supera el límite de 10MB.");
+        continue;
+      }
+      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+        errors.push("Solo se pueden subir fotos o videos.");
         continue;
       }
 
@@ -59,7 +64,17 @@ export default function ImageUploader({ imagenes, onChange, onRemove }) {
 
     if (errors.length) setError([...new Set(errors)].join(" "));
     onChange([...imagenes, ...nuevas]);
+  };
+
+  const handleFileChange = (e) => {
+    addFiles(e.target.files);
     e.target.value = "";
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    addFiles(e.dataTransfer.files);
   };
 
   const handleRemove = (index) => {
@@ -71,59 +86,71 @@ export default function ImageUploader({ imagenes, onChange, onRemove }) {
   const limite = imagenes.length >= MAX_FOTOS;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap gap-3">
-        {!limite && (
-          <label className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-brand-light/30 border-2 border-dashed border-brand-mid/30 cursor-pointer">
-            <Camera className="text-brand-mid" size={20} />
-            <input
-              type="file"
-              multiple
-              accept="image/*,video/mp4,video/webm,video/quicktime"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </label>
-        )}
-        {imagenes.map((img, index) => (
-          <div key={img.preview} className="relative w-20 h-20">
-            {img.type === "video" ? (
-              <video
-                src={img.preview}
-                className="w-full h-full object-cover rounded-2xl bg-black"
-                muted
-                playsInline
-                preload="metadata"
-              />
-            ) : (
-              <img
-                src={img.preview}
-                alt={`foto-${index + 1}`}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            )}
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
-              onClick={() => handleRemove(index)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col gap-2.5">
+      {!limite && (
+        <label
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-colors ${
+            dragging
+              ? "border-primary bg-primary/10"
+              : hasError
+                ? "border-red-300 bg-red-50/40"
+                : "border-slate-200 bg-slate-50 hover:border-primary/50 hover:bg-primary/5"
+          }`}
+        >
+          <ImagePlus size={22} className="text-primary" />
+          <span className="text-sm font-medium text-slate-700">
+            {imagenes.length === 0 ? "Tocá para sumar fotos o arrastralas acá" : "Sumar otra foto"}
+          </span>
+          <span className="text-xs text-slate-400">Al menos 1 · máximo 10MB · videos hasta 20s</span>
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/mp4,video/webm,video/quicktime"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </label>
+      )}
+
+      {imagenes.length > 0 && (
+        <div className="grid grid-cols-3 gap-2.5">
+          {imagenes.map((img, index) => (
+            <div key={img.preview} className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
+              {img.type === "video" ? (
+                <>
+                  <video src={img.preview} className="h-full w-full bg-black object-cover" muted playsInline preload="metadata" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Play size={18} className="fill-white text-white" />
+                  </div>
+                </>
+              ) : (
+                <img src={img.preview} alt={`foto-${index + 1}`} className="h-full w-full object-cover" />
+              )}
+              <button
+                type="button"
+                onClick={() => handleRemove(index)}
+                aria-label={`Quitar archivo ${index + 1}`}
+                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-red-600"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {error ? (
-        <div className="flex items-center gap-1.5 text-xs text-red-500 ml-1">
+        <div className="flex items-center gap-1.5 text-xs text-red-500">
           <AlertCircle size={12} className="shrink-0" />
           <span>{error}</span>
         </div>
       ) : (
-        <p className="text-xs text-gray-400 ml-1">
-          {imagenes.length}/{MAX_FOTOS} archivos · máximo 10MB · videos hasta 20s
-        </p>
+        imagenes.length > 0 && (
+          <p className="text-xs text-slate-400">{imagenes.length}/{MAX_FOTOS} archivos</p>
+        )
       )}
     </div>
   );

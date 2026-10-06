@@ -8,6 +8,7 @@
 //
 // Se usa dentro de IncidentForm (paso de ubicación del formulario de reporte).
 import { useState, useEffect, useCallback } from "react";
+import { LocateFixed } from "lucide-react";
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import { reverseGeocode } from "@/lib/geocoding";
 import { useDark } from "@/lib/theme";
@@ -29,7 +30,9 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
   const [userLocation, setUserLocation]     = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  useEffect(() => {
+  // Pide la posición del dispositivo, centra el mapa ahí y deja el pin rojo en ese punto.
+  // Se llama sola al abrir el mapa y también desde el botón "Usar mi ubicación".
+  const locateMe = useCallback(() => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
@@ -45,6 +48,10 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
       },
       () => console.warn("No se pudo obtener ubicación, usando Villa María por defecto."),
     );
+  }, [onChange]);
+
+  useEffect(() => {
+    locateMe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClick = useCallback(
@@ -62,7 +69,15 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
   );
 
   return (
-    <div className={className} style={{ overflow: "hidden" }}>
+    <div className={`${className} relative`} style={{ overflow: "hidden" }}>
+      <button
+        type="button"
+        onClick={locateMe}
+        className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-md transition-colors hover:bg-slate-50"
+      >
+        <LocateFixed size={14} className="text-primary" />
+        Usar mi ubicación
+      </button>
       <Map
 
         {...viewState}

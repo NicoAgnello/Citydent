@@ -7,13 +7,15 @@
 //   open         → booleano que controla si el modal está abierto
 //   onOpenChange → función que recibe true/false cuando el modal debe abrirse o cerrarse
 //   onCreated    → función sin argumentos, se llama cuando el incidente fue creado con éxito
+//   onViewReports → (opcional) función sin argumentos; si viene, la pantalla de éxito
+//                   ofrece "Ver mis reportes" (el ciudadano). Sin ella solo ofrece "Cerrar".
 //
 // Se usa en Home.jsx al presionar el botón principal "Reportar incidente".
 import React from 'react'
 import { Dialog, DialogContent } from "../ui/dialog"
 import IncidentForm from './IncidentForm'
 
-const IncidentModal = ({ open, onOpenChange, onCreated }) => {
+const IncidentModal = ({ open, onOpenChange, onCreated, onViewReports }) => {
   const controlled = open !== undefined;
 
   return (
@@ -29,15 +31,20 @@ const IncidentModal = ({ open, onOpenChange, onCreated }) => {
           !max-w-full !w-full h-[92dvh] rounded-t-2xl
           sm:!top-1/2 sm:!bottom-auto sm:!left-1/2 sm:!right-auto
           sm:!-translate-x-1/2 sm:!-translate-y-1/2
-          sm:!max-w-2xl sm:!w-full sm:h-auto sm:max-h-[90dvh]
+          sm:!max-w-4xl sm:!w-full sm:h-[min(640px,90dvh)]
           sm:rounded-2xl
         "
       >
         <IncidentForm
-          onSuccess={() => {
-            onOpenChange?.(false);
-            onCreated?.();
-          }}
+          onCreated={onCreated}
+          onViewReports={
+            onViewReports
+              ? () => {
+                  onOpenChange?.(false);
+                  onViewReports();
+                }
+              : undefined
+          }
           onClose={() => onOpenChange?.(false)}
         />
       </DialogContent>
