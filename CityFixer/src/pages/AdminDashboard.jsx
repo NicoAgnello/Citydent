@@ -118,7 +118,7 @@ export default function AdminDashboard({ dbRole }) {
             {/* EXCLUSIVO SUPERADMIN */}
             {activeTab === "categorias" && dbRole === "superAdmin" && (
               <ErrorBoundary label="Categorías">
-                <AdminCategoriasTab dbRole={dbRole} />
+                <AdminCategoriasTab incidents={groups} />
               </ErrorBoundary>
             )}
 
