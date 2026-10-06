@@ -15,6 +15,7 @@
 
 import { SignIn } from "@clerk/clerk-react";
 import Map, { Marker } from "react-map-gl";
+import mapboxgl from "mapbox-gl";
 import { MapPin, CheckCircle2 } from "lucide-react";
 
 // Marcadores sobre el mapa real (mismo centro que el resto de la app).
@@ -26,6 +27,8 @@ const PINS = [
   { lng: -63.2485, lat: -32.4092, kind: "open", label: "Pérdida de agua" },
   { lng: -63.2455, lat: -32.4115, kind: "resolved", label: "Árbol retirado" },
 ];
+
+const WEBGL_OK = mapboxgl.supported();
 
 function IncidentPin({ kind, label }) {
   const open = kind === "open";
@@ -53,22 +56,32 @@ function IncidentPin({ kind, label }) {
 function BrandPanel() {
   return (
     <aside className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#1a0f2e] p-12 text-white">
-      {/* Mapa real, solo de fondo: sin interacción ni controles */}
-      <div className="absolute inset-0">
-        <Map
-          initialViewState={MAP_VIEW}
-          mapStyle="mapbox://styles/mapbox/dark-v11"
-          style={{ width: "100%", height: "100%" }}
-          interactive={false}
-          attributionControl={false}
-        >
-          {PINS.map((pin) => (
-            <Marker key={pin.label} longitude={pin.lng} latitude={pin.lat} anchor="left">
-              <IncidentPin kind={pin.kind} label={pin.label} />
-            </Marker>
-          ))}
-        </Map>
-      </div>
+      {/* Mapa real, solo de fondo: sin interacción ni controles.
+          Mapbox necesita WebGL; si el navegador no lo soporta (por ejemplo
+          con la aceleración por hardware desactivada) se muestra un fondo
+          de marca en su lugar en vez de un panel roto. */}
+      {WEBGL_OK ? (
+        <div className="absolute inset-0">
+          <Map
+            initialViewState={MAP_VIEW}
+            mapStyle="mapbox://styles/mapbox/dark-v11"
+            style={{ width: "100%", height: "100%" }}
+            interactive={false}
+            attributionControl={false}
+          >
+            {PINS.map((pin) => (
+              <Marker key={pin.label} longitude={pin.lng} latitude={pin.lat} anchor="left">
+                <IncidentPin kind={pin.kind} label={pin.label} />
+              </Marker>
+            ))}
+          </Map>
+        </div>
+      ) : (
+        <>
+          <div aria-hidden="true" className="absolute -top-40 -left-32 h-[28rem] w-[28rem] rounded-full bg-brand/50 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-48 -right-24 h-[26rem] w-[26rem] rounded-full bg-brand-mid/30 blur-3xl" />
+        </>
+      )}
 
       {/* Tinte de marca y degradados para que el texto se lea sobre el mapa */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-brand/25 mix-blend-color" />
