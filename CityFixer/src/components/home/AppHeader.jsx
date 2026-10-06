@@ -227,6 +227,16 @@ export default function AppHeader({ user, isBanned, activeTab, onTabChange }) {
             <span className="hidden sm:inline">Urgencias</span>
           </button>
 
+          {/* Cambio rápido de tema: visible también en mobile, donde no hay menú de avatar */}
+          <button
+            onClick={() => setThemePref(dark ? "light" : "dark")}
+            aria-label={dark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            title={dark ? "Modo claro" : "Modo oscuro"}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors focus:outline-none"
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {/* Campana de notificaciones */}
           <DropdownMenu open={notiOpen} onOpenChange={setNotiOpen}>
             <DropdownMenuTrigger asChild>
