@@ -31,7 +31,7 @@ const IncidentModal = ({ open, onOpenChange, onCreated, onViewReports }) => {
           !max-w-full !w-full h-[92dvh] rounded-t-2xl
           sm:!top-1/2 sm:!bottom-auto sm:!left-1/2 sm:!right-auto
           sm:!-translate-x-1/2 sm:!-translate-y-1/2
-          sm:!max-w-4xl sm:!w-full sm:h-[min(640px,90dvh)]
+          sm:!max-w-4xl sm:!w-full sm:h-[min(760px,92dvh)]
           sm:rounded-2xl
         "
       >

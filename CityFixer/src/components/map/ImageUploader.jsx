@@ -92,7 +92,7 @@ export default function ImageUploader({ imagenes, onChange, onRemove, hasError =
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-colors ${
+          className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 text-left transition-colors ${
             dragging
               ? "border-primary bg-primary/10"
               : hasError
@@ -100,11 +100,13 @@ export default function ImageUploader({ imagenes, onChange, onRemove, hasError =
                 : "border-slate-200 bg-slate-50 hover:border-primary/50 hover:bg-primary/5"
           }`}
         >
-          <ImagePlus size={22} className="text-primary" />
-          <span className="text-sm font-medium text-slate-700">
-            {imagenes.length === 0 ? "Tocá para sumar fotos o arrastralas acá" : "Sumar otra foto"}
+          <ImagePlus size={22} className="shrink-0 text-primary" />
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-slate-700">
+              {imagenes.length === 0 ? "Tocá para sumar fotos o arrastralas acá" : "Sumar otra foto"}
+            </span>
+            <span className="text-xs text-slate-400">Al menos 1 · máximo 10MB · videos hasta 20s</span>
           </span>
-          <span className="text-xs text-slate-400">Al menos 1 · máximo 10MB · videos hasta 20s</span>
           <input
             type="file"
             multiple

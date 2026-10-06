@@ -67,7 +67,7 @@ export default function CategorySelect({ value, onValueChange, hasError = false 
     <div
       role="radiogroup"
       aria-label="Categoría"
-      className={`grid grid-cols-2 gap-2 rounded-xl ${hasError ? "ring-2 ring-red-300 ring-offset-2 ring-offset-white" : ""}`}
+      className={`grid grid-cols-2 gap-2 sm:grid-cols-3 rounded-xl ${hasError ? "ring-2 ring-red-300 ring-offset-2 ring-offset-white" : ""}`}
     >
       {categorias.map((cat) => {
         const Icon = iconFor(cat.name);
@@ -79,13 +79,13 @@ export default function CategorySelect({ value, onValueChange, hasError = false 
             role="radio"
             aria-checked={selected}
             onClick={() => onValueChange(cat._id)}
-            className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left text-[13px] font-medium transition-colors ${
               selected
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
             }`}
           >
-            <Icon size={17} className="shrink-0" />
+            <Icon size={16} className="shrink-0" />
             <span className="truncate">{capitalize(cat.name)}</span>
           </button>
         );

@@ -170,22 +170,23 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
     <form onSubmit={handleSubmit} noValidate className="flex flex-col h-full overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="shrink-0 border-b border-slate-100 px-6 pb-4 pt-5">
-        <div className="flex items-center justify-between">
-          <DialogTitle className="text-lg font-bold text-slate-900">Cargar incidente</DialogTitle>
+      {/* Mobile: título + cerrar y debajo los pasos. Desktop: todo en una fila para ganar alto. */}
+      <div className="shrink-0 border-b border-slate-100 px-6 pb-4 pt-5 sm:py-4">
+        <div className="flex flex-wrap items-center">
+          <DialogTitle className="order-1 text-lg font-bold text-slate-900">Cargar incidente</DialogTitle>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="order-2 ml-auto rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 sm:order-3"
             aria-label="Cerrar"
           >
             <X size={17} />
           </button>
-        </div>
-        <div className="mt-3 flex items-center gap-3">
-          <Step n={1} label="Dónde" done={dondeListo} active={step === 1} onClick={() => setStep(1)} />
-          <span className="h-px w-8 bg-slate-200" />
-          <Step n={2} label="Qué pasa" done={quePasaListo} active={step === 2} onClick={() => dondeListo ? setStep(2) : handleNext()} />
+          <div className="order-3 mt-3 flex w-full items-center gap-3 sm:order-2 sm:ml-8 sm:mt-0 sm:w-auto">
+            <Step n={1} label="Dónde" done={dondeListo} active={step === 1} onClick={() => setStep(1)} />
+            <span className="h-px w-8 bg-slate-200" />
+            <Step n={2} label="Qué pasa" done={quePasaListo} active={step === 2} onClick={() => dondeListo ? setStep(2) : handleNext()} />
+          </div>
         </div>
       </div>
 
@@ -197,7 +198,7 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
           {/* Mobile: visible solo en paso 1 | Desktop: siempre visible */}
           <div className={`
             flex-col gap-3 px-6 py-5
-            sm:flex sm:w-[55%] sm:border-r sm:border-slate-100
+            sm:flex sm:w-1/2 sm:border-r sm:border-slate-100
             ${step === 1 ? "flex" : "hidden"}
           `}>
             <p className="text-sm text-slate-500">
@@ -231,8 +232,8 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
           {/* ── Columna 2: Detalles ── */}
           {/* Mobile: visible solo en paso 2 | Desktop: siempre visible */}
           <div className={`
-            flex-col gap-5 px-6 py-5
-            sm:flex sm:w-[45%] sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
+            flex-col gap-4 px-6 py-5
+            sm:flex sm:w-1/2 sm:overflow-y-auto sm:[&::-webkit-scrollbar]:hidden
             ${step === 2 ? "flex" : "hidden"}
           `}>
             <div className="space-y-1.5">
@@ -265,24 +266,6 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className={labelCls}>Detalles</Label>
-              <Textarea
-                name="description"
-                placeholder="Contanos qué viste, desde cuándo y qué tan grave es."
-                className={`rounded-xl bg-white min-h-[96px] focus-visible:ring-primary resize-none ${
-                  fieldErrors.description
-                    ? "border-red-400 focus-visible:ring-red-400"
-                    : "border-slate-200"
-                }`}
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-              {fieldErrors.description && (
-                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.description}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
               <Label className={labelCls}>Fotos o videos</Label>
               <ImageUploader
                 imagenes={imagenes}
@@ -298,6 +281,24 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
               )}
             </div>
 
+            <div className="space-y-1.5">
+              <Label className={labelCls}>Detalles</Label>
+              <Textarea
+                name="description"
+                placeholder="Contanos qué viste, desde cuándo y qué tan grave es."
+                className={`rounded-xl bg-white min-h-[76px] focus-visible:ring-primary resize-none ${
+                  fieldErrors.description
+                    ? "border-red-400 focus-visible:ring-red-400"
+                    : "border-slate-200"
+                }`}
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+              {fieldErrors.description && (
+                <p className="text-xs font-medium text-red-500 mt-1">{fieldErrors.description}</p>
+              )}
+            </div>
+
             {errorSubmit && (
               <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-500 text-sm border border-red-100">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
@@ -310,7 +311,7 @@ const IncidentForm = ({ onCreated, onClose, onViewReports }) => {
       </div>
 
       {/* ── Footer con navegación ── */}
-      <div className="shrink-0 px-6 py-4 border-t border-slate-100 bg-white flex flex-col gap-3">
+      <div className="shrink-0 px-6 py-3 sm:py-3.5 border-t border-slate-100 bg-white flex flex-col gap-3">
 
         {/* Botones de paso (solo mobile) */}
         <div className="sm:hidden">

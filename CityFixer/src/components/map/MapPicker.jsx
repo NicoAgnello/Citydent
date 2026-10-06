@@ -8,10 +8,16 @@
 //
 // Se usa dentro de IncidentForm (paso de ubicación del formulario de reporte).
 import { useState, useEffect, useCallback } from "react";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, MapPinOff } from "lucide-react";
+import mapboxgl from "mapbox-gl";
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import { reverseGeocode } from "@/lib/geocoding";
 import { useDark } from "@/lib/theme";
+
+// Mapbox necesita WebGL. Si el navegador no lo soporta (aceleración por hardware
+// desactivada, protecciones de privacidad, etc.) se muestra un aviso en vez de un
+// recuadro vacío; "Usar mi ubicación" sigue funcionando porque no depende del mapa.
+const WEBGL_OK = mapboxgl.supported();
 
 const DEFAULT_CENTER = { longitude: -63.2435, latitude: -32.4097, zoom: 17 };
 
@@ -78,6 +84,16 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
         <LocateFixed size={14} className="text-primary" />
         Usar mi ubicación
       </button>
+      {!WEBGL_OK && (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-100 px-8 text-center">
+          <MapPinOff size={28} className="text-slate-400" />
+          <p className="text-sm font-medium text-slate-700">Tu navegador no puede mostrar el mapa</p>
+          <p className="text-xs text-slate-500">
+            Tocá &ldquo;Usar mi ubicación&rdquo; para marcar donde estás, o probá con otro navegador (por ejemplo Safari o Chrome).
+          </p>
+        </div>
+      )}
+      {WEBGL_OK && (
       <Map
 
         {...viewState}
@@ -103,6 +119,7 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
           </Marker>
         )}
       </Map>
+      )}
     </div>
   );
 }
