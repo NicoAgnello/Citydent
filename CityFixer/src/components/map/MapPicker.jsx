@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import { reverseGeocode } from "@/lib/geocoding";
+import { useDark } from "@/lib/theme";
 
 const DEFAULT_CENTER = { longitude: -63.2435, latitude: -32.4097, zoom: 17 };
 
@@ -23,6 +24,7 @@ function PinIcon({ color }) {
 }
 
 export default function MapPicker({ onChange, className = "w-full h-52 rounded-xl z-0" }) {
+  const dark = useDark();
   const [viewState, setViewState]           = useState(DEFAULT_CENTER);
   const [userLocation, setUserLocation]     = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -66,7 +68,7 @@ export default function MapPicker({ onChange, className = "w-full h-52 rounded-x
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
         onClick={handleClick}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={dark ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/streets-v12"}
         style={{ width: "100%", height: "100%" }}
         dragRotate={false}
         attributionControl={false}

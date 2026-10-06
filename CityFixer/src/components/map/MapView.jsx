@@ -8,6 +8,7 @@
 //
 // Se usa en IncidentDetailSheet para mostrar la ubicación del incidente reportado.
 import Map, { Marker } from "react-map-gl";
+import { useDark } from "@/lib/theme";
 
 function PinIcon({ color }) {
   return (
@@ -19,6 +20,7 @@ function PinIcon({ color }) {
 }
 
 export default function MapView({ lat, lng, className = "w-full h-48 rounded-2xl z-0", interactive = true }) {
+  const dark = useDark();
   if (!lat || !lng) return null;
 
   return (
@@ -26,7 +28,7 @@ export default function MapView({ lat, lng, className = "w-full h-48 rounded-2xl
       <Map
 
         initialViewState={{ longitude: lng, latitude: lat, zoom: 16 }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={dark ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/streets-v12"}
         style={{ width: "100%", height: "100%" }}
         dragRotate={false}
         attributionControl={false}

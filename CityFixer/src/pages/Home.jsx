@@ -39,9 +39,11 @@ import ReportesTab from "@/components/home/ReportesTab";
 import PerfilTab from "@/components/home/PerfilTab";
 import IncidentModal from "@/components/map/IncidentModal";
 import { useIncidents } from "@/hooks/useIncidents";
+import { useApplyTheme } from "@/lib/theme";
 
 export default function Home() {
   const { user } = useUser();
+  useApplyTheme();
   const [activeTab, setActiveTab] = useState("inicio");
   const [reportOpen, setReportOpen] = useState(false);
   const { incidents, loading, refresh } = useIncidents();

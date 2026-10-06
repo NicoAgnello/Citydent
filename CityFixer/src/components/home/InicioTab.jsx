@@ -50,7 +50,7 @@ export default function InicioTab({ user, incidents, loading, onVerTodos, onNuev
             </p>
             <button
               onClick={onNuevoReporte}
-              className="pointer-events-auto flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-lg hover:bg-slate-50 active:bg-slate-100 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="pointer-events-auto flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-black/30 hover:bg-brand-mid active:bg-brand-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <Plus size={16} />
               Cargar incidente
