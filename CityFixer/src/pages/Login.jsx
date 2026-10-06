@@ -162,7 +162,7 @@ function Login() {
                   fontFamily: "Geist Variable, sans-serif",
                 },
                 elements: {
-                  rootBox: "w-full",
+                  rootBox: "!w-full !max-w-none",
                   cardBox: "!w-full !shadow-none !border-0 !bg-transparent !rounded-none",
                   card: "!w-full !bg-transparent !p-0 !shadow-none !border-0 !rounded-none gap-6",
                   header: { display: "none" },
