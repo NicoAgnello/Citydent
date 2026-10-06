@@ -107,8 +107,8 @@ export default function IncidentsMap({ incidents, onSelect, children }) {
           claro es casi blanco y en oscuro el violeta de fondo. El tinte de marca
           solo va en oscuro. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-brand/20 mix-blend-color dark:block" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-slate-50/95 to-transparent" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-50/95 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-50/75 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-50/60 to-transparent" />
 
       {/* El contenedor no captura clics; solo lo hacen los hijos interactivos */}
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-5 md:p-6">
